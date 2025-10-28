@@ -312,62 +312,97 @@
 
         <div class="content-grid">
           <div>
-            <!-- Manual Queue Entry -->
-            <div class="card">
-              <div class="card-header">
+            <!-- Manual Queue Entry Card -->
+            <div class="card mb-3">
+              <div
+                class="card-header d-flex justify-content-between align-items-center"
+              >
                 <span class="card-title">➕ Manual Queue Entry</span>
-              </div>
-              <div class="manual-entry-form">
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Full Name</label>
-                    <input
-                      type="text"
-                      id="manualName"
-                      class="form-input"
-                      placeholder="Enter full name"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label>Student ID</label>
-                    <input
-                      type="text"
-                      id="manualStudentId"
-                      class="form-input"
-                      placeholder="Enter student ID"
-                    />
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Service Type</label>
-                    <select id="manualService" class="form-input">
-                      <option value="Transcript of Records">
-                        Transcript of Records
-                      </option>
-                      <option value="Diploma Issuance">Diploma Issuance</option>
-                      <option value="Certification of Grades">
-                        Certification of Grades
-                      </option>
-                      <option value="Add/Drop Subjects">
-                        Add/Drop Subjects
-                      </option>
-                      <option value="Other Services">Other Services</option>
-                    </select>
-                  </div>
-                  <div class="form-group">
-                    <label>Priority</label>
-                    <select id="manualPriority" class="form-input">
-                      <option value="false">Regular</option>
-                      <option value="true">Priority</option>
-                    </select>
-                  </div>
-                </div>
-                <button class="btn btn-primary" onclick="addManualQueue()">
-                  Add to Queue
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#manualEntryForm"
+                >
+                  Toggle
                 </button>
               </div>
+              <div class="collapse show" id="manualEntryForm">
+                <div class="card-body">
+                  <form id="manualQueueForm">
+                    <div class="row g-3">
+                      <div class="col-md-6">
+                        <label class="form-label">Full Name</label>
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="manualName"
+                          required
+                        />
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Student ID</label>
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="manualStudentId"
+                          required
+                        />
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Course</label>
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="manualCourse"
+                          required
+                        />
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Year Level</label>
+                        <select
+                          class="form-control"
+                          id="manualYearLevel"
+                          required
+                        >
+                          <option value="">Select</option>
+                          <option>1st Year</option>
+                          <option>2nd Year</option>
+                          <option>3rd Year</option>
+                          <option>4th Year</option>
+                        </select>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Service</label>
+                        <select
+                          class="form-control"
+                          id="manualService"
+                          required
+                        >
+                          <option value="">Select Service</option>
+                          <option value='["Transcript of Records"]'>
+                            Transcript of Records
+                          </option>
+                          <option value='["Certificate of Enrollment"]'>
+                            Certificate of Enrollment
+                          </option>
+                          <option value='["Good Moral Character"]'>
+                            Good Moral Character
+                          </option>
+                          <option value='["Diploma"]'>Diploma</option>
+                        </select>
+                      </div>
+                      <div class="col-12">
+                        <button type="submit" class="btn btn-success w-100">
+                          Add to Regular Queue
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
             </div>
+
             <div class="card" id="currentRequestCard">
               <!-- Current request will be loaded dynamically -->
             </div>
