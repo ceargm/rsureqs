@@ -468,45 +468,40 @@ app.post("/api/admin/decline-request", authenticateAdmin, (req, res) => {
 });
 function addToQueueSystem(requestId) {
   console.log(`[DEBUG] Starting addToQueueSystem for requestId: ${requestId}`);
+
   const requestQuery = "SELECT * FROM service_requests WHERE request_id = ?";
   db.query(requestQuery, [requestId], (err, requests) => {
-    if (err) {
-      console.error("[ERROR] Database error fetching request:", err);
+    if (err || requests.length === 0) {
+      console.error("[ERROR] Request not found or DB error:", err);
       return;
     }
-    if (requests.length === 0) {
-      console.log("[DEBUG] No request found for ID:", requestId);
-      return;
-    }
-    console.log("[DEBUG] Fetched request:", requests[0]);
+
     const request = requests[0];
 
+    // Generate queue number
     const queueNumberQuery = `
       SELECT COUNT(*) as count 
       FROM queue 
       WHERE DATE(submitted_at) = CURDATE()
     `;
+
     db.query(queueNumberQuery, (err, countResult) => {
       if (err) {
         console.error("[ERROR] Queue count error:", err);
         return;
       }
-      console.log("[DEBUG] Queue count:", countResult[0].count);
+
       const queueCount = countResult[0].count + 1;
-      const isPriority = false;
-      const priorityType = null;
-      const queueNumber = isPriority
-        ? `P-${String(queueCount).padStart(3, "0")}`
-        : `A-${String(queueCount).padStart(3, "0")}`;
-      console.log("[DEBUG] Generated queueNumber:", queueNumber);
+      const queueNumber = `A-${String(queueCount).padStart(3, "0")}`;
 
       const insertQueueQuery = `
         INSERT INTO queue (
           queue_number, user_id, user_name, student_id, course, year_level,
           request_id, services, total_amount, status, is_priority, priority_type,
           submitted_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'waiting', ?, ?, NOW())
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'waiting', 0, NULL, NOW())
       `;
+
       db.query(
         insertQueueQuery,
         [
@@ -519,31 +514,26 @@ function addToQueueSystem(requestId) {
           requestId,
           request.services,
           request.total_amount,
-          isPriority,
-          priorityType,
         ],
         (err, result) => {
           if (err) {
             console.error("[ERROR] Queue insert error:", err);
             return;
           }
-          console.log(
-            "[DEBUG] Queue inserted successfully, ID:",
-            result.insertId
-          );
 
-          const updateRequestQuery = `
-            UPDATE service_requests 
-            SET queue_status = 'in_queue', queue_number = ? 
-            WHERE request_id = ?
-          `;
-          db.query(updateRequestQuery, [queueNumber, requestId], (err) => {
-            if (err) {
-              console.error("[ERROR] Update service_requests error:", err);
-            } else {
-              console.log("[DEBUG] Updated service_requests with queue info");
+          // Update service_requests with queue info
+          db.query(
+            `UPDATE service_requests 
+             SET queue_status = 'in_queue', queue_number = ? 
+             WHERE request_id = ?`,
+            [queueNumber, requestId],
+            (err) => {
+              if (err)
+                console.error("[ERROR] Update service_requests error:", err);
+              else
+                console.log("[DEBUG] Queue info updated in service_requests");
             }
-          });
+          );
         }
       );
     });
@@ -1597,6 +1587,83 @@ app.get("/api/user/service-requests", (req, res) => {
     }
   );
 });
+// === MANUAL QUEUE ENTRY ===
+app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
+  const {
+    user_name,
+    student_id,
+    course,
+    year_level,
+    services,
+    total_amount = 0.0,
+  } = req.body;
+
+  if (!user_name || !student_id || !course || !year_level || !services) {
+    return res
+      .status(400)
+      .json({ success: false, message: "All fields are required." });
+  }
+
+  // Generate queue number for today
+  const queueNumberQuery = `
+      SELECT COUNT(*) as count 
+      FROM queue 
+      WHERE DATE(submitted_at) = CURDATE()
+    `;
+
+  db.query(queueNumberQuery, (err, countResult) => {
+    if (err) {
+      console.error("Queue count error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    const queueCount = countResult[0].count + 1;
+    const queueNumber = `A-${String(queueCount).padStart(3, "0")}`; // e.g., A-001
+
+    // Insert into queue
+    const insertQuery = `
+        INSERT INTO queue (
+          queue_number, user_id, user_name, student_id, course, year_level,
+          request_id, services, total_amount, status, is_priority, priority_type,
+          submitted_at, added_by, added_by_id
+        ) VALUES (?, NULL, ?, ?, ?, ?, NULL, ?, ?, 'waiting', 0, NULL, NOW(), ?, ?)
+      `;
+
+    const adminName = req.admin.full_name || "System Administrator";
+    const adminId = req.admin.id;
+
+    db.query(
+      insertQuery,
+      [
+        queueNumber,
+        user_name,
+        student_id,
+        course,
+        year_level,
+        services,
+        total_amount,
+        adminName,
+        adminId,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Manual queue insert error:", err);
+          return res.status(500).json({ success: false, message: err.message });
+        }
+
+        res.json({
+          success: true,
+          message: "Manual entry added to queue",
+          queueNumber: queueNumber,
+          queueId: result.insertId,
+        });
+      }
+    );
+  });
+});
+// === END MANUAL QUEUE ENTRY ===
 
 // Start server
 const PORT = 3000;
