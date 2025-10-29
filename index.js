@@ -11,7 +11,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 // JWT Secret Key
-const JWT_SECRET = process.env.JWT_SECRET || 'rsu-reqs-admin-secret-key-2024';
+const JWT_SECRET = process.env.JWT_SECRET || "rsu-reqs-admin-secret-key-2024";
 
 // MySQL connection
 const db = mysql.createConnection({
@@ -103,7 +103,8 @@ function createAdminStaffTable() {
 
 // Create default admin account
 async function createDefaultAdmin() {
-  const checkAdmin = "SELECT * FROM admin_staff WHERE email = 'admin@rsu.edu.ph'";
+  const checkAdmin =
+    "SELECT * FROM admin_staff WHERE email = 'admin@rsu.edu.ph'";
 
   db.query(checkAdmin, async (err, results) => {
     if (err) {
@@ -118,13 +119,19 @@ async function createDefaultAdmin() {
         VALUES (?, ?, ?, 'super_admin')
       `;
 
-      db.query(insertAdmin, ['admin@rsu.edu.ph', hashedPassword, 'System Administrator'], (err) => {
-        if (err) {
-          console.error("Error creating default admin:", err);
-        } else {
-          console.log("✅ Default admin account created - Email: admin@rsu.edu.ph, Password: admin123");
+      db.query(
+        insertAdmin,
+        ["admin@rsu.edu.ph", hashedPassword, "System Administrator"],
+        (err) => {
+          if (err) {
+            console.error("Error creating default admin:", err);
+          } else {
+            console.log(
+              "✅ Default admin account created - Email: admin@rsu.edu.ph, Password: admin123"
+            );
+          }
         }
-      });
+      );
     }
   });
 }
@@ -171,12 +178,12 @@ function createQueueTable() {
 
 // Admin Authentication Middleware
 const authenticateAdmin = (req, res, next) => {
-  const token = req.header('Authorization')?.replace('Bearer ', '');
+  const token = req.header("Authorization")?.replace("Bearer ", "");
 
   if (!token) {
     return res.status(401).json({
       success: false,
-      message: 'Access denied. No token provided.'
+      message: "Access denied. No token provided.",
     });
   }
 
@@ -187,7 +194,7 @@ const authenticateAdmin = (req, res, next) => {
   } catch (error) {
     res.status(401).json({
       success: false,
-      message: 'Invalid token'
+      message: "Invalid token",
     });
   }
 };
@@ -203,7 +210,7 @@ function checkServiceHoursHTML(req, res, next) {
   const openHour = 0;
   const closeHour = 16;
 
-  if (req.path === '/admin' || req.path === '/adminLogin') {
+  if (req.path === "/admin" || req.path === "/adminLogin") {
     return next();
   }
 
@@ -257,7 +264,7 @@ app.post("/api/admin/login", async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({
       success: false,
-      message: 'Email and password are required'
+      message: "Email and password are required",
     });
   }
 
@@ -270,14 +277,14 @@ app.post("/api/admin/login", async (req, res) => {
           console.error("Admin login database error:", err);
           return res.status(500).json({
             success: false,
-            message: "Database error"
+            message: "Database error",
           });
         }
 
         if (results.length === 0) {
           return res.json({
             success: false,
-            message: "Invalid email or password"
+            message: "Invalid email or password",
           });
         }
 
@@ -287,24 +294,23 @@ app.post("/api/admin/login", async (req, res) => {
         if (!isPasswordValid) {
           return res.json({
             success: false,
-            message: "Invalid email or password"
+            message: "Invalid email or password",
           });
         }
 
-        db.query(
-          "UPDATE admin_staff SET last_login = NOW() WHERE id = ?",
-          [admin.id]
-        );
+        db.query("UPDATE admin_staff SET last_login = NOW() WHERE id = ?", [
+          admin.id,
+        ]);
 
         const token = jwt.sign(
           {
             adminId: admin.id,
             email: admin.email,
             role: admin.role,
-            full_name: admin.full_name
+            full_name: admin.full_name,
           },
           JWT_SECRET,
-          { expiresIn: '8h' }
+          { expiresIn: "8h" }
         );
 
         const { password: _, ...adminWithoutPassword } = admin;
@@ -313,7 +319,7 @@ app.post("/api/admin/login", async (req, res) => {
           success: true,
           message: "Login successful",
           admin: adminWithoutPassword,
-          token
+          token,
         });
       }
     );
@@ -321,7 +327,7 @@ app.post("/api/admin/login", async (req, res) => {
     console.error("Admin login error:", error);
     res.status(500).json({
       success: false,
-      message: "Server error occurred"
+      message: "Server error occurred",
     });
   }
 });
@@ -335,20 +341,20 @@ app.get("/api/admin/me", authenticateAdmin, (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error"
+          message: "Database error",
         });
       }
 
       if (results.length === 0) {
         return res.status(404).json({
           success: false,
-          message: "Admin not found"
+          message: "Admin not found",
         });
       }
 
       res.json({
         success: true,
-        admin: results[0]
+        admin: results[0],
       });
     }
   );
@@ -369,7 +375,7 @@ const adminApiRoutes = [
   "/api/admin/queues",
   "/api/admin/start-processing",
   "/api/admin/mark-done",
-  "/api/admin/notify-student"
+  "/api/admin/notify-student",
 ];
 
 // app.use(adminApiRoutes, authenticateAdmin);
@@ -397,14 +403,14 @@ app.post("/api/admin/approve-request", authenticateAdmin, (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error"
+          message: "Database error",
         });
       }
 
       if (result.affectedRows === 0) {
         return res.status(404).json({
           success: false,
-          message: "Request not found"
+          message: "Request not found",
         });
       }
 
@@ -413,7 +419,7 @@ app.post("/api/admin/approve-request", authenticateAdmin, (req, res) => {
       res.json({
         success: true,
         message: "Request approved successfully and added to queue",
-        approvedBy: approvedBy
+        approvedBy: approvedBy,
       });
     }
   );
@@ -441,132 +447,98 @@ app.post("/api/admin/decline-request", authenticateAdmin, (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error"
+          message: "Database error",
         });
       }
 
       if (result.affectedRows === 0) {
         return res.status(404).json({
           success: false,
-          message: "Request not found"
+          message: "Request not found",
         });
       }
 
       res.json({
         success: true,
         message: "Request declined successfully",
-        declinedBy: declinedBy
+        declinedBy: declinedBy,
       });
     }
   );
 });
-
-// Add to queue system function
 function addToQueueSystem(requestId) {
+  console.log(`[DEBUG] Starting addToQueueSystem for requestId: ${requestId}`);
+
   const requestQuery = "SELECT * FROM service_requests WHERE request_id = ?";
   db.query(requestQuery, [requestId], (err, requests) => {
-    if (err) {
-      console.error("Database error in addToQueueSystem:", err);
-      return;
-    }
-
-    if (requests.length === 0) {
-      console.error("Request not found for queue:", requestId);
+    if (err || requests.length === 0) {
+      console.error("[ERROR] Request not found or DB error:", err);
       return;
     }
 
     const request = requests[0];
-    const checkQueueQuery = "SELECT * FROM queue WHERE request_id = ?";
-    db.query(checkQueueQuery, [requestId], (err, existingQueue) => {
+
+    // Generate queue number
+    const queueNumberQuery = `
+      SELECT COUNT(*) as count 
+      FROM queue 
+      WHERE DATE(submitted_at) = CURDATE()
+    `;
+
+    db.query(queueNumberQuery, (err, countResult) => {
       if (err) {
-        console.error("Database error:", err);
+        console.error("[ERROR] Queue count error:", err);
         return;
       }
 
-      if (existingQueue.length > 0) {
-        console.log("Request already in queue:", requestId);
-        return;
-      }
+      const queueCount = countResult[0].count + 1;
+      const queueNumber = `A-${String(queueCount).padStart(3, "0")}`;
 
-      const queueNumberQuery = `
-        SELECT COUNT(*) as count 
-        FROM queue 
-        WHERE DATE(submitted_at) = CURDATE()
+      const insertQueueQuery = `
+        INSERT INTO queue (
+          queue_number, user_id, user_name, student_id, course, year_level,
+          request_id, services, total_amount, status, is_priority, priority_type,
+          submitted_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'waiting', 0, NULL, NOW())
       `;
 
-      db.query(queueNumberQuery, (err, countResult) => {
-        if (err) {
-          console.error("Database error:", err);
-          return;
-        }
-
-        const queueCount = countResult[0].count + 1;
-        const isPriority = false;
-        const priorityType = null;
-        const queueNumber = isPriority
-          ? `P-${String(queueCount).padStart(3, "0")}`
-          : `A-${String(queueCount).padStart(3, "0")}`;
-
-        const insertQueueQuery = `
-          INSERT INTO queue (
-            queue_number, 
-            user_id, 
-            user_name,
-            student_id,
-            course,
-            year_level,
-            request_id,
-            services,
-            total_amount,
-            status,
-            is_priority,
-            priority_type,
-            submitted_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'waiting', ?, ?, NOW())
-        `;
-
-        db.query(
-          insertQueueQuery,
-          [
-            queueNumber,
-            request.user_id,
-            request.user_name,
-            request.student_id,
-            request.course,
-            request.year_level,
-            requestId,
-            request.services,
-            request.total_amount,
-            isPriority,
-            priorityType,
-          ],
-          (err, result) => {
-            if (err) {
-              console.error("Database error:", err);
-              return;
-            }
-
-            const updateRequestQuery = `
-              UPDATE service_requests 
-              SET queue_status = 'in_queue', 
-                  queue_number = ? 
-              WHERE request_id = ?
-            `;
-
-            db.query(updateRequestQuery, [queueNumber, requestId], (err) => {
-              if (err) {
-                console.error("Error updating service request:", err);
-              } else {
-                console.log(`Request ${requestId} added to queue as ${queueNumber}`);
-              }
-            });
+      db.query(
+        insertQueueQuery,
+        [
+          queueNumber,
+          request.user_id,
+          request.user_name,
+          request.student_id,
+          request.course,
+          request.year_level,
+          requestId,
+          request.services,
+          request.total_amount,
+        ],
+        (err, result) => {
+          if (err) {
+            console.error("[ERROR] Queue insert error:", err);
+            return;
           }
-        );
-      });
+
+          // Update service_requests with queue info
+          db.query(
+            `UPDATE service_requests 
+             SET queue_status = 'in_queue', queue_number = ? 
+             WHERE request_id = ?`,
+            [queueNumber, requestId],
+            (err) => {
+              if (err)
+                console.error("[ERROR] Update service_requests error:", err);
+              else
+                console.log("[DEBUG] Queue info updated in service_requests");
+            }
+          );
+        }
+      );
     });
   });
 }
-
 app.post("/api/admin/start-processing", authenticateAdmin, (req, res) => {
   const { queueId } = req.body;
   const adminId = req.admin.adminId;
@@ -575,7 +547,7 @@ app.post("/api/admin/start-processing", authenticateAdmin, (req, res) => {
   if (!queueId) {
     return res.status(400).json({
       success: false,
-      message: "Queue ID is required"
+      message: "Queue ID is required",
     });
   }
 
@@ -587,14 +559,14 @@ app.post("/api/admin/start-processing", authenticateAdmin, (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({
         success: false,
-        message: "Database error"
+        message: "Database error",
       });
     }
 
     if (queueResults.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Queue not found"
+        message: "Queue not found",
       });
     }
 
@@ -615,14 +587,14 @@ app.post("/api/admin/start-processing", authenticateAdmin, (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error"
+          message: "Database error",
         });
       }
 
       if (result.affectedRows === 0) {
         return res.status(404).json({
           success: false,
-          message: "Queue not found"
+          message: "Queue not found",
         });
       }
 
@@ -647,7 +619,7 @@ app.post("/api/admin/start-processing", authenticateAdmin, (req, res) => {
       res.json({
         success: true,
         message: "Queue moved to processing",
-        processedBy: adminName
+        processedBy: adminName,
       });
     });
   });
@@ -661,7 +633,7 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
   if (!queueId) {
     return res.status(400).json({
       success: false,
-      message: "Queue ID is required"
+      message: "Queue ID is required",
     });
   }
 
@@ -673,14 +645,14 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({
         success: false,
-        message: "Database error"
+        message: "Database error",
       });
     }
 
     if (queueResults.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Queue not found"
+        message: "Queue not found",
       });
     }
 
@@ -702,14 +674,14 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error"
+          message: "Database error",
         });
       }
 
       if (result.affectedRows === 0) {
         return res.status(404).json({
           success: false,
-          message: "Queue not found"
+          message: "Queue not found",
         });
       }
       // ✅ CRITICAL FIX: Also update the service_requests table
@@ -748,7 +720,7 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
           return res.json({
             success: true,
             message: "Queue completed successfully",
-            completedBy: adminName
+            completedBy: adminName,
           });
         }
 
@@ -765,11 +737,15 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
             WHERE queue_id = ?
           `;
 
-          db.query(startNextQuery, [adminName, adminId, nextQueue[0].queue_id], (err) => {
-            if (err) {
-              console.error("Error starting next queue:", err);
+          db.query(
+            startNextQuery,
+            [adminName, adminId, nextQueue[0].queue_id],
+            (err) => {
+              if (err) {
+                console.error("Error starting next queue:", err);
+              }
             }
-          });
+          );
           nextQueueStarted = true;
         }
 
@@ -777,7 +753,7 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
           success: true,
           message: "Queue completed successfully",
           completedBy: adminName,
-          nextQueueStarted: nextQueueStarted
+          nextQueueStarted: nextQueueStarted,
         });
       });
     });
@@ -785,14 +761,15 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
 });
 
 app.post("/api/admin/add-manual-queue", authenticateAdmin, (req, res) => {
-  const { name, studentId, service, isPriority, transactionType, notes } = req.body;
+  const { name, studentId, service, isPriority, transactionType, notes } =
+    req.body;
   const adminId = req.admin.adminId;
   const adminName = req.admin.full_name;
 
   if (!name) {
     return res.status(400).json({
       success: false,
-      message: "Name is required"
+      message: "Name is required",
     });
   }
 
@@ -807,7 +784,7 @@ app.post("/api/admin/add-manual-queue", authenticateAdmin, (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({
         success: false,
-        message: "Database error"
+        message: "Database error",
       });
     }
 
@@ -841,18 +818,18 @@ app.post("/api/admin/add-manual-queue", authenticateAdmin, (req, res) => {
         studentId || null,
         JSON.stringify([service]),
         isPriority,
-        isPriority ? 'Manual Priority' : null,
-        transactionType || 'walkin',
+        isPriority ? "Manual Priority" : null,
+        transactionType || "walkin",
         notes || null,
         adminName,
-        adminId
+        adminId,
       ],
       (err, result) => {
         if (err) {
           console.error("Database error:", err);
           return res.status(500).json({
             success: false,
-            message: "Database error"
+            message: "Database error",
           });
         }
 
@@ -860,7 +837,7 @@ app.post("/api/admin/add-manual-queue", authenticateAdmin, (req, res) => {
           success: true,
           message: "Manual queue entry added successfully",
           queueNumber: queueNumber,
-          addedBy: adminName
+          addedBy: adminName,
         });
       }
     );
@@ -1217,13 +1194,13 @@ app.post("/api/admin/make-priority", (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error"
+          message: "Database error",
         });
       }
 
       res.json({
         success: true,
-        message: "Queue item moved to priority"
+        message: "Queue item moved to priority",
       });
     }
   );
@@ -1242,13 +1219,13 @@ app.post("/api/admin/move-to-regular", authenticateAdmin, (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error"
+          message: "Database error",
         });
       }
 
       res.json({
         success: true,
-        message: "Queue item moved to regular"
+        message: "Queue item moved to regular",
       });
     }
   );
@@ -1264,7 +1241,7 @@ app.post("/api/admin/make-current", authenticateAdmin, (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error"
+          message: "Database error",
         });
       }
 
@@ -1278,13 +1255,13 @@ app.post("/api/admin/make-current", authenticateAdmin, (req, res) => {
             console.error("Database error:", err);
             return res.status(500).json({
               success: false,
-              message: "Database error"
+              message: "Database error",
             });
           }
 
           res.json({
             success: true,
-            message: "Queue item set as current"
+            message: "Queue item set as current",
           });
         }
       );
@@ -1302,13 +1279,13 @@ app.post("/api/admin/clear-priority", authenticateAdmin, (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error"
+          message: "Database error",
         });
       }
 
       res.json({
         success: true,
-        message: "Priority queue cleared"
+        message: "Priority queue cleared",
       });
     }
   );
@@ -1320,7 +1297,7 @@ app.post("/api/admin/add-to-queue", authenticateAdmin, (req, res) => {
   if (!requestId) {
     return res.status(400).json({
       success: false,
-      message: "Request ID is required"
+      message: "Request ID is required",
     });
   }
 
@@ -1330,14 +1307,14 @@ app.post("/api/admin/add-to-queue", authenticateAdmin, (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({
         success: false,
-        message: "Database error"
+        message: "Database error",
       });
     }
 
     if (requests.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Request not found"
+        message: "Request not found",
       });
     }
 
@@ -1349,14 +1326,14 @@ app.post("/api/admin/add-to-queue", authenticateAdmin, (req, res) => {
         console.error("Database error:", err);
         return res.status(500).json({
           success: false,
-          message: "Database error"
+          message: "Database error",
         });
       }
 
       if (existingQueue.length > 0) {
         return res.json({
           success: false,
-          message: "Request already in queue"
+          message: "Request already in queue",
         });
       }
 
@@ -1371,7 +1348,7 @@ app.post("/api/admin/add-to-queue", authenticateAdmin, (req, res) => {
           console.error("Database error:", err);
           return res.status(500).json({
             success: false,
-            message: "Database error"
+            message: "Database error",
           });
         }
 
@@ -1420,7 +1397,7 @@ app.post("/api/admin/add-to-queue", authenticateAdmin, (req, res) => {
               console.error("Database error:", err);
               return res.status(500).json({
                 success: false,
-                message: "Database error"
+                message: "Database error",
               });
             }
 
@@ -1483,7 +1460,7 @@ app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({
         success: false,
-        message: "Database error"
+        message: "Database error",
       });
     }
 
@@ -1491,9 +1468,10 @@ app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
       try {
         return {
           ...queue,
-          services: typeof queue.services === "string"
-            ? JSON.parse(queue.services)
-            : queue.services,
+          services:
+            typeof queue.services === "string"
+              ? JSON.parse(queue.services)
+              : queue.services,
         };
       } catch (parseErr) {
         console.error("Error parsing services for queue:", queue.queue_id);
@@ -1518,7 +1496,7 @@ app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
 
     res.json({
       success: true,
-      queues: organizedQueues
+      queues: organizedQueues,
     });
   });
 });
@@ -1529,7 +1507,7 @@ app.post("/api/admin/notify-student", authenticateAdmin, (req, res) => {
   if (!queueId) {
     return res.status(400).json({
       success: false,
-      message: "Queue ID is required"
+      message: "Queue ID is required",
     });
   }
 
@@ -1539,14 +1517,14 @@ app.post("/api/admin/notify-student", authenticateAdmin, (req, res) => {
       console.error("Database error:", err);
       return res.status(500).json({
         success: false,
-        message: "Database error"
+        message: "Database error",
       });
     }
 
     if (queues.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Queue not found"
+        message: "Queue not found",
       });
     }
 
@@ -1609,6 +1587,83 @@ app.get("/api/user/service-requests", (req, res) => {
     }
   );
 });
+// === MANUAL QUEUE ENTRY ===
+app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
+  const {
+    user_name,
+    student_id,
+    course,
+    year_level,
+    services,
+    total_amount = 0.0,
+  } = req.body;
+
+  if (!user_name || !student_id || !course || !year_level || !services) {
+    return res
+      .status(400)
+      .json({ success: false, message: "All fields are required." });
+  }
+
+  // Generate queue number for today
+  const queueNumberQuery = `
+      SELECT COUNT(*) as count 
+      FROM queue 
+      WHERE DATE(submitted_at) = CURDATE()
+    `;
+
+  db.query(queueNumberQuery, (err, countResult) => {
+    if (err) {
+      console.error("Queue count error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    const queueCount = countResult[0].count + 1;
+    const queueNumber = `A-${String(queueCount).padStart(3, "0")}`; // e.g., A-001
+
+    // Insert into queue
+    const insertQuery = `
+        INSERT INTO queue (
+          queue_number, user_id, user_name, student_id, course, year_level,
+          request_id, services, total_amount, status, is_priority, priority_type,
+          submitted_at, added_by, added_by_id
+        ) VALUES (?, NULL, ?, ?, ?, ?, NULL, ?, ?, 'waiting', 0, NULL, NOW(), ?, ?)
+      `;
+
+    const adminName = req.admin.full_name || "System Administrator";
+    const adminId = req.admin.id;
+
+    db.query(
+      insertQuery,
+      [
+        queueNumber,
+        user_name,
+        student_id,
+        course,
+        year_level,
+        services,
+        total_amount,
+        adminName,
+        adminId,
+      ],
+      (err, result) => {
+        if (err) {
+          console.error("Manual queue insert error:", err);
+          return res.status(500).json({ success: false, message: err.message });
+        }
+
+        res.json({
+          success: true,
+          message: "Manual entry added to queue",
+          queueNumber: queueNumber,
+          queueId: result.insertId,
+        });
+      }
+    );
+  });
+});
+// === END MANUAL QUEUE ENTRY ===
 
 // Start server
 const PORT = 3000;
