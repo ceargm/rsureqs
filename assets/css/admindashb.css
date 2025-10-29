@@ -481,9 +481,9 @@ body {
 
 .priority-card {
   background: #ffcdd2;
-  border-radius: 12px;
+  /* border-radius: 12px;
   padding: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 20px; */
 }
 
 .priority-header {

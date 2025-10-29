@@ -7,6 +7,13 @@
   <title>Admin Queue Management Dashboard</title>
   <link rel="stylesheet" href="assets/css/admindashb.css" />
   <style>
+
+    .content-item {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
     /* Fallback styles in case CSS fails to load */
     .notification-toast {
       position: fixed;
@@ -397,7 +404,7 @@
       </div>
 
       <div class="content-grid">
-        <div>
+        <div class="content-item">
           <!-- ==================== MANUAL QUEUE ENTRY (CLEAN UI) ==================== -->
           <div class="card mb-3 border-0 shadow-sm">
             <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
@@ -494,8 +501,8 @@
           </div>
         </div>
 
-        <div>
-          <div class="priority-card" id="priorityQueueContainer">
+        <div class="content-item">
+          <div class="card priority-card" id="priorityQueueContainer">
             <!-- Priority queue will be loaded dynamically -->
           </div>
 
@@ -520,6 +527,7 @@
             </div>
           </div>
         </div>
+
       </div>
     </div>
 
