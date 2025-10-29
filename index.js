@@ -72,6 +72,34 @@ function createServiceRequestsTable() {
     else console.log("✅ service_requests table ready");
   });
 }
+// -------------------------------------------------------------------
+// Get the next global queue number (A-001, A-002, …)
+// Returns a string like "A-001"
+// -------------------------------------------------------------------
+function getNextQueueNumber(callback) {
+  // 1. Find the highest existing number that starts with "A-"
+  const sql = `
+    SELECT queue_number 
+    FROM queue 
+    WHERE queue_number REGEXP '^A-[0-9]+$' 
+    ORDER BY CAST(SUBSTRING(queue_number, 3) AS UNSIGNED) DESC 
+    LIMIT 1
+  `;
+
+  db.query(sql, (err, rows) => {
+    if (err) return callback(err);
+
+    let nextSeq = 1;
+    if (rows.length > 0) {
+      const last = rows[0].queue_number; // e.g. "A-123"
+      const num = parseInt(last.split("-")[1], 10);
+      nextSeq = num + 1;
+    }
+
+    const nextNumber = `A-${String(nextSeq).padStart(3, "0")}`;
+    callback(null, nextNumber);
+  });
+}
 
 // Create admin_staff table
 function createAdminStaffTable() {
@@ -479,28 +507,22 @@ function addToQueueSystem(requestId) {
     const request = requests[0];
 
     // Generate queue number
-    const queueNumberQuery = `
-      SELECT COUNT(*) as count 
-      FROM queue 
-      WHERE DATE(submitted_at) = CURDATE()
-    `;
-
-    db.query(queueNumberQuery, (err, countResult) => {
+    // Generate queue number
+    getNextQueueNumber((err, queueNumber) => {
       if (err) {
-        console.error("[ERROR] Queue count error:", err);
-        return;
+        console.error("Error generating queue number:", err);
+        return; // Exit early, caller will handle response
       }
 
-      const queueCount = countResult[0].count + 1;
-      const queueNumber = `A-${String(queueCount).padStart(3, "0")}`;
+      const isPriority = false;
+      const priorityType = null;
 
       const insertQueueQuery = `
-        INSERT INTO queue (
-          queue_number, user_id, user_name, student_id, course, year_level,
-          request_id, services, total_amount, status, is_priority, priority_type,
-          submitted_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'waiting', 0, NULL, NOW())
-      `;
+    INSERT INTO queue (
+      queue_number, user_id, user_name, student_id, course, year_level,
+      request_id, services, total_amount, status, is_priority, priority_type, submitted_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'waiting', ?, ?, NOW())
+  `;
 
       db.query(
         insertQueueQuery,
@@ -514,26 +536,25 @@ function addToQueueSystem(requestId) {
           requestId,
           request.services,
           request.total_amount,
+          isPriority,
+          priorityType,
         ],
         (err, result) => {
           if (err) {
-            console.error("[ERROR] Queue insert error:", err);
-            return;
+            console.error("Database error:", err);
+            return; // Exit early
           }
 
-          // Update service_requests with queue info
-          db.query(
-            `UPDATE service_requests 
-             SET queue_status = 'in_queue', queue_number = ? 
-             WHERE request_id = ?`,
-            [queueNumber, requestId],
-            (err) => {
-              if (err)
-                console.error("[ERROR] Update service_requests error:", err);
-              else
-                console.log("[DEBUG] Queue info updated in service_requests");
-            }
-          );
+          const updateRequestQuery = `
+        UPDATE service_requests 
+        SET queue_status = 'in_queue', queue_number = ? 
+        WHERE request_id = ?
+      `;
+
+          db.query(updateRequestQuery, [queueNumber, requestId], (err) => {
+            if (err) console.error("Error updating service request:", err);
+            // No res.json here – caller (e.g., approval route) will respond
+          });
         }
       );
     });
@@ -1605,13 +1626,8 @@ app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
   }
 
   // Generate queue number for today
-  const queueNumberQuery = `
-      SELECT COUNT(*) as count 
-      FROM queue 
-      WHERE DATE(submitted_at) = CURDATE()
-    `;
-
-  db.query(queueNumberQuery, (err, countResult) => {
+  // Generate queue number
+  getNextQueueNumber((err, queueNumber) => {
     if (err) {
       console.error("Queue count error:", err);
       return res
@@ -1619,17 +1635,14 @@ app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
         .json({ success: false, message: "Database error" });
     }
 
-    const queueCount = countResult[0].count + 1;
-    const queueNumber = `A-${String(queueCount).padStart(3, "0")}`; // e.g., A-001
-
     // Insert into queue
     const insertQuery = `
-        INSERT INTO queue (
-          queue_number, user_id, user_name, student_id, course, year_level,
-          request_id, services, total_amount, status, is_priority, priority_type,
-          submitted_at, added_by, added_by_id
-        ) VALUES (?, NULL, ?, ?, ?, ?, NULL, ?, ?, 'waiting', 0, NULL, NOW(), ?, ?)
-      `;
+    INSERT INTO queue (
+      queue_number, user_id, user_name, student_id, course, year_level,
+      request_id, services, total_amount, status, is_priority, priority_type,
+      submitted_at, added_by, added_by_id
+    ) VALUES (?, NULL, ?, ?, ?, ?, NULL, ?, ?, 'waiting', 0, NULL, NOW(), ?, ?)
+  `;
 
     const adminName = req.admin.full_name || "System Administrator";
     const adminId = req.admin.id;
