@@ -236,7 +236,7 @@ function checkServiceHoursHTML(req, res, next) {
   const now = new Date();
   const hours = now.getHours();
   const openHour = 0;
-  const closeHour = 16;
+  const closeHour = 24;
 
   if (req.path === "/admin" || req.path === "/adminLogin") {
     return next();
@@ -560,6 +560,7 @@ function addToQueueSystem(requestId) {
     });
   });
 }
+
 app.post("/api/admin/start-processing", authenticateAdmin, (req, res) => {
   const { queueId } = req.body;
   const adminId = req.admin.adminId;
@@ -705,6 +706,7 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
           message: "Queue not found",
         });
       }
+
       // ✅ CRITICAL FIX: Also update the service_requests table
       if (requestId) {
         const updateServiceRequestQuery = `
@@ -723,59 +725,14 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
         });
       }
 
-      // Get the next waiting queue and move to processing
-      const nextQueueQuery = `
-        SELECT queue_id 
-        FROM queue 
-        WHERE status = 'waiting' 
-        AND DATE(submitted_at) = CURDATE()
-        ORDER BY 
-          CASE WHEN is_priority = 1 THEN 0 ELSE 1 END,
-          submitted_at ASC
-        LIMIT 1
-      `;
+      // ✅ FIXED: Remove automatic processing of next queue
+      // Let the admin manually start the next queue when ready
 
-      db.query(nextQueueQuery, (err, nextQueue) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.json({
-            success: true,
-            message: "Queue completed successfully",
-            completedBy: adminName,
-          });
-        }
-
-        let nextQueueStarted = false;
-
-        if (nextQueue.length > 0) {
-          // Automatically move next queue to processing with staff info
-          const startNextQuery = `
-            UPDATE queue 
-            SET status = 'processing', 
-                started_at = NOW(),
-                processed_by = ?,
-                processed_by_id = ?
-            WHERE queue_id = ?
-          `;
-
-          db.query(
-            startNextQuery,
-            [adminName, adminId, nextQueue[0].queue_id],
-            (err) => {
-              if (err) {
-                console.error("Error starting next queue:", err);
-              }
-            }
-          );
-          nextQueueStarted = true;
-        }
-
-        res.json({
-          success: true,
-          message: "Queue completed successfully",
-          completedBy: adminName,
-          nextQueueStarted: nextQueueStarted,
-        });
+      res.json({
+        success: true,
+        message: "Queue completed successfully",
+        completedBy: adminName,
+        nextQueueStarted: false // Always false now
       });
     });
   });
