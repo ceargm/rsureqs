@@ -5,10 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RSU REQS - Dashboard</title>
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/assets/css/dashboard.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="/assets/css/dashboard.css" rel="stylesheet">
+
 
     <style>
         /* Enhanced styles for better UX */
@@ -79,6 +81,10 @@
         }
 
         .queue-number-display {
+            /* center the content */
+            display: flex;
+            justify-content: center;
+            align-items: center;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             padding: 20px;
@@ -328,7 +334,6 @@
                         <h4>Your Current Queue Number</h4>
                         <div class="queue-number" id="currentQueueNumber">A-001</div>
                         <p id="queueStatusMessage">Waiting for approval</p>
-              
                     </div>
 
                     <div class="text-center">
@@ -400,7 +405,7 @@
                 </div>
             </div>
 
-            
+
             <!-- Services Section -->
             <div id="services" class="section">
                 <div class="home-content">
@@ -1212,9 +1217,6 @@
                 <i class="bi bi-inbox display-4 text-muted mb-3"></i>
                 <h4>No Service Requests</h4>
                 <p>You haven't submitted any service requests yet.</p>
-                <button class="btn btn-primary" onclick="showPage('home')">
-                    <i class="bi bi-plus-circle me-1"></i> Request a Service
-                </button>
             </div>
         `;
                 return;

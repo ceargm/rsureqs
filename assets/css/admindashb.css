@@ -481,9 +481,9 @@ body {
 
 .priority-card {
   background: #ffcdd2;
-  /* border-radius: 12px;
+  border-radius: 12px;
   padding: 20px;
-  margin-bottom: 20px; */
+  margin-bottom: 20px;
 }
 
 .priority-header {
@@ -1156,11 +1156,6 @@ body {
   transition: all 0.2s;
 }
 
-/* .btn-primary.btn-sm:hover {
-  background: linear-gradient(135deg, #2c7bb6, #3182ce);
-  transform: translateY(-1px);
-  /* box-shadow: 0 4px 8px rgba(49, 130, 206, 0.3); */
-} */
 
 .btn-primary.btn-sm:active {
   transform: translateY(0);
