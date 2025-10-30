@@ -1677,6 +1677,106 @@ app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
   });
 });
 // === END MANUAL QUEUE ENTRY ===
+// New public API endpoint for queue status (no authentication needed)
+app.get("/api/queue/status", (req, res) => {
+  // Get now serving (single processing queue)
+  const nowServingQuery = `
+  SELECT queue_number 
+  FROM queue 
+  WHERE status = 'processing' 
+  ORDER BY is_priority DESC, started_at ASC 
+  LIMIT 1
+`;
+  db.query(nowServingQuery, (err, nowServingResult) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+    const nowServing =
+      nowServingResult.length > 0 ? nowServingResult[0].queue_number : null;
+
+    // Get coming next: Next 4 items AFTER the one currently being served (from processing)
+    const comingNextQuery = `
+  SELECT queue_number 
+  FROM queue 
+  WHERE status = 'processing' 
+  ORDER BY is_priority DESC, started_at ASC 
+  LIMIT 4 OFFSET 1
+`;
+    db.query(comingNextQuery, (err, comingNextResult) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error" });
+      }
+      const comingNext = comingNextResult.map((row) => row.queue_number);
+
+      // Get ready to claim (up to 10, newest first) - now reads from 'completed' status
+      const readyToClaimQuery =
+        "SELECT queue_number FROM queue WHERE status = 'completed' ORDER BY completed_at DESC LIMIT 10";
+      db.query(readyToClaimQuery, (err, readyToClaimResult) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Database error" });
+        }
+        const readyToClaim = readyToClaimResult.map((row) => row.queue_number);
+
+        res.json({
+          success: true,
+          nowServing,
+          comingNext,
+          readyToClaim,
+        });
+      });
+    });
+  });
+});
+
+// Add/Complete protected admin route for marking done (sets to 'ready')
+app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
+  const { queueId } = req.body;
+  if (!queueId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Queue ID is required" });
+  }
+
+  const completedBy = req.admin.full_name;
+  const completedById = req.admin.adminId;
+
+  const updateQuery = `
+    UPDATE queue 
+    SET status = 'ready', completed_at = NOW(), completed_by = ?, completed_by_id = ?
+    WHERE queue_id = ? AND status = 'processing'
+  `;
+
+  db.query(
+    updateQuery,
+    [completedBy, completedById, queueId],
+    (err, result) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error" });
+      }
+
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Queue not found or not in processing",
+        });
+      }
+
+      res.json({ success: true, message: "Request marked as ready to claim" });
+    }
+  );
+});
 
 // Start server
 const PORT = 3000;
