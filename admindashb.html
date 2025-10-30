@@ -6,308 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin Queue Management Dashboard</title>
   <link rel="stylesheet" href="assets/css/admindashb.css" />
-  <style>
-    /* Fallback styles in case CSS fails to load */
-    .notification-toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #2e7d32;
-      color: white;
-      padding: 15px 25px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      z-index: 10000;
-    }
-
-    @keyframes slideInRight {
-      from {
-        transform: translateX(400px);
-        opacity: 0;
-      }
-
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-
-    @keyframes slideOutRight {
-      from {
-        transform: translateX(0);
-        opacity: 1;
-      }
-
-      to {
-        transform: translateX(400px);
-        opacity: 0;
-      }
-    }
-
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 1000;
-      left: 0;
-      top: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.5);
-    }
-
-    .modal.active {
-      display: block;
-    }
-
-    .modal-content {
-      background-color: #fefefe;
-      margin: 5% auto;
-      padding: 20px;
-      border-radius: 8px;
-      width: 80%;
-      max-width: 600px;
-    }
-
-    /* Additional fallback styles */
-    .btn {
-      padding: 10px 15px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      margin: 5px;
-    }
-
-    .btn-primary {
-      background: #007bff;
-      color: white;
-    }
-
-    .btn-success {
-      background: #28a745;
-      color: white;
-    }
-
-    .btn-danger {
-      background: #dc3545;
-      color: white;
-    }
-
-    .btn-secondary {
-      background: #6c757d;
-      color: white;
-    }
-
-    .badge {
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    /* Enhanced styles for real-time updates */
-    .queue-item-processing {
-      border-left: 4px solid #ff9800;
-      background-color: #fff3e0;
-    }
-
-    .queue-item-notified {
-      border-left: 4px solid #2196f3;
-      background-color: #e3f2fd;
-    }
-
-    .queue-item-completed {
-      border-left: 4px solid #4caf50;
-      background-color: #e8f5e8;
-    }
-
-    .status-badge {
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: bold;
-    }
-
-    .status-processing {
-      background: #ff9800;
-      color: white;
-    }
-
-    .status-notified {
-      background: #2196f3;
-      color: white;
-    }
-
-    .status-completed {
-      background: #4caf50;
-      color: white;
-    }
-
-    .status-waiting {
-      background: #9e9e9e;
-      color: white;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-
-    .btn-sm {
-      padding: 4px 8px;
-      font-size: 12px;
-    }
-
-    /* Manual entry styles */
-    .manual-entry-form {
-      background: #f8f9fa;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 20px;
-    }
-
-    .form-row {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
-    .form-group {
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .form-input {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 14px;
-    }
-
-    .quick-stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    .stat-item {
-      background: white;
-      padding: 15px;
-      border-radius: 8px;
-      text-align: center;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .stat-number {
-      font-size: 24px;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    /* Scrollable Priority Queue */
-    .priority-queue-list {
-      max-height: 300px;
-      /* Fits approximately 2 items; scrolls for more */
-      overflow-y: auto;
-      padding-right: 8px;
-    }
-
-    /* Custom scrollbar for Priority Queue */
-    .priority-queue-list::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .priority-queue-list::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    .priority-queue-list::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 10px;
-    }
-
-    .priority-queue-list::-webkit-scrollbar-thumb:hover {
-      background: #a8a8a8;
-    }
-
-    .stat-label {
-      font-size: 12px;
-      color: #666;
-    }
-
-    /* Scrollable Regular Queue */
-    #regularQueueContainer .card-body {
-      max-height: 400px;
-      overflow-y: auto;
-      padding-right: 8px;
-    }
-
-    /* Scrollable Currently Processing */
-    #processingQueueContainer {
-      max-height: 400px;
-      overflow-y: auto;
-      padding-right: 8px;
-    }
-
-    /* Optional: Custom scrollbar (nice touch) */
-    #regularQueueContainer .card-body::-webkit-scrollbar,
-    #processingQueueContainer::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    #regularQueueContainer .card-body::-webkit-scrollbar-track,
-    #processingQueueContainer::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    #regularQueueContainer .card-body::-webkit-scrollbar-thumb,
-    #processingQueueContainer::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 10px;
-    }
-
-    #regularQueueContainer .card-body::-webkit-scrollbar-thumb:hover,
-    #processingQueueContainer::-webkit-scrollbar-thumb:hover {
-      background: #a8a8a8;
-    }
-
-    /* Scrollable Priority & Regular Queue - Show scroll after 2 items */
-    .priority-queue-list,
-    .regular-queue-list {
-      max-height: 240px;
-      /* ~2 items visible */
-      overflow-y: auto;
-      padding-right: 8px;
-    }
-
-    /* Custom scrollbar */
-    .priority-queue-list::-webkit-scrollbar,
-    .regular-queue-list::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .priority-queue-list::-webkit-scrollbar-track,
-    .regular-queue-list::-webkit-scrollbar-track {
-      background: #f1f1f1;
-      border-radius: 10px;
-    }
-
-    .priority-queue-list::-webkit-scrollbar-thumb,
-    .regular-queue-list::-webkit-scrollbar-thumb {
-      background: #c1c1c1;
-      border-radius: 10px;
-    }
-
-    .priority-queue-list::-webkit-scrollbar-thumb:hover,
-    .regular-queue-list::-webkit-scrollbar-thumb:hover {
-      background: #a8a8a8;
-    }
-  </style>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/improved_admindash.css" />
+  <!-- MOVED THE OTHER STYLES IN THE IMPROVED_ADMINDASHB.CSS FOR BETTER ORGANIZATION -->
 </head>
 
 <body>
@@ -319,37 +23,22 @@
     </div>
 
     <div class="menu-item active" data-page="queue">
-      <svg class="menu-icon" fill="currentColor" viewBox="0 0 20 20">
-        <path
-          d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
-      </svg>
+      <i class="bi bi-list-task menu-icon"></i>
       <span>Queue Management</span>
     </div>
 
     <div class="menu-item" data-page="documents">
-      <svg class="menu-icon" fill="currentColor" viewBox="0 0 20 20">
-        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-        <path fill-rule="evenodd"
-          d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
-          clip-rule="evenodd" />
-      </svg>
+      <i class="bi bi-file-earmark-text menu-icon"></i>
       <span>Service Requests</span>
     </div>
 
     <div class="menu-item" data-page="reports">
-      <svg class="menu-icon" fill="currentColor" viewBox="0 0 20 20">
-        <path
-          d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-      </svg>
+      <i class="bi bi-bar-chart menu-icon"></i>
       <span>Reports</span>
     </div>
 
     <div class="menu-item" data-page="settings">
-      <svg class="menu-icon" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd"
-          d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
-          clip-rule="evenodd" />
-      </svg>
+      <i class="bi bi-gear menu-icon"></i>
       <span>Settings</span>
     </div>
 
@@ -359,7 +48,7 @@
     </div>
 
     <div class="user-card">
-      <div class="user-avatar"></div>
+      <div class="user-avatar">JS</div>
       <div class="user-info">
         <h4>Jila Santos</h4>
         <p>Registrar Staff</p>
@@ -397,45 +86,39 @@
       </div>
 
       <div class="content-grid">
-        <div>
-          <!-- ==================== MANUAL QUEUE ENTRY (CLEAN UI) ==================== -->
-          <div class="card mb-3 border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
+        <div class="content-item">
+          <!-- Manual Queue Entry -->
+          <div class="card">
+            <div class="card-header">
               <span class="card-title">Manual Queue Entry</span>
-              <button class="btn btn-sm btn-outline-secondary border-0" type="button" data-bs-toggle="collapse"
+              <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
                 data-bs-target="#manualEntryCollapse">
-                <small>Toggle</small>
+                <i class="bi bi-chevron-down"></i>
               </button>
             </div>
 
             <div class="collapse show" id="manualEntryCollapse">
-              <div class="card-body p-4">
+              <div class="card-body">
                 <form id="manualQueueForm" class="row g-3 needs-validation" novalidate>
-                  <!-- Full Name -->
                   <div class="col-md-6">
-                    <label class="form-label text-secondary fw-medium">Full Name</label>
-                    <input type="text" class="form-control form-control-sm" id="manualName"
-                      placeholder="Enter full name" required />
+                    <label class="form-label">Full Name</label>
+                    <input type="text" class="form-control" id="manualName" placeholder="Enter full name" required />
                   </div>
 
-                  <!-- Student ID -->
                   <div class="col-md-6">
-                    <label class="form-label text-secondary fw-medium">Student ID</label>
-                    <input type="text" class="form-control form-control-sm" id="manualStudentId"
-                      placeholder="e.g. 2022-0001-001" required />
-                  </div>
-
-                  <!-- Course -->
-                  <div class="col-md-4">
-                    <label class="form-label text-secondary fw-medium">Course</label>
-                    <input type="text" class="form-control form-control-sm" id="manualCourse" placeholder="e.g. BSIT"
+                    <label class="form-label">Student ID</label>
+                    <input type="text" class="form-control" id="manualStudentId" placeholder="e.g. 2022-0001-001"
                       required />
                   </div>
 
-                  <!-- Year Level -->
                   <div class="col-md-4">
-                    <label class="form-label text-secondary fw-medium">Year Level</label>
-                    <select class="form-select form-select-sm" id="manualYearLevel" required>
+                    <label class="form-label">Course</label>
+                    <input type="text" class="form-control" id="manualCourse" placeholder="e.g. BSIT" required />
+                  </div>
+
+                  <div class="col-md-4">
+                    <label class="form-label">Year Level</label>
+                    <select class="form-select" id="manualYearLevel" required>
                       <option value="" disabled selected>Select</option>
                       <option>1st Year</option>
                       <option>2nd Year</option>
@@ -443,38 +126,27 @@
                       <option>4th Year</option>
                     </select>
                   </div>
-
-                  <!-- Service -->
+                  
                   <div class="col-md-4">
-                    <label class="form-label text-secondary fw-medium">Service</label>
-                    <select class="form-select form-select-sm" id="manualService" required>
-                      <option value="" disabled selected>
-                        Select Service
-                      </option>
-                      <option value='["Transcript of Records"]'>
-                        Transcript of Records
-                      </option>
-                      <option value='["Certificate of Enrollment"]'>
-                        Certificate of Enrollment
-                      </option>
-                      <option value='["Good Moral Character"]'>
-                        Good Moral Character
-                      </option>
+                    <label class="form-label">Service</label>
+                    <select class="form-select" id="manualService" required>
+                      <option value="" disabled selected>Select Service</option>
+                      <option value='["Transcript of Records"]'>Transcript of Records</option>
+                      <option value='["Certificate of Enrollment"]'>Certificate of Enrollment</option>
+                      <option value='["Good Moral Character"]'>Good Moral Character</option>
                       <option value='["Diploma"]'>Diploma</option>
                     </select>
                   </div>
 
-                  <!-- Submit Button -->
-                  <div class="col-12 mt-3">
-                    <button type="submit" class="btn btn-primary btn-sm w-100 fw-medium shadow-sm">
-                      Add to Queue
+                  <div class="col-12 mt-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                      <i class="bi bi-plus-circle"></i> Add to Queue
                     </button>
                   </div>
                 </form>
               </div>
             </div>
           </div>
-          <!-- =========================================================================== -->
 
           <div class="card" id="currentRequestCard">
             <!-- Current request will be loaded dynamically -->
@@ -483,40 +155,43 @@
           <div class="quick-actions">
             <h3>Quick Actions</h3>
             <button class="action-btn" onclick="queueManager.processNextInQueue()">
-              ➡️ Process Next
+              <i class="bi bi-arrow-right"></i> Process Next
             </button>
             <button class="action-btn" onclick="serviceRequestManager.loadServiceRequests()">
-              🔄 Refresh
+              <i class="bi bi-arrow-clockwise"></i> Refresh
             </button>
             <button class="action-btn" id="pauseQueueBtn" onclick="toggleQueuePause()">
-              ⏸️ Pause Queue
+              <i class="bi bi-pause-circle"></i> Pause Queue
             </button>
           </div>
         </div>
 
-        <div>
-          <div class="priority-card" id="priorityQueueContainer">
+        <div class="content-item">
+          <div class="card priority-card" id="priorityQueueContainer">
             <!-- Priority queue will be loaded dynamically -->
           </div>
 
           <div class="card">
             <div class="card-header">
               <span class="card-title">Regular Queue</span>
-              <span class="badge waiting">0 waiting</span>
+              <span class="badge waiting" id="regularQueueCount">0 waiting</span>
             </div>
-            <div class="card-body" style="padding: 0">
-              <div id="regularQueueContainer" style="padding: 0">
+            <div class="card-body p-0">
+              <div class="scrollable-area" id="regularQueueContainer">
                 <!-- Items loaded here -->
               </div>
             </div>
           </div>
+
           <div class="card">
             <div class="card-header">
-              <span class="card-title">🔄 Currently Processing</span>
-              <span class="badge" id="processingBadge">0 processing</span>
+              <span class="card-title"><i class="bi bi-arrow-repeat"></i> Currently Processing</span>
+              <span class="badge processing" id="processingBadge">0 processing</span>
             </div>
-            <div id="processingQueueContainer" style="padding: 0 20px">
-              <!-- Currently processing queues will be loaded here -->
+            <div class="card-body p-0">
+              <div class="scrollable-area" id="processingQueueContainer">
+                <!-- Currently processing queues will be loaded here -->
+              </div>
             </div>
           </div>
         </div>
@@ -584,16 +259,12 @@
 
       <div class="charts-grid">
         <div class="info-card">
-          <h3>
-            Peak Hours Statistic <span style="color: #999">(Today)</span>
-          </h3>
+          <h3>Peak Hours Statistic <span style="color: #999">(Today)</span></h3>
           <div class="chart-placeholder">Chart Placeholder - Peak Hours</div>
         </div>
 
         <div class="info-card">
-          <h3>
-            Recent Client Requests <span style="color: #999">(Today)</span>
-          </h3>
+          <h3>Recent Client Requests <span style="color: #999">(Today)</span></h3>
           <ul class="request-list" id="recentRequestsList">
             <!-- Recent requests will be populated here -->
           </ul>
@@ -622,7 +293,7 @@
       <div class="header">
         <h1>Queue Report Details</h1>
         <button class="btn btn-secondary" onclick="showPage('reports')">
-          ← Back to Reports
+          <i class="bi bi-arrow-left"></i> Back to Reports
         </button>
       </div>
 
@@ -685,30 +356,12 @@
       </div>
     </div>
 
-    <!-- Settings Page -->
+
+    <!-- --------------------------------------------- SETTINGS PAGE ------------------------------------------------->
     <div id="settings-page" class="page">
-      <!-- Add this somewhere in your admin dashboard HTML where you want to show staff info -->
-      <div class="staff-info-card" style="
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-          ">
+      <div class="staff-info-card">
         <div class="staff-header d-flex align-items-center mb-3">
-          <div class="staff-avatar" style="
-                width: 60px;
-                height: 60px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                color: white;
-                font-weight: bold;
-                font-size: 1.5rem;
-                margin-right: 15px;
-              ">
+          <div class="staff-avatar">
             <span id="staffAvatarInitials">AD</span>
           </div>
           <div>
@@ -771,7 +424,7 @@
         </div>
 
         <button class="btn-logout" onclick="handleLogout()">
-          🚪 Log out
+          <i class="bi bi-box-arrow-right"></i> Log out
         </button>
       </div>
 
@@ -801,229 +454,229 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- ------Modals-------------------------------------------------------------------------- -->
+  <!-- --------------------------------------------- SETTING'S MODALS HERE ------------------------------------------------->
 
-    <!-- Account Details Modal -->
-    <div id="accountDetailsModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Registrar Staff Account Details</h3>
-          <span class="modal-close" onclick="toggleModal('accountDetailsModal')">&times;</span>
+  <!-- Account Details Modal -->
+  <div id="accountDetailsModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Registrar Staff Account Details</h3>
+        <span class="modal-close" onclick="toggleModal('accountDetailsModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" value="Jila Santos" class="form-input" />
         </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Full Name</label>
-            <input type="text" value="Jila Santos" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label>Email Address</label>
-            <input type="email" value="jila.santos@rsu.edu" class="form-input" />
-          </div>
-          <div class="form-group">
-            <label>Role</label>
-            <input type="text" value="Registrar Staff" class="form-input" disabled />
-          </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" value="jila.santos@rsu.edu" class="form-input" />
         </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="toggleModal('accountDetailsModal')">
-            Cancel
-          </button>
-          <button class="btn btn-primary" onclick="saveAccountDetails()">
-            Save Changes
-          </button>
+        <div class="form-group">
+          <label>Role</label>
+          <input type="text" value="Registrar Staff" class="form-input" disabled />
         </div>
       </div>
-    </div>
-
-    <!-- Password Modal -->
-    <div id="passwordModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Manage Account Password</h3>
-          <span class="modal-close" onclick="toggleModal('passwordModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Current Password</label>
-            <input type="password" class="form-input" placeholder="Enter current password" />
-          </div>
-          <div class="form-group">
-            <label>New Password</label>
-            <input type="password" class="form-input" placeholder="Enter new password" />
-          </div>
-          <div class="form-group">
-            <label>Confirm New Password</label>
-            <input type="password" class="form-input" placeholder="Confirm new password" />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="toggleModal('passwordModal')">
-            Cancel
-          </button>
-          <button class="btn btn-primary" onclick="changePassword()">
-            Change Password
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Approve Request Modal -->
-    <div id="approveRequestModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Approve Service Request</h3>
-          <span class="modal-close" onclick="toggleModal('approveRequestModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="approveRequestId" />
-          <div class="form-group">
-            <label>Request Details</label>
-            <div id="approveRequestDetails" class="request-details-preview">
-              <!-- Request details will be populated here -->
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Admin Notes (Optional)</label>
-            <textarea id="approveNotes" class="form-input" rows="3"
-              placeholder="Add any notes for the student..."></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="toggleModal('approveRequestModal')">
-            Cancel
-          </button>
-          <button class="btn btn-success" onclick="serviceRequestManager.confirmApproveRequest()">
-            Approve Request
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Decline Request Modal -->
-    <div id="declineRequestModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Decline Service Request</h3>
-          <span class="modal-close" onclick="toggleModal('declineRequestModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="declineRequestId" />
-          <div class="form-group">
-            <label>Request Details</label>
-            <div id="declineRequestDetails" class="request-details-preview">
-              <!-- Request details will be populated here -->
-            </div>
-          </div>
-          <div class="form-group">
-            <label>Reason for Declining <span style="color: red">*</span></label>
-            <textarea id="declineReason" class="form-input" rows="4"
-              placeholder="Please provide a clear reason for declining this request..." required></textarea>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="toggleModal('declineRequestModal')">
-            Cancel
-          </button>
-          <button class="btn btn-danger" onclick="serviceRequestManager.confirmDeclineRequest()">
-            Decline Request
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Request Details Modal -->
-    <div id="requestDetailsModal" class="modal">
-      <div class="modal-content" style="max-width: 700px">
-        <div class="modal-header">
-          <h3>Service Request Details</h3>
-          <span class="modal-close" onclick="toggleModal('requestDetailsModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div id="requestDetailsContent">
-            <!-- Request details will be populated here -->
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="toggleModal('requestDetailsModal')">
-            Close
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Additional Modals for Settings -->
-    <div id="waitingTimeModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Edit Services Waiting Time</h3>
-          <span class="modal-close" onclick="toggleModal('waitingTimeModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Average Service Time (minutes)</label>
-            <input type="number" class="form-input" value="15" min="1" />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="toggleModal('waitingTimeModal')">
-            Cancel
-          </button>
-          <button class="btn btn-primary" onclick="saveWaitingTime()">
-            Save Changes
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="monitoringModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Edit Monitoring Details</h3>
-          <span class="modal-close" onclick="toggleModal('monitoringModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Auto-refresh Interval (seconds)</label>
-            <input type="number" class="form-input" value="5" min="1" />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="toggleModal('monitoringModal')">
-            Cancel
-          </button>
-          <button class="btn btn-primary" onclick="saveMonitoring()">
-            Save Changes
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="notificationModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h3>Edit Notification Details</h3>
-          <span class="modal-close" onclick="toggleModal('notificationModal')">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label>Enable Sound Notifications</label>
-            <input type="checkbox" checked />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="toggleModal('notificationModal')">
-            Cancel
-          </button>
-          <button class="btn btn-primary" onclick="saveNotification()">
-            Save Changes
-          </button>
-        </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="toggleModal('accountDetailsModal')">
+          Cancel
+        </button>
+        <button class="btn btn-primary" onclick="saveAccountDetails()">
+          Save Changes
+        </button>
       </div>
     </div>
   </div>
 
-  <!-- New Modal for Manual Transaction Details -->
+  <!-- Password Modal -->
+  <div id="passwordModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Manage Account Password</h3>
+        <span class="modal-close" onclick="toggleModal('passwordModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" class="form-input" placeholder="Enter current password" />
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" class="form-input" placeholder="Enter new password" />
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" class="form-input" placeholder="Confirm new password" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="toggleModal('passwordModal')">
+          Cancel
+        </button>
+        <button class="btn btn-primary" onclick="changePassword()">
+          Change Password
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approve Request Modal -->
+  <div id="approveRequestModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Approve Service Request</h3>
+        <span class="modal-close" onclick="toggleModal('approveRequestModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="approveRequestId" />
+        <div class="form-group">
+          <label>Request Details</label>
+          <div id="approveRequestDetails" class="request-details-preview">
+            <!-- Request details will be populated here -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Admin Notes (Optional)</label>
+          <textarea id="approveNotes" class="form-input" rows="3"
+            placeholder="Add any notes for the student..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="toggleModal('approveRequestModal')">
+          Cancel
+        </button>
+        <button class="btn btn-success" onclick="serviceRequestManager.confirmApproveRequest()">
+          Approve Request
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decline Request Modal -->
+  <div id="declineRequestModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Decline Service Request</h3>
+        <span class="modal-close" onclick="toggleModal('declineRequestModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="declineRequestId" />
+        <div class="form-group">
+          <label>Request Details</label>
+          <div id="declineRequestDetails" class="request-details-preview">
+            <!-- Request details will be populated here -->
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Reason for Declining <span style="color: red">*</span></label>
+          <textarea id="declineReason" class="form-input" rows="4"
+            placeholder="Please provide a clear reason for declining this request..." required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="toggleModal('declineRequestModal')">
+          Cancel
+        </button>
+        <button class="btn btn-danger" onclick="serviceRequestManager.confirmDeclineRequest()">
+          Decline Request
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Request Details Modal -->
+  <div id="requestDetailsModal" class="modal">
+    <div class="modal-content" style="max-width: 700px">
+      <div class="modal-header">
+        <h3>Service Request Details</h3>
+        <span class="modal-close" onclick="toggleModal('requestDetailsModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div id="requestDetailsContent">
+          <!-- Request details will be populated here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="toggleModal('requestDetailsModal')">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Additional Modals for Settings -->
+  <div id="waitingTimeModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Services Waiting Time</h3>
+        <span class="modal-close" onclick="toggleModal('waitingTimeModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Average Service Time (minutes)</label>
+          <input type="number" class="form-input" value="15" min="1" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="toggleModal('waitingTimeModal')">
+          Cancel
+        </button>
+        <button class="btn btn-primary" onclick="saveWaitingTime()">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="monitoringModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Monitoring Details</h3>
+        <span class="modal-close" onclick="toggleModal('monitoringModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Auto-refresh Interval (seconds)</label>
+          <input type="number" class="form-input" value="5" min="1" />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="toggleModal('monitoringModal')">
+          Cancel
+        </button>
+        <button class="btn btn-primary" onclick="saveMonitoring()">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="notificationModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Notification Details</h3>
+        <span class="modal-close" onclick="toggleModal('notificationModal')">&times;</span>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Enable Sound Notifications</label>
+          <input type="checkbox" checked />
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="toggleModal('notificationModal')">
+          Cancel
+        </button>
+        <button class="btn btn-primary" onclick="saveNotification()">
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- --------------------------------------------- MANUAL TRANSACTION MODAL ------------------------------------------------->
   <div id="manualTransactionModal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -1055,8 +708,70 @@
       </div>
     </div>
   </div>
+  <!-- --------------------------------------------- END OF MANUAL TRANSACTION MODAL ------------------------------------------------->
+
+  <!-- Add Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
+
+    // -------------------------- BOOTSTRAP OFFCANVAS SIDEBAR FOR MOBILE USING OFFCANVAS COMPONENT--------------------------------------
+
+    // Initialize Bootstrap Offcanvas for sidebar on mobile
+    document.querySelectorAll('.menu-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const offcanvasEl = document.getElementById('sidebarOffcanvas');
+        const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+        if (bsOffcanvas && window.innerWidth <= 768) {
+          bsOffcanvas.hide();
+        }
+      });
+    });
+    // Keep your existing navigation setup but update it to work with Bootstrap
+    function setupNavigation() {
+      const menuItems = document.querySelectorAll(".menu-item");
+      menuItems.forEach((item) => {
+        item.addEventListener("click", () => {
+          const targetPage = item.getAttribute("data-page");
+          // Remove active class from all menu items and pages
+          menuItems.forEach((mi) => mi.classList.remove("active"));
+          document.querySelectorAll(".page").forEach((page) => page.classList.remove("active"));
+          // Add active class to clicked item
+          item.classList.add("active");
+          // Show target page
+          showPage(targetPage);
+          // On mobile, the offcanvas will auto-close due to data-bs-dismiss="offcanvas"
+        });
+      });
+    }
+    // -------------------------- END OF BOOTSTRAP OFFCANVAS SIDEBAR FOR MOBILE USING OFFCANVAS COMPONENT--------------------------------------
+
+    // -------------------------- SHOW PAGE FUNCTION TO HANDLE PAGE NAVIGATION -----------------------------------------------------
+    function showPage(page) {
+      // Hide all pages
+      document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+      // Show target page
+      const pageToShow = document.getElementById(page + "-page");
+      if (pageToShow) {
+        pageToShow.classList.add("active");
+        // Refresh data for specific pages
+        if (page === "queue" && queueManager) {
+          queueManager.loadQueues();
+        } else if (page === "documents" && serviceRequestManager) {
+          serviceRequestManager.loadServiceRequests();
+        } else if (page === "reports") {
+          updateReportsData();
+        } else if (page === "github") {
+          loadGitHubData();
+        }
+      } else {
+        console.error("Page not found:", page);
+        // Fallback to queue page
+        document.getElementById("queue-page").classList.add("active");
+      }
+    }
+    // -------------------------- END SHOW PAGE FUNCTION TO HANDLE PAGE NAVIGATION -----------------------------------------------------
+
     // Initialize managers
     let serviceRequestManager;
     let queueManager;
@@ -1068,9 +783,7 @@
       "Admin token from localStorage:",
       adminToken ? "Present" : "Missing"
     );
-
     let currentStaff = null;
-
     // Function to make authenticated API calls
     function makeAuthenticatedRequest(url, options = {}) {
       if (!adminToken) {
@@ -1078,7 +791,6 @@
         adminLogout();
         return Promise.reject("No admin token");
       }
-
       const defaultOptions = {
         headers: {
           Authorization: `Bearer ${adminToken}`,
@@ -1086,7 +798,6 @@
           ...options.headers,
         },
       };
-
       console.log("Making authenticated request to:", url);
       return fetch(url, { ...defaultOptions, ...options });
     }
@@ -1152,7 +863,6 @@
       if (serviceRequestManager) {
         serviceRequestManager.currentAdmin = staff.full_name;
       }
-
       console.log("Staff info displayed:", staff.full_name);
     }
 
@@ -1222,54 +932,6 @@
       // Set up auto-refresh
       setupAutoRefresh();
     });
-
-    function setupNavigation() {
-      const menuItems = document.querySelectorAll(".menu-item");
-
-      menuItems.forEach((item) => {
-        item.addEventListener("click", () => {
-          const targetPage = item.getAttribute("data-page");
-
-          // Remove active class from all menu items and pages
-          menuItems.forEach((mi) => mi.classList.remove("active"));
-          document
-            .querySelectorAll(".page")
-            .forEach((page) => page.classList.remove("active"));
-
-          // Add active class to clicked item
-          item.classList.add("active");
-
-          // Show target page
-          showPage(targetPage);
-        });
-      });
-    }
-
-    function showPage(page) {
-      // Hide all pages
-      document
-        .querySelectorAll(".page")
-        .forEach((p) => p.classList.remove("active"));
-
-      // Show target page
-      const pageToShow = document.getElementById(page + "-page");
-      if (pageToShow) {
-        pageToShow.classList.add("active");
-
-        // Refresh data for specific pages
-        if (page === "queue" && queueManager) {
-          queueManager.loadQueues();
-        } else if (page === "documents" && serviceRequestManager) {
-          serviceRequestManager.loadServiceRequests();
-        } else if (page === "reports") {
-          updateReportsData();
-        }
-      } else {
-        console.error("Page not found:", page);
-        // Fallback to queue page
-        document.getElementById("queue-page").classList.add("active");
-      }
-    }
 
     function showReportDetail() {
       showPage("report-detail");
@@ -2270,10 +1932,6 @@
           }')">
                         🔔 Notify Student
                     </button>
-                    <button class="btn btn-warning" onclick="queueManager.escalatePriority('${currentProcessing.queue_id
-          }')">
-                        ⚡ Escalate
-                    </button>
                     <button class="btn btn-success" onclick="queueManager.markAsDone('${currentProcessing.queue_id
           }')">
                         ✓ Mark as Done
@@ -2364,102 +2022,6 @@
           .join("");
       }
 
-      // renderPriorityQueue() {
-      //   const priorityCard = document.getElementById(
-      //     "priorityQueueContainer"
-      //   );
-      //   if (!priorityCard) return;
-
-      //   const priorityQueues = this.queues.priority || [];
-
-      //   priorityCard.innerHTML = `
-      //         <div class="priority-header">
-      //             <div>
-      //                 <div style="color: #c62828; font-size: 14px; font-weight: 600; margin-bottom: 5px;">
-      //                     ❤️ Priority Queue (${priorityQueues.length})
-      //                 </div>
-      //                 <div style="font-size: 12px; color: #666">Next: ${
-      //                   priorityQueues[0]
-      //                     ? priorityQueues[0].queue_number
-      //                     : "None"
-      //                 }</div>
-      //             </div>
-      //             <button class="btn btn-sm btn-outline-danger" onclick="queueManager.clearPriorityQueue()" ${
-      //               priorityQueues.length === 0 ? "disabled" : ""
-      //             }>
-      //                 Clear All
-      //             </button>
-      //         </div>
-      //         ${priorityQueues
-      //           .map((queue, index) => {
-      //             const services = Array.isArray(queue.services)
-      //               ? queue.services
-      //               : [];
-      //             return `
-      //                 <div class="priority-queue-item" style="background: white; border-radius: 8px; padding: 15px; margin-top: 10px; border-left: 4px solid #c62828;">
-      //                     <div class="queue-header" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-      //                         <div class="priority-id">${this.escapeHtml(
-      //                           queue.queue_number
-      //                         )}</div>
-      //                         <div>
-      //                             <span class="badge pwa">${this.escapeHtml(
-      //                               queue.priority_type || "Priority"
-      //                             )}</span>
-      //                             <span class="status-badge status-waiting">#${
-      //                               index + 1
-      //                             }</span>
-      //                         </div>
-      //                     </div>
-      //                     <div style="font-size: 14px; color: #333; margin-bottom: 5px; font-weight: 600;">${this.escapeHtml(
-      //                       queue.user_name
-      //                     )}</div>
-      //                     <div style="font-size: 12px; color: #666; margin-bottom: 3px;">
-      //                         ${this.escapeHtml(
-      //                           queue.student_id || "N/A"
-      //                         )} | ${this.escapeHtml(queue.course || "N/A")}
-      //                     </div>
-      //                     <div style="font-size: 12px; color: #999; margin-bottom: 8px;">
-      //                         ${services.join(", ")}
-      //                     </div>
-      //                     <div style="font-size: 12px; color: #999;">
-      //                         Submitted: ${new Date(
-      //                           queue.submitted_at
-      //                         ).toLocaleTimeString()}
-      //                     </div>
-      //                     <div style="font-size: 14px; font-weight: 600; color: #c62828; margin-top: 10px;">
-      //                         ₱${parseFloat(queue.total_amount || 0).toFixed(
-      //                           2
-      //                         )}
-      //                     </div>
-      //                     <div class="action-buttons" style="margin-top: 10px;">
-      //                         <button class="btn btn-sm btn-primary" onclick="queueManager.startProcessing('${
-      //                           queue.queue_id
-      //                         }')">
-      //                             Start Processing
-      //                         </button>
-      //                         <button class="btn btn-sm btn-outline-secondary" onclick="queueManager.moveToRegular('${
-      //                           queue.queue_id
-      //                         }')">
-      //                             Make Regular
-      //                         </button>
-      //                     </div>
-      //                 </div>
-      //             `;
-      //           })
-      //           .join("")}
-      //         ${
-      //           priorityQueues.length === 0
-      //             ? `
-      //             <div class="empty-state">
-      //                 <div style="text-align: center; padding: 20px; color: #999;">
-      //                     No priority requests
-      //                 </div>
-      //             </div>
-      //         `
-      //             : ""
-      //         }
-      //     `;
-      // }
       renderPriorityQueue() {
         const priorityQueueCard = document.getElementById(
           "priorityQueueContainer"
@@ -2469,7 +2031,7 @@
         const priorityQueues = this.queues.priority || [];
 
         priorityQueueCard.innerHTML = `
-    <div class="card-header">
+    <div class="card-header-priority">
       <span class="card-title">❤️ Priority Queue</span>
       <span class="badge priority">${priorityQueues.length} priority</span>
     </div>
@@ -2726,26 +2288,6 @@
         }
       }
 
-      async escalatePriority(queueId) {
-        try {
-          const response = await makeAuthenticatedRequest(
-            "/api/admin/escalate-priority",
-            {
-              method: "POST",
-              body: JSON.stringify({ queueId }),
-            }
-          );
-
-          const result = await response.json();
-          if (result.success) {
-            showNotification("Priority escalated!");
-            await this.loadQueues();
-          }
-        } catch (error) {
-          console.error("Error escalating:", error);
-        }
-      }
-
       async transferToStaff(queueId) {
         const staff = prompt("Enter staff name to transfer to:");
         if (staff) {
@@ -2853,35 +2395,6 @@
           alert("Error notifying student. Please try again.");
         }
       }
-
-      // async markAsDone(queueId) {
-      //   if (!confirm("Mark this request as completed?")) return;
-
-      //   try {
-      //     const response = await makeAuthenticatedRequest(
-      //       "/api/admin/mark-done",
-      //       {
-      //         method: "POST",
-      //         body: JSON.stringify({ queueId }),
-      //       }
-      //     );
-
-      //     const result = await response.json();
-      //     if (result.success) {
-      //       showNotification(
-      //         result.nextQueueStarted
-      //           ? "Request completed! Next queue started automatically."
-      //           : "Request completed!"
-      //       );
-      //       await this.loadQueues();
-      //     } else {
-      //       alert("Error: " + result.message);
-      //     }
-      //   } catch (error) {
-      //     console.error("Error marking as done:", error);
-      //     alert("Error completing request. Please try again.");
-      //   }
-      // }
 
       async markAsDone(queueId) {
         if (!confirm("Mark this request as completed?")) return;
