@@ -350,28 +350,51 @@
             <h3>
               Recent Client Requests <span style="color: #999">(Today)</span>
             </h3>
-            <ul class="request-list" id="recentRequestsList">
-              <!-- Recent requests will be populated here -->
-            </ul>
+            <ul class="request-list" id="recentRequestsList"></ul>
           </div>
         </div>
 
-        <div class="history-table">
+        <div class="history-table" id="queueReportHistoryContainer">
           <h2 class="history-title">Queue Report History</h2>
-          <div class="history-item" onclick="showReportDetail()">
-            <span class="history-day">Today: Monday 8am-4pm</span>
-            <span class="history-date">August 8, 2025</span>
-          </div>
-          <div class="history-item" onclick="showReportDetail()">
-            <span class="history-day">Friday 8am-4pm</span>
-            <span class="history-date">August 5, 2025</span>
-          </div>
-          <div class="history-item" onclick="showReportDetail()">
-            <span class="history-day">Thursday 8am-4pm</span>
-            <span class="history-date">August 4, 2025</span>
+          <div
+            class="history-item empty"
+            style="text-align: center; color: #999; padding: 20px 0"
+          >
+            No reports found.
           </div>
         </div>
       </div>
+
+      <div id="report-detail-page" class="page">
+        <div class="header">
+          <h1>Queue Report Details</h1>
+          <button class="btn btn-secondary" onclick="showPage('reports')">
+            <i class="bi bi-arrow-left"></i> Back to Reports
+          </button>
+        </div>
+
+        <div class="report-header">
+          <h2 class="report-title">Queue Report History</h2>
+          <div class="report-date" id="reportDetailDate">Loading...</div>
+
+          <div class="service-summary">
+            <h3 class="summary-title">Overall Service Requested</h3>
+            <div class="summary-grid" id="reportDetailServiceGrid"></div>
+
+            <div class="total-requests">
+              <div class="total-label">Total Requests</div>
+              <div class="total-number" id="reportDetailTotal">0</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="data-table" id="reportDetailDataTable">
+          <div style="text-align: center; color: #999; padding: 30px 0">
+            Loading report details...
+          </div>
+        </div>
+      </div>
+      ```
 
       <!-- Detail Report Page -->
       <div id="report-detail-page" class="page">
@@ -1132,9 +1155,17 @@
         setupAutoRefresh();
       });
 
-      function showReportDetail() {
+      // ⬇️ REPLACE THIS FUNCTION ⬇️
+      function showReportDetail(reportId) {
+        if (reportId === "today") {
+          // Call the new function to populate the page
+          populateTodayReportDetail();
+        } else {
+          // This can be used later for other reports
+        }
         showPage("report-detail");
       }
+      // ⬆️ END OF REPLACEMENT ⬆️
 
       function toggleQueuePause() {
         isQueuePaused = !isQueuePaused;
@@ -1167,6 +1198,10 @@
             queueManager.queues.completed || []
           ).length;
           document.getElementById("totalRequestsToday").textContent = total;
+          // 3. Update the Recent Requests list
+          renderRecentRequests(queueManager.queues);
+          // 4. Update the Report History list
+          renderReportHistory(queueManager.queues);
         }
 
         // 2. Update FCR Chart from Service Request Manager
@@ -1296,6 +1331,91 @@
           fcrChartInstance.data = chartData;
           fcrChartInstance.update();
         }
+      }
+      // ⬆️ END OF NEW FUNCTION ⬆️
+      // ⬇️ ADD THIS ENTIRE NEW FUNCTION ⬇️
+
+      /**
+       * Populates the 'Recent Client Requests' list on the Reports page.
+       * Gathers all requests from the queueManager, sorts them, and shows the top 5.
+       */
+      function renderRecentRequests(queues) {
+        const listElement = document.getElementById("recentRequestsList");
+        if (!listElement) {
+          console.warn("Recent requests list element not found.");
+          return;
+        }
+
+        // 1. Combine all available queue arrays
+        const allRequests = [
+          ...(queues.waiting || []),
+          ...(queues.processing || []),
+          ...(queues.ready || []),
+          ...(queues.completed || []),
+          ...(queues.priority || []),
+        ];
+
+        // 2. Sort by 'submitted_at' time, most recent first
+        allRequests.sort(
+          (a, b) => new Date(b.submitted_at) - new Date(a.submitted_at)
+        );
+
+        // 3. Use all recent requests (CSS will handle scrolling)
+        const recentRequests = allRequests;
+
+        // 4. Handle empty state
+        if (recentRequests.length === 0) {
+          listElement.innerHTML = `
+          <li class="request-list-item empty">
+            No requests found for today.
+          </li>
+        `;
+          return;
+        }
+
+        // 5. Build and inject the HTML
+        // 5. Build and inject the HTML
+        listElement.innerHTML = recentRequests
+          .map((request) => {
+            // Safely get service name
+            const services = Array.isArray(request.services)
+              ? request.services
+              : [];
+            let mainService = "General Request"; // Default
+            if (services.length > 0) {
+              // Try to parse if it's JSON string, otherwise use as-is
+              try {
+                const parsedServices = JSON.parse(services[0]);
+                mainService = Array.isArray(parsedServices)
+                  ? parsedServices[0]
+                  : services[0];
+              } catch (e) {
+                mainService = services[0]; // It's just a string
+              }
+            } else if (request.service) {
+              mainService = request.service;
+            }
+
+            // Utility to prevent XSS (HTML injection)
+            const escape = (str) => {
+              if (str === null || str === undefined) return "";
+              return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+            };
+
+            const clientName = escape(request.user_name);
+            const serviceName = escape(mainService);
+
+            return `
+          <li class="request-list-item">
+            <div class="client-name" title="${clientName}">${clientName}</div>
+            <div class="service-name" title="${serviceName}">${serviceName}</div>
+          </li>
+        `;
+          })
+          .join("");
       }
       // ⬆️ END OF NEW FUNCTION ⬆️
 
@@ -3036,6 +3156,188 @@
             );
           }
         });
+      // ⬇️ ADD THESE TWO NEW FUNCTIONS ⬇️
+
+      /**
+       * Populates the 'Queue Report History' list on the Reports page.
+       * For now, it just checks for today's completed requests.
+       */
+      function renderReportHistory(queues) {
+        const container = document.getElementById(
+          "queueReportHistoryContainer"
+        );
+        if (!container) return;
+
+        const completedRequests = queues.completed || [];
+
+        if (completedRequests.length > 0) {
+          // Format today's date
+          const today = new Date();
+          const day = today.toLocaleDateString("en-US", { weekday: "long" });
+          const date = today.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          });
+
+          container.innerHTML = `
+          <h2 class="history-title">Queue Report History</h2>
+          <div class="history-item" onclick="showReportDetail('today')">
+            <span class="history-day">Today's Report</span>
+            <span class="history-date">${day}, ${date}</span>
+          </div>
+          `;
+        } else {
+          container.innerHTML = `
+          <h2 class="history-title">Queue Report History</h2>
+          <div class="history-item empty" style="text-align: center; color: #999; padding: 20px 0;">
+            No completed requests for today.
+          </div>
+        `;
+        }
+      }
+
+      /**
+       * Populates the Report Detail page with data from 'today' (queueManager.queues.completed)
+       */
+      function populateTodayReportDetail() {
+        const completedRequests = queueManager.queues.completed || [];
+
+        // --- 1. Set Date and Total ---
+        const today = new Date();
+        const day = today.toLocaleDateString("en-US", { weekday: "long" });
+        const date = today.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        const dateEl = document.getElementById("reportDetailDate");
+        const totalEl = document.getElementById("reportDetailTotal");
+
+        if (dateEl) dateEl.innerHTML = `Today: ${day} <br/> ${date}`;
+        if (totalEl) totalEl.textContent = completedRequests.length;
+
+        // --- 2. Group services and create summary ---
+        const serviceSummary = new Map();
+        const requestsByService = new Map();
+
+        // Utility to prevent XSS (HTML injection)
+        const escape = (str) => {
+          if (str === null || str === undefined) return "";
+          return String(str)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        };
+
+        completedRequests.forEach((req) => {
+          let services = [];
+          try {
+            if (
+              typeof req.services === "string" &&
+              req.services.startsWith("[")
+            ) {
+              services = JSON.parse(req.services);
+            } else if (Array.isArray(req.services)) {
+              services = req.services;
+            } else if (req.services) {
+              services = [String(req.services)]; // Handle as single string
+            }
+          } catch (e) {
+            console.warn("Could not parse services:", req.services);
+          }
+
+          if (services.length === 0) {
+            services = ["Other"]; // Fallback
+          }
+
+          services.forEach((serviceName) => {
+            const cleanServiceName = escape(serviceName);
+            // Add to summary count
+            serviceSummary.set(
+              cleanServiceName,
+              (serviceSummary.get(cleanServiceName) || 0) + 1
+            );
+
+            // Add request to service group
+            if (!requestsByService.has(cleanServiceName)) {
+              requestsByService.set(cleanServiceName, []);
+            }
+            requestsByService.get(cleanServiceName).push(req);
+          });
+        });
+
+        // --- 3. Populate Service Grid ---
+        const gridContainer = document.getElementById(
+          "reportDetailServiceGrid"
+        );
+        let gridHtml = "<div>"; // Start first column
+        let count = 0;
+        serviceSummary.forEach((count, serviceName) => {
+          gridHtml += `
+          <div class="service-item">
+            <span class="service-name">${serviceName}:</span>
+            <span class="service-count">${count}</span>
+          </div>
+        `;
+          count++;
+          // Split into two columns
+          if (count % 5 === 0 && count < serviceSummary.size) {
+            gridHtml += "</div><div>";
+          }
+        });
+        gridHtml += "</div>";
+
+        if (gridContainer) {
+          gridContainer.innerHTML =
+            serviceSummary.size > 0
+              ? gridHtml
+              : '<div style="color: #999; font-size: 14px;">No services recorded.</div>';
+        }
+
+        // --- 4. Populate Data Table ---
+        const tableContainer = document.getElementById("reportDetailDataTable");
+        let tableHtml = "";
+
+        requestsByService.forEach((requests, serviceName) => {
+          tableHtml += `
+          <div class="table-section">
+            <div class="table-header-title">${serviceName}</div>
+            <div class="table-row header-row">
+              <div class="table-cell header">Name</div>
+              <div class="table-cell header">Year/Course</div>
+              <div class="table-cell header">Student ID</div>
+            </div>
+        `;
+
+          requests.forEach((req) => {
+            tableHtml += `
+            <div class="table-row">
+              <div class="table-cell">${escape(req.user_name)}</div>
+              <div class="table-cell">${escape(req.course || "N/A")} - ${escape(
+              req.year_level || "N/A"
+            )}</div>
+              <div class="table-cell">${escape(req.student_id || "N/A")}</div>
+            </div>
+          `;
+          });
+
+          tableHtml += "</div>"; // End table-section
+        });
+
+        if (tableContainer) {
+          tableContainer.innerHTML =
+            requestsByService.size > 0
+              ? tableHtml
+              : `
+          <div style="text-align: center; color: #999; padding: 30px 0;">
+            No detailed request data to display.
+          </div>
+        `;
+        }
+      }
+      // ⬆️ END OF NEW FUNCTIONS ⬆️
     </script>
   </body>
 </html>
