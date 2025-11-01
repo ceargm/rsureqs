@@ -394,7 +394,6 @@
           </div>
         </div>
       </div>
-      ```
 
       <!-- Detail Report Page -->
       <div id="report-detail-page" class="page">
@@ -912,7 +911,6 @@
     <!-- Add Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    z
 
     <script>
       // -------------------------- BOOTSTRAP OFFCANVAS SIDEBAR FOR MOBILE USING OFFCANVAS COMPONENT--------------------------------------
@@ -1206,12 +1204,32 @@
 
         // 2. Update FCR Chart from Service Request Manager
         if (serviceRequestManager && serviceRequestManager.requests) {
-          const approvedCount = serviceRequestManager.requests.filter(
-            (req) => req.status === "approved"
-          ).length;
-          const declinedCount = serviceRequestManager.requests.filter(
-            (req) => req.status === "declined"
-          ).length;
+          // --- START OF FIX ---
+          // Get today's date as a string (e.g., "2025-10-31")
+          const todayStr = new Date().toLocaleDateString("en-CA");
+
+          // Filter approved for today
+          const approvedCount = serviceRequestManager.requests.filter((req) => {
+            if (req.status !== "approved" || !req.approved_at) {
+              return false;
+            }
+            const requestDateStr = new Date(req.approved_at).toLocaleDateString(
+              "en-CA"
+            );
+            return requestDateStr === todayStr;
+          }).length;
+
+          // Filter declined for today
+          const declinedCount = serviceRequestManager.requests.filter((req) => {
+            if (req.status !== "declined" || !req.declined_at) {
+              return false;
+            }
+            const requestDateStr = new Date(req.declined_at).toLocaleDateString(
+              "en-CA"
+            );
+            return requestDateStr === todayStr;
+          }).length;
+          // --- END OF FIX ---
 
           // Call the new chart rendering function
           renderFCRChart(approvedCount, declinedCount);
@@ -1769,16 +1787,25 @@
           );
           if (!container) return;
 
-          const approvedRequests = this.requests.filter(
-            (req) => req.status === "approved"
-          );
+          // 1. Get the start of today (midnight)
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          // 2. Filter for approved AND approved_at date is on or after today
+          const approvedRequests = this.requests.filter((req) => {
+            return (
+              req.status === "approved" &&
+              req.approved_at && // Make sure the date exists
+              new Date(req.approved_at) >= today
+            ); // Compare it
+          });
 
           if (approvedRequests.length === 0) {
             container.innerHTML = `
                     <div class="empty-state">
                         <div style="text-align: center; padding: 40px; color: #999;">
                             <div style="font-size: 3rem;"></div>
-                            <p style="margin-top: 10px;">No approved service requests.</p>
+                            <p style="margin-top: 10px;">No approved service requests for today.</p>
                         </div>
                     </div>
                 `;
@@ -1837,16 +1864,25 @@
           );
           if (!container) return;
 
-          const declinedRequests = this.requests.filter(
-            (req) => req.status === "declined"
-          );
+          // 1. Get the start of today (midnight)
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          // 2. Filter for declined AND declined_at date is on or after today
+          const declinedRequests = this.requests.filter((req) => {
+            return (
+              req.status === "declined" &&
+              req.declined_at && // Make sure the date exists
+              new Date(req.declined_at) >= today
+            ); // Compare it
+          });
 
           if (declinedRequests.length === 0) {
             container.innerHTML = `
                     <div class="empty-state">
                         <div style="text-align: center; padding: 40px; color: #999;">
                             <div style="font-size: 3rem;"></div>
-                            <p style="margin-top: 10px;">No declined service requests.</p>
+                            <p style="margin-top: 10px;">No declined service requests for today.</p>
                         </div>
                     </div>
                 `;
@@ -1904,15 +1940,35 @@
         }
 
         updateStats() {
+          // Get today's date as a string (e.g., "2025-10-31")
+          const todayStr = new Date().toLocaleDateString("en-CA");
+
+          // Pending requests are always "current"
           const pendingCount = this.requests.filter(
             (req) => req.status === "pending"
           ).length;
-          const approvedCount = this.requests.filter(
-            (req) => req.status === "approved"
-          ).length;
-          const declinedCount = this.requests.filter(
-            (req) => req.status === "declined"
-          ).length;
+
+          // Filter approved for today
+          const approvedCount = this.requests.filter((req) => {
+            if (req.status !== "approved" || !req.approved_at) {
+              return false;
+            }
+            const requestDateStr = new Date(req.approved_at).toLocaleDateString(
+              "en-CA"
+            );
+            return requestDateStr === todayStr;
+          }).length;
+
+          // Filter declined for today
+          const declinedCount = this.requests.filter((req) => {
+            if (req.status !== "declined" || !req.declined_at) {
+              return false;
+            }
+            const requestDateStr = new Date(req.declined_at).toLocaleDateString(
+              "en-CA"
+            );
+            return requestDateStr === todayStr;
+          }).length;
 
           const pendingElement = document.getElementById("pendingCount");
           const approvedElement = document.getElementById("approvedCount");
