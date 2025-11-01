@@ -1036,37 +1036,37 @@ app.get("/api/user/can-join-queue", (req, res) => {
 });
 
 app.post("/api/queue/submit-request", (req, res) => {
-  const { userId, services, totalAmount, requirements } = req.body;
+  const { userId, service, totalAmount, requirements } = req.body;
 
-  if (!userId || !services || !Array.isArray(services)) {
+  // Validate input (now single service, not array)
+  if (!userId || !service) {
     return res.status(400).json({
       success: false,
-      message: "User ID and services are required",
+      message: "User ID and service are required",
     });
   }
 
+  // Generate unique request ID for this ONE service
   const requestId =
     "REQ-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
 
+  // Fetch user profile
   db.query(
     "SELECT fullname, student_id, course, year_level, email, phone FROM users WHERE id = ?",
     [userId],
     (err, userResults) => {
       if (err) {
         console.error("Database error:", err);
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error" });
+        return res.status(500).json({ success: false, message: "Database error" });
       }
 
       if (userResults.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
+        return res.status(404).json({ success: false, message: "User not found" });
       }
 
       const user = userResults[0];
 
+      // Insert ONE service request
       db.query(
         `INSERT INTO service_requests 
          (request_id, user_id, user_name, student_id, course, year_level, 
@@ -1079,7 +1079,7 @@ app.post("/api/queue/submit-request", (req, res) => {
           user.student_id,
           user.course,
           user.year_level,
-          JSON.stringify(services),
+          JSON.stringify([service]), // ← still an array, but with 1 item
           totalAmount,
           JSON.stringify(requirements),
           user.email,
@@ -1088,9 +1088,7 @@ app.post("/api/queue/submit-request", (req, res) => {
         (err, result) => {
           if (err) {
             console.error("Database error:", err);
-            return res
-              .status(500)
-              .json({ success: false, message: "Database error" });
+            return res.status(500).json({ success: false, message: "Database error" });
           }
 
           res.json({
