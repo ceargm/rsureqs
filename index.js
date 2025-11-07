@@ -732,7 +732,7 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
         success: true,
         message: "Queue completed successfully",
         completedBy: adminName,
-        nextQueueStarted: false // Always false now
+        nextQueueStarted: false, // Always false now
       });
     });
   });
