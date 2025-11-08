@@ -732,7 +732,7 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
         success: true,
         message: "Queue completed successfully",
         completedBy: adminName,
-        nextQueueStarted: false // Always false now
+        nextQueueStarted: false, // Always false now
       });
     });
   });
@@ -1209,12 +1209,29 @@ app.post("/api/admin/move-to-regular", authenticateAdmin, (req, res) => {
   );
 });
 
+// THIS IS THE CORRECTED CODE
 app.post("/api/admin/make-current", authenticateAdmin, (req, res) => {
   const { queueId } = req.body;
+  const adminId = req.admin.adminId;
+  const adminName = req.admin.full_name;
 
+  //
+  // THE FIX:
+  // We ONLY update the single item being promoted.
+  // We update 'started_at' to NOW() so the sorting logic (in Fix 2)
+  // will automatically make it the new "current" item (processing[0]).
+  // We also log which admin made this change for consistency.
+  //
   db.query(
-    `UPDATE queue SET status = 'waiting' WHERE status = 'processing'`,
-    (err) => {
+    `UPDATE queue 
+     SET 
+       status = 'processing', 
+       started_at = NOW(),
+       processed_by = ?,
+       processed_by_id = ?
+     WHERE queue_id = ?`,
+    [adminName, adminId, queueId],
+    (err, result) => {
       if (err) {
         console.error("Database error:", err);
         return res.status(500).json({
@@ -1223,26 +1240,17 @@ app.post("/api/admin/make-current", authenticateAdmin, (req, res) => {
         });
       }
 
-      db.query(
-        `UPDATE queue 
-         SET status = 'processing', started_at = NOW()
-         WHERE queue_id = ?`,
-        [queueId],
-        (err, result) => {
-          if (err) {
-            console.error("Database error:", err);
-            return res.status(500).json({
-              success: false,
-              message: "Database error",
-            });
-          }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Queue not found",
+        });
+      }
 
-          res.json({
-            success: true,
-            message: "Queue item set as current",
-          });
-        }
-      );
+      res.json({
+        success: true,
+        message: "Queue item set as current",
+      });
     }
   );
 });
@@ -1427,9 +1435,13 @@ app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
     WHERE DATE(submitted_at) = CURDATE()
     ORDER BY 
       CASE 
-        WHEN is_priority = 1 THEN 0 
-        ELSE 1 
-      END,
+        WHEN status = 'processing' THEN started_at 
+        ELSE NULL 
+      END DESC,
+      CASE 
+        WHEN status = 'completed' THEN completed_at 
+        ELSE NULL 
+      END DESC,
       submitted_at ASC
   `;
 
@@ -1635,15 +1647,21 @@ app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
 });
 // === END MANUAL QUEUE ENTRY ===
 // New public API endpoint for queue status (no authentication needed)
+// THIS IS THE CORRECTED CODE TO PASTE
+// New public API endpoint for queue status (no authentication needed)
 app.get("/api/queue/status", (req, res) => {
-  // Get now serving (single processing queue)
+  // ---------------------------------
+  // "Now Serving" (FIXED)
+  // Order by 'started_at DESC' (newest first) to match the admin dashboard.
+  // ---------------------------------
   const nowServingQuery = `
-  SELECT queue_number 
-  FROM queue 
-  WHERE status = 'processing' 
-  ORDER BY is_priority DESC, started_at ASC 
-  LIMIT 1
-`;
+    SELECT queue_number 
+    FROM queue 
+    WHERE status = 'processing' 
+    ORDER BY started_at DESC 
+    LIMIT 1
+  `;
+
   db.query(nowServingQuery, (err, nowServingResult) => {
     if (err) {
       console.error("Database error:", err);
@@ -1652,16 +1670,19 @@ app.get("/api/queue/status", (req, res) => {
         .json({ success: false, message: "Database error" });
     }
     const nowServing =
-      nowServingResult.length > 0 ? nowServingResult[0].queue_number : null;
+      nowServingResult.length > 0 ? nowServingResult[0].queue_number : "None";
 
-    // Get coming next: Next 4 items AFTER the one currently being served (from processing)
+    // ---------------------------------
+    // "Coming Next" (FIXED)
+    // Also order by 'started_at DESC' to show the correct "next" items.
+    // ---------------------------------
     const comingNextQuery = `
-  SELECT queue_number 
-  FROM queue 
-  WHERE status = 'processing' 
-  ORDER BY is_priority DESC, started_at ASC 
-  LIMIT 4 OFFSET 1
-`;
+      SELECT queue_number 
+      FROM queue 
+      WHERE status = 'processing' 
+      ORDER BY started_at DESC 
+      LIMIT 4 OFFSET 1
+    `;
     db.query(comingNextQuery, (err, comingNextResult) => {
       if (err) {
         console.error("Database error:", err);
@@ -1671,9 +1692,13 @@ app.get("/api/queue/status", (req, res) => {
       }
       const comingNext = comingNextResult.map((row) => row.queue_number);
 
-      // Get ready to claim (up to 10, newest first) - now reads from 'completed' status
+      // ---------------------------------
+      // "Ready to Claim" (FIXED)
+      // This correctly looks for 'completed' to match your "Mark as Done" button.
+      // ---------------------------------
       const readyToClaimQuery =
         "SELECT queue_number FROM queue WHERE status = 'completed' ORDER BY completed_at DESC LIMIT 10";
+
       db.query(readyToClaimQuery, (err, readyToClaimResult) => {
         if (err) {
           console.error("Database error:", err);
@@ -1695,45 +1720,45 @@ app.get("/api/queue/status", (req, res) => {
 });
 
 // Add/Complete protected admin route for marking done (sets to 'ready')
-app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
-  const { queueId } = req.body;
-  if (!queueId) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Queue ID is required" });
-  }
+// app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
+//   const { queueId } = req.body;
+//   if (!queueId) {
+//     return res
+//       .status(400)
+//       .json({ success: false, message: "Queue ID is required" });
+//   }
 
-  const completedBy = req.admin.full_name;
-  const completedById = req.admin.adminId;
+//   const completedBy = req.admin.full_name;
+//   const completedById = req.admin.adminId;
 
-  const updateQuery = `
-    UPDATE queue 
-    SET status = 'ready', completed_at = NOW(), completed_by = ?, completed_by_id = ?
-    WHERE queue_id = ? AND status = 'processing'
-  `;
+//   const updateQuery = `
+//     UPDATE queue
+//     SET status = 'ready', completed_at = NOW(), completed_by = ?, completed_by_id = ?
+//     WHERE queue_id = ? AND status = 'processing'
+//   `;
 
-  db.query(
-    updateQuery,
-    [completedBy, completedById, queueId],
-    (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error" });
-      }
+//   db.query(
+//     updateQuery,
+//     [completedBy, completedById, queueId],
+//     (err, result) => {
+//       if (err) {
+//         console.error("Database error:", err);
+//         return res
+//           .status(500)
+//           .json({ success: false, message: "Database error" });
+//       }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Queue not found or not in processing",
-        });
-      }
+//       if (result.affectedRows === 0) {
+//         return res.status(404).json({
+//           success: false,
+//           message: "Queue not found or not in processing",
+//         });
+//       }
 
-      res.json({ success: true, message: "Request marked as ready to claim" });
-    }
-  );
-});
+//       res.json({ success: true, message: "Request marked as ready to claim" });
+//     }
+//   );
+// });
 
 // Start server
 const PORT = 3000;
