@@ -1209,50 +1209,78 @@ app.post("/api/admin/move-to-regular", authenticateAdmin, (req, res) => {
   );
 });
 
-// THIS IS THE CORRECTED CODE
+// THIS IS THE CORRECTED "MAKE-CURRENT" LOGIC
 app.post("/api/admin/make-current", authenticateAdmin, (req, res) => {
   const { queueId } = req.body;
   const adminId = req.admin.adminId;
   const adminName = req.admin.full_name;
 
-  //
-  // THE FIX:
-  // We ONLY update the single item being promoted.
-  // We update 'started_at' to NOW() so the sorting logic (in Fix 2)
-  // will automatically make it the new "current" item (processing[0]).
-  // We also log which admin made this change for consistency.
-  //
-  db.query(
-    `UPDATE queue 
-     SET 
-       status = 'processing', 
-       started_at = NOW(),
-       processed_by = ?,
-       processed_by_id = ?
-     WHERE queue_id = ?`,
-    [adminName, adminId, queueId],
-    (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Database error",
-        });
-      }
+  if (!queueId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Queue ID is required" });
+  }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Queue not found",
-        });
-      }
+  // 1. Find the timestamp of the *current* (oldest) processing item
+  const findOldestQuery = `
+    SELECT started_at 
+    FROM queue 
+    WHERE status = 'processing' 
+      AND DATE(submitted_at) = CURDATE()
+    ORDER BY started_at ASC 
+    LIMIT 1
+  `;
 
-      res.json({
-        success: true,
-        message: "Queue item set as current",
-      });
+  db.query(findOldestQuery, (err, results) => {
+    if (err) {
+      console.error("Database error (findOldest):", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
     }
-  );
+
+    let newTimestamp;
+    if (results.length > 0) {
+      // 2. Found an old item. Set new timestamp 1 second *before* it.
+      const oldestTime = new Date(results[0].started_at);
+      oldestTime.setSeconds(oldestTime.getSeconds() - 1);
+      newTimestamp = oldestTime;
+    } else {
+      // 3. No other item is processing. Just set to NOW().
+      newTimestamp = new Date();
+    }
+
+    // 4. Update the selected queue item with this new, *older* timestamp
+    db.query(
+      `UPDATE queue 
+       SET 
+         status = 'processing', 
+         started_at = ?,  -- This is the new, older timestamp
+         processed_by = ?,
+         processed_by_id = ?
+       WHERE queue_id = ?`,
+      [newTimestamp, adminName, adminId, queueId],
+      (err, result) => {
+        if (err) {
+          console.error("Database error (update):", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Database error" });
+        }
+
+        if (result.affectedRows === 0) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Queue not found" });
+        }
+
+        res.json({
+          success: true,
+          message: "Queue item set as current",
+        });
+      }
+    );
+  });
 });
 
 app.post("/api/admin/clear-priority", authenticateAdmin, (req, res) => {
@@ -1415,29 +1443,26 @@ app.post("/api/admin/add-to-queue", authenticateAdmin, (req, res) => {
 app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
   const query = `
     SELECT 
-      queue_id,
-      queue_number,
-      user_id,
-      user_name,
-      student_id,
-      course,
-      year_level,
-      request_id,
-      services,
-      total_amount,
-      status,
-      is_priority,
-      priority_type,
-      submitted_at,
-      started_at,
-      completed_at
+      queue_id, queue_number, user_id, user_name, student_id, course,
+      year_level, request_id, services, total_amount, status,
+      is_priority, priority_type, submitted_at, started_at, completed_at
     FROM queue
     WHERE DATE(submitted_at) = CURDATE()
     ORDER BY 
+      -- 🟢 START OF FIX 🟢
+      -- Sort processing items first
       CASE 
-        WHEN status = 'processing' THEN started_at 
-        ELSE NULL 
-      END DESC,
+        WHEN status = 'processing' THEN 1
+        WHEN status = 'waiting' THEN 2
+        ELSE 3
+      END ASC,
+      -- For processing items, sort by PRIORITY first
+      is_priority DESC,
+      -- Then, sort by started_at (oldest first)
+      started_at ASC,
+      -- 🟢 END OF FIX 🟢
+
+      -- Fallback sorting for other statuses
       CASE 
         WHEN status = 'completed' THEN completed_at 
         ELSE NULL 
@@ -1650,13 +1675,13 @@ app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
 app.get("/api/queue/status", (req, res) => {
   const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
 
-  // NOW SERVING: Latest processing
+  // --- 🟢 FIX: Sort by Priority, then Time 🟢 ---
   const nowServingQuery = `
     SELECT queue_number 
     FROM queue 
     WHERE status = 'processing' 
       AND DATE(submitted_at) = ?
-    ORDER BY started_at DESC 
+    ORDER BY is_priority DESC, started_at ASC 
     LIMIT 1
   `;
 
@@ -1670,14 +1695,14 @@ app.get("/api/queue/status", (req, res) => {
     const nowServing =
       nowServingResult.length > 0 ? nowServingResult[0].queue_number : "None";
 
-    // COMING NEXT: Next 3 in processing (after current)
+    // --- 🟢 FIX: Sort by Priority, then Time 🟢 ---
     const comingNextQuery = `
       SELECT queue_number 
       FROM queue 
       WHERE status = 'processing' 
         AND DATE(submitted_at) = ?
-      ORDER BY started_at DESC 
-      LIMIT 4 OFFSET 1
+      ORDER BY is_priority DESC, started_at ASC 
+      LIMIT 3 OFFSET 1
     `;
     db.query(comingNextQuery, [today], (err, comingNextResult) => {
       if (err) {
@@ -1689,7 +1714,6 @@ app.get("/api/queue/status", (req, res) => {
       const comingNext = comingNextResult.map((row) => row.queue_number);
 
       // READY TO CLAIM: Only today's completed
-      // --- THIS IS THE FIX: Removed 'LIMIT 10' ---
       const readyToClaimQuery = `
         SELECT queue_number 
         FROM queue 
