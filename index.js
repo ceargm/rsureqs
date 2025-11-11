@@ -1646,25 +1646,23 @@ app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
   });
 });
 // === END MANUAL QUEUE ENTRY ===
-// New public API endpoint for queue status (no authentication needed)
-// THIS IS THE CORRECTED CODE TO PASTE
-// New public API endpoint for queue status (no authentication needed)
+// New public API endpoint for queue status (no authentication needed) - FIXED DAILY RESET
 app.get("/api/queue/status", (req, res) => {
-  // ---------------------------------
-  // "Now Serving" (FIXED)
-  // Order by 'started_at DESC' (newest first) to match the admin dashboard.
-  // ---------------------------------
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+  // NOW SERVING: Latest processing
   const nowServingQuery = `
     SELECT queue_number 
     FROM queue 
     WHERE status = 'processing' 
+      AND DATE(submitted_at) = ?
     ORDER BY started_at DESC 
     LIMIT 1
   `;
 
-  db.query(nowServingQuery, (err, nowServingResult) => {
+  db.query(nowServingQuery, [today], (err, nowServingResult) => {
     if (err) {
-      console.error("Database error:", err);
+      console.error("Database error (nowServing):", err);
       return res
         .status(500)
         .json({ success: false, message: "Database error" });
@@ -1672,36 +1670,37 @@ app.get("/api/queue/status", (req, res) => {
     const nowServing =
       nowServingResult.length > 0 ? nowServingResult[0].queue_number : "None";
 
-    // ---------------------------------
-    // "Coming Next" (FIXED)
-    // Also order by 'started_at DESC' to show the correct "next" items.
-    // ---------------------------------
+    // COMING NEXT: Next 3 in processing (after current)
     const comingNextQuery = `
       SELECT queue_number 
       FROM queue 
       WHERE status = 'processing' 
+        AND DATE(submitted_at) = ?
       ORDER BY started_at DESC 
       LIMIT 4 OFFSET 1
     `;
-    db.query(comingNextQuery, (err, comingNextResult) => {
+    db.query(comingNextQuery, [today], (err, comingNextResult) => {
       if (err) {
-        console.error("Database error:", err);
+        console.error("Database error (comingNext):", err);
         return res
           .status(500)
           .json({ success: false, message: "Database error" });
       }
       const comingNext = comingNextResult.map((row) => row.queue_number);
 
-      // ---------------------------------
-      // "Ready to Claim" (FIXED)
-      // This correctly looks for 'completed' to match your "Mark as Done" button.
-      // ---------------------------------
-      const readyToClaimQuery =
-        "SELECT queue_number FROM queue WHERE status = 'completed' ORDER BY completed_at DESC LIMIT 10";
+      // READY TO CLAIM: Only today's completed
+      // --- THIS IS THE FIX: Removed 'LIMIT 10' ---
+      const readyToClaimQuery = `
+        SELECT queue_number 
+        FROM queue 
+        WHERE status = 'completed' 
+          AND DATE(completed_at) = ?
+        ORDER BY completed_at DESC
+      `;
 
-      db.query(readyToClaimQuery, (err, readyToClaimResult) => {
+      db.query(readyToClaimQuery, [today], (err, readyToClaimResult) => {
         if (err) {
-          console.error("Database error:", err);
+          console.error("Database error (readyToClaim):", err);
           return res
             .status(500)
             .json({ success: false, message: "Database error" });
