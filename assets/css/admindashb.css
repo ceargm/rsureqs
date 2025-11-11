@@ -1219,12 +1219,17 @@ body {
   }
 }
 /* ────────────────────────────────────────
-   DARK THEME – 100% consistent (no white islands)
+   DARK THEME – 100% consistent (FIXED)
    ──────────────────────────────────────── */
+
+/* --- Base Body --- */
 body.dark-theme {
   background: #121212;
   color: #e0e0e0;
 }
+
+/* --- Main Component Backgrounds --- */
+/* This rule turns all cards, headers, and sections dark. */
 body.dark-theme .main-content,
 body.dark-theme .page,
 body.dark-theme .header,
@@ -1236,25 +1241,74 @@ body.dark-theme .settings-section,
 body.dark-theme .settings-item,
 body.dark-theme .list-group-item,
 body.dark-theme .table,
-body.dark-theme .table * {
+body.dark-theme .table *,
+body.dark-theme .document-item,
+body.dark-theme .summary-card,
+body.dark-theme .info-card,
+body.dark-theme .history-table,
+body.dark-theme .report-header,
+body.dark-theme .data-table,
+body.dark-theme .table-section,
+body.dark-theme .staff-info-card,
+body.dark-theme .settings-profile,
+body.dark-theme .request-list-item {
   background: #2d2d2d !important;
   color: #e0e0e0 !important;
   border-color: #444 !important;
 }
 
-/* ────── Text that must stay muted ────── */
+/* --- Specific Text Color Overrides --- */
+/* This rule fixes text that was blending in (e.g., black text on dark background) */
+body.dark-theme .stat-label,
+body.dark-theme .header h1,
+body.dark-theme .card-title,
+body.dark-theme .info-label,
+body.dark-theme .info-value,
+body.dark-theme .document-title,
+body.dark-theme .document-description,
+body.dark-theme .queue-number,
+body.dark-theme .summary-label,
+body.dark-theme .info-card h3,
+body.dark-theme .request-list-item .client-name,
+body.dark-theme .history-title,
+body.dark-theme .history-day,
+body.dark-theme .report-title,
+body.dark-theme .summary-title,
+body.dark-theme .service-name,
+body.dark-theme .service-count,
+body.dark-theme .total-label,
+body.dark-theme .table-header-title,
+body.dark-theme .table-cell,
+body.dark-theme .profile-info h3,
+body.dark-theme .profile-info p,
+body.dark-theme .staff-details p,
+body.dark-theme .staff-details p strong,
+body.dark-theme h1, /* Generic h1 */
+body.dark-theme h2, /* Generic h2 */
+body.dark-theme h3, /* Generic h3 */
+body.dark-theme h4, /* Generic h4 */
+body.dark-theme p /* Generic p */ {
+  color: #e0e0e0 !important;
+}
+
+/* --- Muted/Secondary Text Overrides --- */
+/* This rule ensures secondary text is still visible but muted. */
 body.dark-theme .text-muted,
 body.dark-theme .text-secondary,
 body.dark-theme small,
-body.dark-theme .badge,
 body.dark-theme .form-text,
 body.dark-theme .form-label,
 body.dark-theme .form-control::placeholder,
-body.dark-theme .dropdown-item {
+body.dark-theme .dropdown-item,
+body.dark-theme .stat-label, /* Re-adding for muted look */
+body.dark-theme .request-list-item .service-name,
+body.dark-theme .report-date,
+body.dark-theme .table-cell.header,
+body.dark-theme .history-date {
   color: #aaa !important;
 }
 
-/* ────── Inputs ────── */
+/* --- Inputs --- */
 body.dark-theme .form-control,
 body.dark-theme .form-select,
 body.dark-theme .form-check-input {
@@ -1267,8 +1321,15 @@ body.dark-theme .form-select:focus {
   border-color: #4299e1 !important;
   box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3) !important;
 }
+/* Fix for search bar */
+body.dark-theme .search-wrapper {
+  background: #3a3a3a !important;
+}
+body.dark-theme .search-wrapper input.form-control {
+  background: transparent !important;
+}
 
-/* ────── Buttons ────── */
+/* --- Buttons --- */
 body.dark-theme .btn-primary {
   background: linear-gradient(135deg, #3182ce, #4299e1) !important;
 }
@@ -1281,8 +1342,15 @@ body.dark-theme .btn-danger {
 body.dark-theme .btn-info {
   background: #17a2b8 !important;
 }
+/* Fix for outline/secondary buttons */
+body.dark-theme .btn-outline-secondary,
+body.dark-theme .btn-secondary {
+  background: #4a4a4a !important;
+  color: #e0e0e0 !important;
+  border-color: #555 !important;
+}
 
-/* ────── Badges ────── */
+/* --- Badges --- */
 body.dark-theme .badge.waiting {
   background: #2c5282 !important;
   color: #bee3f8 !important;
@@ -1295,8 +1363,17 @@ body.dark-theme .badge.priority {
   background: #9c27b0 !important;
   color: #f3e5f5 !important;
 }
+/* Fix for approved/declined badges */
+body.dark-theme .badge.approved-badge {
+  background: #28a745 !important;
+  color: #fff !important;
+}
+body.dark-theme .badge.declined-badge {
+  background: #dc3545 !important;
+  color: #fff !important;
+}
 
-/* ────── Scrollbars ────── */
+/* --- Scrollbars --- */
 body.dark-theme ::-webkit-scrollbar-thumb {
   background: #555 !important;
 }
@@ -1304,33 +1381,61 @@ body.dark-theme ::-webkit-scrollbar-track {
   background: #1e1e1e !important;
 }
 
-/* ────── Sidebar (keep green) ────── */
+/* --- Sidebar (Dark Mode) --- */
 body.dark-theme .sidebar {
-  background: #0a2900 !important;
+  background: #2c3e50 !important; /* Dark Slate Blue */
 }
 body.dark-theme .sidebar .menu-item {
-  color: #ddd !important;
+  color: #e0e0e0 !important; /* Lighter text for dark bg */
 }
 body.dark-theme .sidebar .menu-item:hover {
-  background: rgba(255, 255, 255, 0.08) !important;
+  background: rgba(255, 255, 255, 0.05) !important; /* More subtle hover */
 }
 body.dark-theme .sidebar .menu-item.active {
-  background: #dfdede !important;
+  background: #dfdede !important; /* Keep active item light */
   color: #1a1a1a !important;
 }
+/* Sidebar cards (Request Today & User) */
+body.dark-theme .sidebar .request-card,
+body.dark-theme .sidebar .user-card {
+  background: #23313f !important; /* Darker card background */
+  color: #e0e0e0 !important;
+}
+body.dark-theme .sidebar .request-number {
+  color: #4299e1 !important; /* Use a theme blue for the number */
+}
+body.dark-theme .sidebar .request-label {
+  color: #aaa !important; /* Muted text */
+}
+body.dark-theme .sidebar .user-info h4 {
+  color: #e0e0e0 !important;
+}
+body.dark-theme .sidebar .user-info p {
+  color: #aaa !important; /* Muted text */
+}
 
-/* ────── Specific white cards that must stay white ────── */
-body.dark-theme .card.mb-3.border-0.shadow-sm,
-body.dark-theme .card-header.bg-white,
-body.dark-theme .card-body.bg-white {
-  background: #fff !important;
-  color: #333 !important;
-  border-color: #e0e0e0 !important;
-}
-body.dark-theme .card-header.bg-white h6 {
+/* --- EXCEPTION: Manual Queue Entry Card --- */
+/* This rule keeps the manual entry form white, as it's a special component. */
+body.dark-theme #manualEntryCollapse + .card,
+body.dark-theme #manualEntryCollapse + .card .card-header,
+body.dark-theme #manualEntryCollapse + .card .card-body {
+  background: #ffffff !important;
   color: #2d3748 !important;
+  border-color: #e2e8f0 !important;
 }
+body.dark-theme #manualEntryCollapse + .card .form-label,
+body.dark-theme #manualEntryCollapse + .card h6 {
+  color: #4a5568 !important;
+}
+body.dark-theme #manualEntryCollapse + .card .form-control,
+body.dark-theme #manualEntryCollapse + .card .form-select {
+  background: #ffffff !important;
+  color: #2d3748 !important;
+  border-color: #e2e8f0 !important;
+}
+
 /* --- iOS-Style Notification Badge CSS --- */
+/* This section is for the red dot on the sidebar */
 .sidebar .menu-item {
   /* This is still needed for positioning */
   position: relative;
@@ -1368,4 +1473,124 @@ body.dark-theme .card-header.bg-white h6 {
 /* When the menu item has this class, show the dot */
 .menu-item.has-notification .notification-dot {
   display: block;
+}
+/* --- Fix for Reports Summary Cards --- */
+body.dark-theme .summary-number {
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .summary-label {
+  color: #aaa !important;
+}
+/* --- Fix for Queue Management Page --- */
+
+/* 1. Fixes the pink background on the Priority Queue card */
+body.dark-theme .priority-card {
+  background: #2d2d2d !important;
+}
+
+/* 2. Fixes the white request "cards" inside Priority and Regular queues */
+body.dark-theme .queue-card {
+  background: #3a3a3a !important;
+  border-color: #555 !important;
+}
+
+/* 3. Fixes the white request "items" inside Currently Processing */
+body.dark-theme .queue-item {
+  background: #3a3a3a !important;
+  border-color: #555 !important;
+}
+
+/* 4. Fixes the white "Next to serve" bar */
+body.dark-theme .next-serve {
+  background: #2d2d2d !important;
+  border-color: #444 !important;
+  color: #e0e0e0 !important;
+}
+body.dark-theme .next-serve strong {
+  color: #fff !important;
+}
+
+/* 5. Fixes the text color INSIDE all the queue items */
+body.dark-theme .queue-card .queue-id,
+body.dark-theme .queue-card div[style*="color: #666"],
+body.dark-theme .queue-item div[style*="font-size: 14px"],
+body.dark-theme .queue-item strong {
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .queue-card .queue-status,
+body.dark-theme .queue-card .queue-status small,
+body.dark-theme .queue-card div[style*="color: #999"],
+body.dark-theme .queue-item div[style*="color: #666"] {
+  color: #aaa !important;
+}
+/* --- Fix for Priority Queue (Card + Badge) --- */
+
+/* 1. Makes the pink priority card background dark */
+body.dark-theme .priority-card {
+  background: #2d2d2d !important;
+}
+
+/* 2. Changes the priority badge from purple to "semi-red" */
+body.dark-theme .badge.priority {
+  background: #dc3545 !important; /* A solid "semi-red" */
+  color: #ffffff !important;
+}
+/* --- Fix for Priority Queue Header Bar --- */
+body.dark-theme .card-header-priority {
+  background: #2d2d2d !important;
+  color: #e0e0e0 !important;
+}
+/* --- Fix for Modals in Dark Mode --- */
+body.dark-theme .modal-content {
+  background: #2d2d2d !important;
+  border-color: #444 !important;
+}
+
+body.dark-theme .modal-header {
+  border-bottom-color: #444 !important;
+}
+
+body.dark-theme .modal-header h3 {
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .modal-close {
+  color: #aaa !important;
+}
+body.dark-theme .modal-close:hover {
+  color: #fff !important;
+}
+
+body.dark-theme .modal-body {
+  color: #e0e0e0 !important;
+}
+
+body.dark-theme .modal-footer {
+  border-top-color: #444 !important;
+}
+
+/* Fix for modal content (e.g., Service Request Details) */
+body.dark-theme .request-details .info-row {
+  border-bottom-color: #444 !important;
+}
+
+body.dark-theme .request-details .info-label {
+  color: #aaa !important;
+}
+
+body.dark-theme .request-details .info-value {
+  color: #e0e0e0 !important;
+}
+
+/* Fix for preview boxes in other modals (Approve/Decline) */
+body.dark-theme .request-details-preview {
+  background: #3a3a3a !important;
+  border-color: #555 !important;
+  color: #e0e0e0 !important;
+}
+/* --- Fix for Reports Page Hover Effect --- */
+body.dark-theme .history-item:hover {
+  background: #3a3a3a !important; /* A slightly lighter dark color */
 }
