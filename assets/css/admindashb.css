@@ -1383,26 +1383,32 @@ body.dark-theme ::-webkit-scrollbar-track {
 
 /* --- Sidebar (Dark Mode) --- */
 body.dark-theme .sidebar {
-  background: #2c3e50 !important; /* Dark Slate Blue */
+  background: #1e1e1e !important; /* Dark, image-matched background */
 }
 body.dark-theme .sidebar .menu-item {
-  color: #e0e0e0 !important; /* Lighter text for dark bg */
+  color: #9ca3af !important; /* Muted gray text for inactive items */
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s; /* Smooth transition */
 }
 body.dark-theme .sidebar .menu-item:hover {
-  background: rgba(255, 255, 255, 0.05) !important; /* More subtle hover */
+  background: #373737 !important; /* Slightly lighter bg on hover */
+  color: #ffffff !important; /* Bright white text on hover */
 }
 body.dark-theme .sidebar .menu-item.active {
-  background: #dfdede !important; /* Keep active item light */
-  color: #1a1a1a !important;
+  background: #22c55e !important; /* Bright Green (from image) */
+  color: #ffffff !important; /* White text on active */
+  font-weight: 700;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.25); /* Subtle green glow */
 }
+
 /* Sidebar cards (Request Today & User) */
 body.dark-theme .sidebar .request-card,
 body.dark-theme .sidebar .user-card {
-  background: #23313f !important; /* Darker card background */
+  background: #2d2d2d !important; /* Match content dark color */
   color: #e0e0e0 !important;
 }
 body.dark-theme .sidebar .request-number {
-  color: #4299e1 !important; /* Use a theme blue for the number */
+  color: #22c55e !important; /* Use new active green color */
 }
 body.dark-theme .sidebar .request-label {
   color: #aaa !important; /* Muted text */
