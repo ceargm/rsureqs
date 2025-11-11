@@ -2487,6 +2487,10 @@
                 completed: [],
                 priority: [],
               };
+
+              // --- 🟢 REVERTED: The .reverse() line has been REMOVED 🟢 ---
+              // The sorting is now handled correctly by the server.
+
               this.renderQueueDashboard();
               this.updateQueueStats();
               updateReportsData();
