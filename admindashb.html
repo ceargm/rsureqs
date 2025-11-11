@@ -46,6 +46,7 @@
       <div class="menu-item" data-page="documents">
         <i class="bi bi-file-earmark-text menu-icon"></i>
         <span>Service Requests</span>
+        <span class="notification-dot"></span>
       </div>
 
       <div class="menu-item" data-page="reports">
@@ -265,21 +266,46 @@
 
       <!-- Service Request Page -->
       <div id="documents-page" class="page">
-        <div class="header">
-          <h1>Service Request Management</h1>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-number blue" id="pendingCount">0</div>
-              <div class="stat-label">Pending</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number orange" id="approvedCount">0</div>
-              <div class="stat-label">Approved</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-number green" id="declinedCount">0</div>
-              <div class="stat-label">Declined</div>
-            </div>
+        <div
+          class="header d-flex align-items-center justify-content-between flex-wrap gap-3"
+        >
+          <h1 class="mb-0 fs-4 fw-bold">Service Request Management</h1>
+
+          <!-- MODERN SEARCH BAR – clean, non-bold, pill-shaped -->
+          <div
+            class="search-wrapper d-flex align-items-center shadow-sm"
+            style="border-radius: 50px; overflow: hidden; background: #f8f9fa"
+          >
+            <input
+              type="text"
+              id="serviceRequestSearchInput"
+              class="form-control border-0 bg-transparent"
+              style="
+                height: 40px;
+                font-size: 1rem;
+                font-weight: 400;
+                padding: 0 16px;
+                outline: none;
+                box-shadow: none;
+                color: #212529;
+              "
+              placeholder="Search..."
+              aria-label="Search service requests"
+            />
+            <button
+              class="btn btn-primary d-flex align-items-center justify-content-center"
+              id="serviceRequestSearchBtn"
+              type="button"
+              style="
+                height: 40px;
+                width: 48px;
+                border-radius: 50px;
+                border: none;
+                margin-left: -1px;
+              "
+            >
+              <i class="bi bi-search text-white"></i>
+            </button>
           </div>
         </div>
 
@@ -560,6 +586,27 @@
             <div class="settings-item-icon">Aa</div>
             <span>Change Font Size</span>
             <span class="settings-value" id="fontSizeValue">Medium</span>
+          </div>
+          <div
+            class="settings-item d-flex align-items-center justify-content-between"
+          >
+            <div class="d-flex align-items-center">
+              <i class="bi bi-moon-stars-fill me-2"></i>
+              <div>
+                <div>Dark Mode</div>
+                <small class="text-muted"
+                  >Toggle between light and dark theme</small
+                >
+              </div>
+            </div>
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="darkModeSwitch"
+              />
+              <label class="form-check-label" for="darkModeSwitch"></label>
+            </div>
           </div>
         </div>
       </div>
@@ -949,9 +996,30 @@
       // -------------------------- SHOW PAGE FUNCTION TO HANDLE PAGE NAVIGATION -----------------------------------------------------
       function showPage(page) {
         // Hide all pages
-        document
-          .querySelectorAll(".page")
-          .forEach((p) => p.classList.remove("active"));
+        document.querySelectorAll(".page").forEach((p) => {
+          p.classList.remove("active");
+
+          // --- 🟢 NEW CODE STARTS HERE 🟢 ---
+          // If this is the "documents-page" being hidden, clear its search bar
+          if (p.id === "documents-page") {
+            const searchInput = document.getElementById(
+              "serviceRequestSearchInput"
+            );
+            if (searchInput && searchInput.value !== "") {
+              searchInput.value = ""; // Clear the text
+
+              // Also, trigger the search button's click to reset the filter
+              const searchBtn = document.getElementById(
+                "serviceRequestSearchBtn"
+              );
+              if (searchBtn) {
+                searchBtn.click();
+              }
+            }
+          }
+          // --- 🟢 NEW CODE ENDS HERE 🟢 ---
+        });
+
         // Show target page
         const pageToShow = document.getElementById(page + "-page");
         if (pageToShow) {
@@ -1734,20 +1802,20 @@
                                       request.services.join(", ")
                                     )}</div>
                                     <div class="document-description">
-                                        Requested by: ${this.escapeHtml(
-                                          request.user_name
-                                        )} (${this.escapeHtml(
-                request.student_id
-              )})<br>
-                                        Course: ${this.escapeHtml(
-                                          request.course
-                                        )} - ${this.escapeHtml(
-                request.year_level
-              )}<br>
-                                        Total Amount: ₱${parseFloat(
-                                          request.total_amount || 0
-                                        ).toFixed(2)}
-                                    </div>
+    <span class="requester-line">Requested by: ${this.escapeHtml(
+      request.user_name
+    )} (${this.escapeHtml(request.student_id)})</span><br>
+    ${
+      request.services
+        ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
+        : ""
+    }
+    ${
+      request.submitted_at
+        ? `Submitted: ${new Date(request.submitted_at).toLocaleString()}`
+        : ""
+    }
+</div>
                                 </div>
                                 <div class="queue-number">Request ID: ${this.escapeHtml(
                                   request.request_id
@@ -1822,26 +1890,20 @@
                                       request.services.join(", ")
                                     )}</div>
                                     <div class="document-description">
-                                        Requested by: ${this.escapeHtml(
-                                          request.user_name
-                                        )} (${this.escapeHtml(
-                request.student_id
-              )})<br>
-                                        ${
-                                          request.approved_by
-                                            ? `Approved by: ${this.escapeHtml(
-                                                request.approved_by
-                                              )}<br>`
-                                            : ""
-                                        }
-                                        ${
-                                          request.approved_at
-                                            ? `Approved at: ${new Date(
-                                                request.approved_at
-                                              ).toLocaleString()}`
-                                            : ""
-                                        }
-                                    </div>
+    <span class="requester-line">Requested by: ${this.escapeHtml(
+      request.user_name
+    )} (${this.escapeHtml(request.student_id)})</span><br>
+    ${
+      request.services
+        ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
+        : ""
+    }
+    ${
+      request.approved_at
+        ? `Approved at: ${new Date(request.approved_at).toLocaleString()}`
+        : ""
+    }
+</div>
                                 </div>
                                 <div class="queue-number">
                                     <span class="badge approved-badge">Approved</span>
@@ -1899,26 +1961,20 @@
                                       request.services.join(", ")
                                     )}</div>
                                     <div class="document-description">
-                                        Requested by: ${this.escapeHtml(
-                                          request.user_name
-                                        )} (${this.escapeHtml(
-                request.student_id
-              )})<br>
-                                        ${
-                                          request.declined_by
-                                            ? `Declined by: ${this.escapeHtml(
-                                                request.declined_by
-                                              )}<br>`
-                                            : ""
-                                        }
-                                        ${
-                                          request.decline_reason
-                                            ? `Reason: ${this.escapeHtml(
-                                                request.decline_reason
-                                              )}`
-                                            : ""
-                                        }
-                                    </div>
+    <span class="requester-line">Requested by: ${this.escapeHtml(
+      request.user_name
+    )} (${this.escapeHtml(request.student_id)})</span><br>
+    ${
+      request.services
+        ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
+        : ""
+    }
+    ${
+      request.declined_at
+        ? `Declined at: ${new Date(request.declined_at).toLocaleString()}`
+        : ""
+    }
+</div>
                                 </div>
                                 <div class="queue-number">
                                     <span class="badge declined-badge">Declined</span>
@@ -1977,6 +2033,26 @@
           if (pendingElement) pendingElement.textContent = pendingCount;
           if (approvedElement) approvedElement.textContent = approvedCount;
           if (declinedElement) declinedElement.textContent = declinedCount;
+
+          // --- 🟢 NEW CODE STARTS HERE 🟢 ---
+          // This updates the notification dot in the sidebar
+          const serviceMenu = document.querySelector(
+            '.menu-item[data-page="documents"]'
+          );
+          const dot = serviceMenu
+            ? serviceMenu.querySelector(".notification-dot")
+            : null;
+
+          if (serviceMenu && dot) {
+            if (pendingCount > 0) {
+              dot.textContent = pendingCount; // Set the number
+              serviceMenu.classList.add("has-notification");
+            } else {
+              dot.textContent = ""; // Clear the number
+              serviceMenu.classList.remove("has-notification");
+            }
+          }
+          // --- 🟢 NEW CODE ENDS HERE 🟢 ---
         }
 
         showApproveModal(requestId) {
@@ -2300,6 +2376,81 @@
             .replace(/'/g, "&#039;");
         }
       }
+      /* --------------------------------------------------------------
+   SERVICE REQUEST SEARCH — BY REQUESTER NAME ONLY
+   -------------------------------------------------------------- */
+      document.addEventListener("DOMContentLoaded", () => {
+        const searchInput = document.getElementById(
+          "serviceRequestSearchInput"
+        );
+        const searchBtn = document.getElementById("serviceRequestSearchBtn");
+
+        if (!searchInput || !searchBtn) return;
+
+        const performSearch = () => {
+          const term = searchInput.value.trim().toLowerCase();
+          if (!serviceRequestManager?.requests?.length) return;
+
+          ["pending", "approved", "declined"].forEach((status) => {
+            const containerId = {
+              pending: "pendingRequestsContainer",
+              approved: "approvedRequestsContainer",
+              declined: "declinedRequestsContainer",
+            }[status];
+
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const items = container.querySelectorAll(".document-item");
+            let visible = 0;
+
+            items.forEach((item) => {
+              // ---- NEW: only look at the line that has class "requester-line" ----
+              const requesterEl = item.querySelector(".requester-line");
+              const requesterName = requesterEl
+                ? requesterEl.textContent
+                    .replace(/^Requested by:\s*/i, "")
+                    .trim()
+                    .toLowerCase()
+                : "";
+
+              const show = term === "" || requesterName.includes(term);
+              item.style.display = show ? "" : "none";
+              if (show) visible++;
+            });
+
+            // ---- Show / hide “no results” message ----
+            let noResult = container.querySelector(".no-result-msg");
+            if (!noResult && visible === 0 && term !== "") {
+              noResult = document.createElement("div");
+              noResult.className = "no-result-msg text-center text-muted py-4";
+              noResult.innerHTML = `<em>No ${status} requests found for "${searchInput.value}"</em>`;
+              container.appendChild(noResult);
+            } else if (noResult && (visible > 0 || term === "")) {
+              noResult.remove();
+            }
+          });
+        };
+
+        // Button click
+        searchBtn.addEventListener("click", performSearch);
+
+        // Live search (debounced)
+        let debounceTimer;
+        searchInput.addEventListener("input", () => {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(performSearch, 300);
+        });
+
+        // Re-apply after every render
+        const originalRender = serviceRequestManager.renderRequests.bind(
+          serviceRequestManager
+        );
+        serviceRequestManager.renderRequests = function () {
+          originalRender();
+          performSearch();
+        };
+      });
 
       // Queue Manager
       class QueueManager {
@@ -3100,26 +3251,21 @@
 
       // Enhanced auto-refresh with error handling
       function setupEnhancedAutoRefresh() {
-        // Refresh every 5 seconds when on queue page
+        // Refresh queue data every 5 seconds (runs in background)
         setInterval(() => {
-          if (
-            !isQueuePaused &&
-            document.getElementById("queue-page").classList.contains("active")
-          ) {
+          if (!isQueuePaused) {
+            // We removed the page check so this always runs,
+            // updating stats like "Total Requests Today".
             queueManager.loadQueues();
           }
-        }, 5000);
+        }, 5000); // You can keep this at 5s, or change to 10s (10000) if 5s is too frequent
 
-        // Refresh service requests every 30 seconds
+        // Refresh service requests every 30 seconds (runs in background)
         setInterval(() => {
-          if (
-            document
-              .getElementById("documents-page")
-              .classList.contains("active")
-          ) {
-            serviceRequestManager.loadServiceRequests();
-          }
-        }, 30000);
+          // We removed the page check so this always runs,
+          // updating the notification dot.
+          serviceRequestManager.loadServiceRequests();
+        }, 30000); // 30s is good, but you can make it 15s (15000) if you want it faster
       }
 
       // Initialize with enhanced features
@@ -3394,6 +3540,38 @@
         }
       }
       // ⬆️ END OF NEW FUNCTIONS ⬆️
+      // ────── Theme toggle (only on Settings page) ──────
+      document.addEventListener("DOMContentLoaded", () => {
+        const body = document.body;
+        const darkSwitch = document.getElementById("darkModeSwitch");
+
+        // Load saved preference
+        if (localStorage.getItem("theme") === "dark") {
+          body.classList.add("dark-theme");
+          if (darkSwitch) darkSwitch.checked = true;
+        }
+
+        // Toggle handler
+        if (darkSwitch) {
+          darkSwitch.addEventListener("change", () => {
+            if (darkSwitch.checked) {
+              body.classList.add("dark-theme");
+              localStorage.setItem("theme", "dark");
+            } else {
+              body.classList.remove("dark-theme");
+              localStorage.setItem("theme", "light");
+            }
+          });
+        }
+      });
+      // Apply dark-theme only once – no inline !important overrides
+      document.addEventListener("DOMContentLoaded", () => {
+        if (localStorage.getItem("theme") === "dark") {
+          document.body.classList.add("dark-theme");
+          const sw = document.getElementById("darkModeSwitch");
+          if (sw) sw.checked = true;
+        }
+      });
     </script>
   </body>
 </html>
