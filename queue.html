@@ -108,12 +108,9 @@
   </body>
 </html>
 <script>
-  // Consolidated live clock (updates time/date every second)
+  // ---------- LIVE CLOCK ----------
   function updateClock() {
     const now = new Date();
-    // For testing with fixed date: Uncomment below and comment out the real date/time lines.
-    // const now = new Date('2025-10-30T09:27:04'); // Fixed to October 30, 2025, 09:27:04
-
     const time = now.toLocaleTimeString("en-US", {
       hour12: false,
       hour: "2-digit",
@@ -131,68 +128,151 @@
     document.getElementById("live-date").textContent = date;
   }
 
-  // Update clock immediately and every second
-  updateClock();
-  setInterval(updateClock, 1000);
+  // --- State for "Ready to Claim" paging ---
+  let fullReadyToClaimList = [];
+  let readyToClaimBatchIndex = 0;
+  const readyToClaimBatchSize = 10;
+  // -----------------------------------------
 
-  // New: Function to fetch and update queue status from API
+  // --- Display batch (this function just renders the UI) ---
+  function displayReadyToClaimBatch() {
+    const readyClaimCodes = document.querySelector(".ready-claim .codes");
+
+    // 1. Add 'sliding-out' class to slide UP and fade out
+    readyClaimCodes.classList.add("sliding-out");
+
+    // 2. Wait for the 'out' animation to finish (400ms)
+    setTimeout(() => {
+      // 3. Update the content (same as before)
+      readyClaimCodes.innerHTML = "";
+      const totalItems = fullReadyToClaimList.length;
+
+      if (totalItems === 0) {
+        const div = document.createElement("div");
+        div.textContent = "None";
+        readyClaimCodes.appendChild(div);
+        readyToClaimBatchIndex = 0; // Reset index
+      } else {
+        // Check if index is out of bounds (end of list OR list shrank), reset to 0
+        let startIndex = readyToClaimBatchIndex * readyToClaimBatchSize;
+        if (startIndex >= totalItems) {
+          readyToClaimBatchIndex = 0;
+          startIndex = 0;
+        }
+
+        const endIndex = Math.min(
+          startIndex + readyToClaimBatchSize,
+          totalItems
+        );
+        const currentBatch = fullReadyToClaimList.slice(startIndex, endIndex);
+
+        currentBatch.forEach((item) => {
+          const div = document.createElement("div");
+          div.textContent = item;
+          readyClaimCodes.appendChild(div);
+        });
+
+        readyToClaimBatchIndex++; // Increment index for *next* time this runs
+      }
+
+      // 4. Prepare for 'slide in'
+      // Remove 'sliding-out' and add 'sliding-in'
+      // This makes it "jump" to the bottom, still invisible
+      readyClaimCodes.classList.remove("sliding-out");
+      readyClaimCodes.classList.add("sliding-in");
+
+      // 5. Force the browser to apply the 'sliding-in' state
+      // We use a tiny delay (a "tick")
+      setTimeout(() => {
+        // 6. Remove 'sliding-in' to trigger the animation
+        // It will now slide UP and fade IN to its final spot
+        readyClaimCodes.classList.remove("sliding-in");
+      }, 20); // 20ms is all you need
+    }, 400); // This 400ms MUST match your CSS transition duration
+  }
+  // --- Reset UI for a new day ---
+  function resetQueueForNewDay() {
+    document.querySelector(".now-serving .queue-number").textContent = "None";
+    const comingNextList = document.querySelector(".coming-next ul");
+    comingNextList.innerHTML = "<li>None</li>";
+    fullReadyToClaimList = [];
+    readyToClaimBatchIndex = 0;
+  }
+
+  // --- Fetch & update queue (this function just gets data) ---
   async function updateQueueStatus() {
     try {
       const response = await fetch("/api/queue/status");
-      if (!response.ok) {
-        throw new Error("API error");
-      }
+      if (!response.ok) throw new Error("API error");
       const data = await response.json();
 
       if (data.success) {
-        // Update NOW SERVING
+        // ---- DAILY RESET LOGIC ----
+        const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+        const lastDay = sessionStorage.getItem("queueDay");
+
+        if (!lastDay || lastDay !== today) {
+          resetQueueForNewDay();
+        }
+        sessionStorage.setItem("queueDay", today);
+        // ---------------------------
+
+        // NOW SERVING
         const nowServingElem = document.querySelector(
           ".now-serving .queue-number"
         );
         nowServingElem.textContent = data.nowServing || "None";
 
-        // Update COMING UP NEXT (clear and rebuild list)
+        // COMING UP NEXT
         const comingNextList = document.querySelector(".coming-next ul");
-        comingNextList.innerHTML = ""; // Clear static items
-        data.comingNext.forEach((item, index) => {
+        comingNextList.innerHTML = "";
+        data.comingNext.forEach((item, i) => {
           const li = document.createElement("li");
-          li.textContent = item;
-          if (index === 0) li.innerHTML = `<strong>${item}</strong>`; // Bold first item as in your static example
+          li.innerHTML = i === 0 ? `<strong>${item}</strong>` : item;
           comingNextList.appendChild(li);
         });
-        if (data.comingNext.length === 0) {
-          const li = document.createElement("li");
-          li.textContent = "None";
-          comingNextList.appendChild(li);
+        if (!data.comingNext.length) {
+          comingNextList.innerHTML = "<li>None</li>";
         }
 
-        // Update READY TO CLAIM (clear and rebuild grid)
-        const readyClaimCodes = document.querySelector(".ready-claim .codes");
-        readyClaimCodes.innerHTML = ""; // Clear static items
-        data.readyToClaim.forEach((item) => {
-          const div = document.createElement("div");
-          div.textContent = item;
-          readyClaimCodes.appendChild(div);
-        });
-        if (data.readyToClaim.length === 0) {
-          const div = document.createElement("div");
-          div.textContent = "None";
-          readyClaimCodes.appendChild(div);
+        // READY TO CLAIM
+        // Only update the list if the data *actually changed*
+        const newList = data.readyToClaim || [];
+        if (JSON.stringify(fullReadyToClaimList) !== JSON.stringify(newList)) {
+          fullReadyToClaimList = newList;
+
+          // *** THE FIX IS HERE ***
+          // We have DELETED the line "readyToClaimBatchIndex = 0;"
+          // The display loop will handle this itself.
         }
       }
     } catch (error) {
       console.error("Error fetching queue status:", error);
-      // Fallback: Show "Loading..." if error (prevents blank page)
       document.querySelector(".now-serving .queue-number").textContent =
         "Loading...";
       document.querySelector(".coming-next ul").innerHTML =
         "<li>Loading...</li>";
-      document.querySelector(".ready-claim .codes").innerHTML =
-        "<div>Loading...</div>";
+      fullReadyToClaimList = [];
+      readyToClaimBatchIndex = 0;
     }
   }
 
-  // Load queue status immediately and refresh every 5 seconds for sync
-  updateQueueStatus();
+  // --- Initial load & timers ---
+  updateClock();
+  setInterval(updateClock, 1000); // 1. Clock loop
+
+  async function initialLoad() {
+    await updateQueueStatus(); // Get data one time
+    displayReadyToClaimBatch(); // Show the first batch immediately
+  }
+
+  initialLoad();
+
+  // --- SEPARATE LOOPS ---
+
+  // 2. API Poll Loop: Fetch data every 5 seconds
   setInterval(updateQueueStatus, 5000);
+
+  // 3. Display Rotation Loop: Rotate batch every 10 seconds
+  setInterval(displayReadyToClaimBatch, 10000);
 </script>
