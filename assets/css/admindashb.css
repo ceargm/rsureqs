@@ -1156,7 +1156,6 @@ body {
   transition: all 0.2s;
 }
 
-
 .btn-primary.btn-sm:active {
   transform: translateY(0);
 }
@@ -1170,4 +1169,203 @@ body {
   .col-md-4 {
     margin-bottom: 0;
   }
+}
+/* --- Styles for Recent Requests List --- */
+.request-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin-bottom: 0;
+  max-height: 300px; /* Prevents list from getting too long */
+  overflow-y: auto; /* Adds scroll if needed */
+}
+.request-list-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 5px; /* Added 5px horizontal padding */
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+.request-list-item:last-child {
+  border-bottom: none;
+}
+.request-list-item .client-name {
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 10px;
+}
+.request-list-item .service-name {
+  font-size: 13px;
+  color: #777;
+  text-align: right;
+  white-space: nowrap;
+  flex-shrink: 0; /* Prevents service name from shrinking */
+}
+.request-list-item.empty {
+  justify-content: center;
+  color: #999;
+  padding: 20px 0;
+}
+@media (max-width: 576px) {
+  .search-wrapper {
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+  .search-wrapper input {
+    flex: 1;
+  }
+}
+/* ────────────────────────────────────────
+   DARK THEME – 100% consistent (no white islands)
+   ──────────────────────────────────────── */
+body.dark-theme {
+  background: #121212;
+  color: #e0e0e0;
+}
+body.dark-theme .main-content,
+body.dark-theme .page,
+body.dark-theme .header,
+body.dark-theme .card,
+body.dark-theme .card-body,
+body.dark-theme .card-header,
+body.dark-theme .stat-card,
+body.dark-theme .settings-section,
+body.dark-theme .settings-item,
+body.dark-theme .list-group-item,
+body.dark-theme .table,
+body.dark-theme .table * {
+  background: #2d2d2d !important;
+  color: #e0e0e0 !important;
+  border-color: #444 !important;
+}
+
+/* ────── Text that must stay muted ────── */
+body.dark-theme .text-muted,
+body.dark-theme .text-secondary,
+body.dark-theme small,
+body.dark-theme .badge,
+body.dark-theme .form-text,
+body.dark-theme .form-label,
+body.dark-theme .form-control::placeholder,
+body.dark-theme .dropdown-item {
+  color: #aaa !important;
+}
+
+/* ────── Inputs ────── */
+body.dark-theme .form-control,
+body.dark-theme .form-select,
+body.dark-theme .form-check-input {
+  background: #3a3a3a !important;
+  color: #e0e0e0 !important;
+  border-color: #555 !important;
+}
+body.dark-theme .form-control:focus,
+body.dark-theme .form-select:focus {
+  border-color: #4299e1 !important;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.3) !important;
+}
+
+/* ────── Buttons ────── */
+body.dark-theme .btn-primary {
+  background: linear-gradient(135deg, #3182ce, #4299e1) !important;
+}
+body.dark-theme .btn-success {
+  background: #28a745 !important;
+}
+body.dark-theme .btn-danger {
+  background: #dc3545 !important;
+}
+body.dark-theme .btn-info {
+  background: #17a2b8 !important;
+}
+
+/* ────── Badges ────── */
+body.dark-theme .badge.waiting {
+  background: #2c5282 !important;
+  color: #bee3f8 !important;
+}
+body.dark-theme .badge.processing {
+  background: #dd6b20 !important;
+  color: #fdebd0 !important;
+}
+body.dark-theme .badge.priority {
+  background: #9c27b0 !important;
+  color: #f3e5f5 !important;
+}
+
+/* ────── Scrollbars ────── */
+body.dark-theme ::-webkit-scrollbar-thumb {
+  background: #555 !important;
+}
+body.dark-theme ::-webkit-scrollbar-track {
+  background: #1e1e1e !important;
+}
+
+/* ────── Sidebar (keep green) ────── */
+body.dark-theme .sidebar {
+  background: #0a2900 !important;
+}
+body.dark-theme .sidebar .menu-item {
+  color: #ddd !important;
+}
+body.dark-theme .sidebar .menu-item:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+body.dark-theme .sidebar .menu-item.active {
+  background: #dfdede !important;
+  color: #1a1a1a !important;
+}
+
+/* ────── Specific white cards that must stay white ────── */
+body.dark-theme .card.mb-3.border-0.shadow-sm,
+body.dark-theme .card-header.bg-white,
+body.dark-theme .card-body.bg-white {
+  background: #fff !important;
+  color: #333 !important;
+  border-color: #e0e0e0 !important;
+}
+body.dark-theme .card-header.bg-white h6 {
+  color: #2d3748 !important;
+}
+/* --- iOS-Style Notification Badge CSS --- */
+.sidebar .menu-item {
+  /* This is still needed for positioning */
+  position: relative;
+}
+
+.notification-dot {
+  /* Hide by default */
+  display: none;
+
+  /* Position */
+  position: absolute;
+  top: 12px; /* Adjust as needed */
+  right: 18px; /* Adjust as needed */
+
+  /* The "iOS" look */
+  background-color: #ff3b30; /* Apple's notification red */
+  color: white;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+
+  /* Sizing and Shape */
+  height: 20px;
+  min-width: 20px; /* Ensures it's a circle for single digits */
+  padding: 0 6px; /* Horizontal padding for multi-digit numbers */
+  border-radius: 10px; /* Half of height */
+
+  /* Centering the text */
+  line-height: 20px; /* Same as height */
+  text-align: center;
+
+  box-sizing: border-box;
+}
+
+/* When the menu item has this class, show the dot */
+.menu-item.has-notification .notification-dot {
+  display: block;
 }
