@@ -1,637 +1,905 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RSU REQS - Dashboard</title>
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/assets/css/dashboard.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link href="/assets/css/dashboard.css" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
 
     <style>
-        /* Enhanced styles for better UX */
-        .service-card {
-            transition: all 0.3s ease;
-            cursor: pointer;
+      /* Enhanced styles for better UX */
+      .service-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .service-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .service-card.selected {
+        border: 2px solid #007bff;
+        background-color: #f8f9fa;
+      }
+
+      .queue-status-badge {
+        font-size: 12px;
+        padding: 4px 8px;
+        border-radius: 12px;
+      }
+
+      .status-approved {
+        background: #28a745;
+        color: white;
+      }
+
+      .status-pending {
+        background: #ffc107;
+        color: black;
+      }
+
+      .status-declined {
+        background: #dc3545;
+        color: white;
+      }
+
+      .status-processing {
+        background: #17a2b8;
+        color: white;
+      }
+
+      .status-completed {
+        background: #6f42c1;
+        color: white;
+      }
+
+      .real-time-alert {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 1050;
+        animation: slideInRight 0.3s ease-out;
+      }
+
+      @keyframes slideInRight {
+        from {
+          transform: translateX(100%);
+          opacity: 0;
         }
 
-        .service-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        to {
+          transform: translateX(0);
+          opacity: 1;
         }
+      }
 
-        .service-card.selected {
-            border: 2px solid #007bff;
-            background-color: #f8f9fa;
-        }
+      .queue-number-display {
+        /* center the content */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+      }
 
-        .queue-status-badge {
-            font-size: 12px;
-            padding: 4px 8px;
-            border-radius: 12px;
-        }
+      .queue-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 10px 0;
+      }
 
-        .status-approved {
-            background: #28a745;
-            color: white;
-        }
-
-        .status-pending {
-            background: #ffc107;
-            color: black;
-        }
-
-        .status-declined {
-            background: #dc3545;
-            color: white;
-        }
-
-        .status-processing {
-            background: #17a2b8;
-            color: white;
-        }
-
-        .status-completed {
-            background: #6f42c1;
-            color: white;
-        }
-
-        .real-time-alert {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1050;
-            animation: slideInRight 0.3s ease-out;
-        }
-
-        @keyframes slideInRight {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        .queue-number-display {
-            /* center the content */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .queue-number {
-            font-size: 2.5rem;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .profile-warning {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
+      .profile-warning {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <!-- for serviceCConfirmationModal - make it have a button to if user wants to add the service or not, so basically the modal just shows the more info about that service-->
-    <div class="modal fade" id="serviceConfirmationModal" tabindex="-1" aria-labelledby="serviceConfirmationModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="serviceConfirmationModalLabel">
-                        <i class="bi bi-info-circle me-2 text-primary"></i> Service Information
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <p id="serviceDescription">Service description goes here...</p>
-                    <p><strong>Fee:</strong> <span id="serviceFee">₱0.00</span></p>
-                    <h6 class="fw-bold">Requirements:</h6>
-                    <ul id="serviceRequirements">
-                        <li>Requirement 1</li>
-                        <li>Requirement 2</li>
-                    </ul>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="confirmAddServiceBtn">Add Service</button>
-                </div>
-            </div>
+    <div
+      class="modal fade"
+      id="serviceConfirmationModal"
+      tabindex="-1"
+      aria-labelledby="serviceConfirmationModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="serviceConfirmationModalLabel">
+              <i class="bi bi-info-circle me-2 text-primary"></i> Service
+              Information
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="serviceDescription">Service description goes here...</p>
+            <p><strong>Fee:</strong> <span id="serviceFee">₱0.00</span></p>
+            <h6 class="fw-bold">Requirements:</h6>
+            <ul id="serviceRequirements">
+              <li>Requirement 1</li>
+              <li>Requirement 2</li>
+            </ul>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="confirmAddServiceBtn"
+            >
+              Add Service
+            </button>
+          </div>
         </div>
+      </div>
     </div>
     <!-- Selected Services Modal -->
-    <div class="modal fade" id="selectedModal" tabindex="-1" aria-labelledby="selectedModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="selectedModalLabel">
-                        <i class="bi bi-pencil-square me-2 text-primary"></i> Selected Services
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
+    <div
+      class="modal fade"
+      id="selectedModal"
+      tabindex="-1"
+      aria-labelledby="selectedModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="selectedModalLabel">
+              <i class="bi bi-pencil-square me-2 text-primary"></i> Selected
+              Services
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
 
-                <div class="modal-body">
-                    <div class="row">
-                        <!-- Left Column: Services -->
-                        <div class="col-md-6">
-                            <h6 class="fw-bold mb-2">Services</h6>
-                            <ul id="selectedServicesList" class="list-group list-group-flush"></ul>
-                        </div>
+          <div class="modal-body">
+            <div class="row">
+              <!-- Left Column: Services -->
+              <div class="col-md-6">
+                <h6 class="fw-bold mb-2">Services</h6>
+                <ul
+                  id="selectedServicesList"
+                  class="list-group list-group-flush"
+                ></ul>
+              </div>
 
-                        <!-- Right Column: Requirements -->
-                        <div class="col-md-6">
-                            <h6 class="fw-bold mb-2">Check List of Requirements</h6>
-                            <div id="requirementsList"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="modal-footer flex-column">
-                    <div class="w-100 d-flex justify-content-between">
-                        <span class="fw-bold">Total amount: <span id="totalAmount">₱0.00</span></span>
-                    </div>
-                    <button id="joinQueueBtn" class="btn btn-success w-100 mt-2">Join Queue Now</button>
-                </div>
+              <!-- Right Column: Requirements -->
+              <div class="col-md-6">
+                <h6 class="fw-bold mb-2">Check List of Requirements</h6>
+                <div id="requirementsList"></div>
+              </div>
             </div>
+          </div>
+
+          <div class="modal-footer flex-column">
+            <div class="w-100 d-flex justify-content-between">
+              <span class="fw-bold"
+                >Total amount: <span id="totalAmount">₱0.00</span></span
+              >
+            </div>
+            <button id="joinQueueBtn" class="btn btn-success w-100 mt-2">
+              Join Queue Now
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- Profile Update Modal -->
-    <div class="modal fade" id="profileUpdateModal" tabindex="-1" aria-labelledby="profileUpdateModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold" id="profileUpdateModalLabel">
-                        <i class="bi bi-person-check me-2 text-primary"></i> Complete Your Profile
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="alert alert-info">
-                        <i class="bi bi-info-circle me-2"></i> Please complete your profile information before joining
-                        the queue.
-                    </div>
-
-                    <form id="profileUpdateForm">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="studentId" class="form-label required-field">Student ID</label>
-                                <input type="text" class="form-control" id="studentId" required>
-                                <div class="form-text">Your official student ID number (not the unique account ID)</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="course" class="form-label required-field">Course</label>
-                                <select class="form-select" id="course" required>
-                                    <option value="" selected disabled>Select Course</option>
-                                    <option value="BS Computer Science">BS Computer Science</option>
-                                    <option value="BS Information Technology">BS Information Technology</option>
-                                    <option value="BS Business Administration">BS Business Administration</option>
-                                    <option value="BS Education">BS Education</option>
-                                    <option value="BS Engineering">BS Engineering</option>
-                                    <option value="BS Nursing">BS Nursing</option>
-                                    <option value="BS Accountancy">BS Accountancy</option>
-                                    <option value="BS Psychology">BS Psychology</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="major" class="form-label">Major (if applicable)</label>
-                                <input type="text" class="form-control" id="major">
-                            </div>
-                            <div class="col-md-6">
-                                <label for="yearLevel" class="form-label required-field">Year Level</label>
-                                <select class="form-select" id="yearLevel" required>
-                                    <option value="" selected disabled>Select Year Level</option>
-                                    <option value="1st Year">1st Year</option>
-                                    <option value="2nd Year">2nd Year</option>
-                                    <option value="3rd Year">3rd Year</option>
-                                    <option value="4th Year">4th Year</option>
-                                    <option value="5th Year">5th Year</option>
-                                    <option value="Graduate">Graduate</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="schoolYear" class="form-label required-field">School Year</label>
-                                <select class="form-select" id="schoolYear" required>
-                                    <option value="" selected disabled>Select School Year</option>
-                                    <option value="2023-2024">2023-2024</option>
-                                    <option value="2024-2025">2024-2025</option>
-                                    <option value="2025-2026">2025-2026</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="yearGraduated" class="form-label">Year Graduated (if applicable)</label>
-                                <input type="number" class="form-control" id="yearGraduated" min="2000" max="2030">
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label for="phone" class="form-label required-field">Phone Number</label>
-                                <input type="tel" class="form-control" id="phone" required value="+63 912 345 6789">
-                                <div class="form-text">This should be the same number you used during registration</div>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="email" class="form-label required-field">Email Address</label>
-                                <input type="email" class="form-control" id="email" required
-                                    value="john.smith@example.com">
-                                <div class="form-text">This should be the same email you used during registration</div>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
-                </div>
+    <div
+      class="modal fade"
+      id="profileUpdateModal"
+      tabindex="-1"
+      aria-labelledby="profileUpdateModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fw-bold" id="profileUpdateModalLabel">
+              <i class="bi bi-person-check me-2 text-primary"></i> Complete Your
+              Profile
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="alert alert-info">
+              <i class="bi bi-info-circle me-2"></i> Please complete your
+              profile information before joining the queue.
             </div>
+
+            <form id="profileUpdateForm">
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="studentId" class="form-label required-field"
+                    >Student ID</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="studentId"
+                    required
+                  />
+                  <div class="form-text">
+                    Your official student ID number (not the unique account ID)
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label for="course" class="form-label required-field"
+                    >Course</label
+                  >
+                  <select class="form-select" id="course" required>
+                    <option value="" selected disabled>Select Course</option>
+                    <option value="BS Computer Science">
+                      BS Computer Science
+                    </option>
+                    <option value="BS Information Technology">
+                      BS Information Technology
+                    </option>
+                    <option value="BS Business Administration">
+                      BS Business Administration
+                    </option>
+                    <option value="BS Education">BS Education</option>
+                    <option value="BS Engineering">BS Engineering</option>
+                    <option value="BS Nursing">BS Nursing</option>
+                    <option value="BS Accountancy">BS Accountancy</option>
+                    <option value="BS Psychology">BS Psychology</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="major" class="form-label"
+                    >Major (if applicable)</label
+                  >
+                  <input type="text" class="form-control" id="major" />
+                </div>
+                <div class="col-md-6">
+                  <label for="yearLevel" class="form-label required-field"
+                    >Year Level</label
+                  >
+                  <select class="form-select" id="yearLevel" required>
+                    <option value="" selected disabled>
+                      Select Year Level
+                    </option>
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                    <option value="3rd Year">3rd Year</option>
+                    <option value="4th Year">4th Year</option>
+                    <option value="5th Year">5th Year</option>
+                    <option value="Graduate">Graduate</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="schoolYear" class="form-label required-field"
+                    >School Year</label
+                  >
+                  <select class="form-select" id="schoolYear" required>
+                    <option value="" selected disabled>
+                      Select School Year
+                    </option>
+                    <option value="2023-2024">2023-2024</option>
+                    <option value="2024-2025">2024-2025</option>
+                    <option value="2025-2026">2025-2026</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="yearGraduated" class="form-label"
+                    >Year Graduated (if applicable)</label
+                  >
+                  <input
+                    type="number"
+                    class="form-control"
+                    id="yearGraduated"
+                    min="2000"
+                    max="2030"
+                  />
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="phone" class="form-label required-field"
+                    >Phone Number</label
+                  >
+                  <input
+                    type="tel"
+                    class="form-control"
+                    id="phone"
+                    required
+                    value="+63 912 345 6789"
+                  />
+                  <div class="form-text">
+                    This should be the same number you used during registration
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label for="email" class="form-label required-field"
+                    >Email Address</label
+                  >
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="email"
+                    required
+                    value="john.smith@example.com"
+                  />
+                  <div class="form-text">
+                    This should be the same email you used during registration
+                  </div>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancel
+            </button>
+            <button type="button" class="btn btn-primary" id="saveProfileBtn">
+              Save Profile
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
-    <div class="d-flex flex-grow-1 justify-content-center align-items-center margin-auto">
-        <div class="card-custom">
-            <nav class="navbar navbar-expand-lg navbar-dark">
-                <div class="container-fluid navbar-container">
-                    <!-- Brand (Logo + Text) -->
-                    <a class="navbar-brand" href="#">
-                        <img src="../assets/img/registrar_logo.png" alt="RSU Logo" class="me-2">
-                        <span class="info text-white fw-bold"> RSU REQS
-                            <!-- <p id="welcome" style="font-size: 15px;">Welcome!</p>
+    <div
+      class="d-flex flex-grow-1 justify-content-center align-items-center margin-auto"
+    >
+      <div class="card-custom">
+        <nav class="navbar navbar-expand-lg navbar-dark">
+          <div class="container-fluid navbar-container">
+            <!-- Brand (Logo + Text) -->
+            <a class="navbar-brand" href="#">
+              <img
+                src="../assets/img/registrar_logo.png"
+                alt="RSU Logo"
+                class="me-2"
+              />
+              <span class="info text-white fw-bold">
+                RSU REQS
+                <!-- <p id="welcome" style="font-size: 15px;">Welcome!</p>
                             <p id="info" style="font-size: 15px;"></p> -->
-                        </span>
+              </span>
+            </a>
 
-                    </a>
+            <!-- Modern Mobile Toggler -->
+            <button
+              class="navbar-toggler"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#navbarNav"
+              aria-controls="navbarNav"
+              aria-expanded="false"
+              aria-label="Toggle navigation"
+            >
+              <span class="navbar-toggler-icon"></span>
+            </button>
 
-                    <!-- Modern Mobile Toggler -->
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-                        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
+            <!-- Navbar Links -->
+            <div
+              class="collapse navbar-collapse justify-content-end"
+              id="navbarNav"
+            >
+              <ul class="navbar-nav">
+                <li class="nav-item">
+                  <a class="nav-link active" href="#" data-target="home">
+                    <i class="bi bi-house-door me-1"></i> Home
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#" data-target="services">
+                    <i class="bi bi-list-check me-1"></i> Services
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#" data-target="docs">
+                    <i class="bi bi-file-earmark-pdf me-1"></i> Docs
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#" data-target="updates">
+                    <i class="bi bi-megaphone me-1"></i> Updates
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="#" data-target="profile">
+                    <i class="bi bi-person-circle me-1"></i> Profile
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </nav>
 
-                    <!-- Navbar Links -->
-                    <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
-                        <ul class="navbar-nav">
-                            <li class="nav-item">
-                                <a class="nav-link active" href="#" data-target="home">
-                                    <i class="bi bi-house-door me-1"></i> Home
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-target="services">
-                                    <i class="bi bi-list-check me-1"></i> Services
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-target="docs">
-                                    <i class="bi bi-file-earmark-pdf me-1"></i> Docs
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-target="updates">
-                                    <i class="bi bi-megaphone me-1"></i> Updates
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="#" data-target="profile">
-                                    <i class="bi bi-person-circle me-1"></i> Profile
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-
-            <!-- Home Section -->
-            <div id="home" class="section active">
-                <div class="home-content">
-                    <!-- Queue Number Display (shown when user has active queue) -->
-                    <div id="queueNumberDisplay" class="queue-number-display" style="display: none;">
-                        <h4>Your Current Queue Number</h4>
-                        <div class="queue-number" id="currentQueueNumber">A-001</div>
-                        <p id="queueStatusMessage">Waiting for approval</p>
-                    </div>
-
-                    <div class="text-center">
-                        <h2>Registrar's Office Services</h2>
-                        <p>Select the service you need from the Registrar's Office. <br>
-                            Queue numbers will be assigned automatically based on current demand.</p>
-                    </div>
-
-                    <!-- Profile Warning (shown when profile incomplete) -->
-                    <div id="profileWarning" class="profile-warning" style="display: none;">
-                        <div class="d-flex align-items-center">
-                            <i class="bi bi-exclamation-triangle-fill me-3 text-warning" style="font-size: 1.5rem;"></i>
-                            <div>
-                                <h5 class="mb-1">Complete Your Profile</h5>
-                                <p class="mb-0">You need to complete your profile before submitting service requests.
-                                </p>
-                            </div>
-                            <button class="btn btn-warning ms-auto" onclick="showProfileUpdateModal()">
-                                Complete Profile
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="services">
-                        <div class="card service-card" onclick="selectService('Transcript of Records')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Transcript of Records</h3>
-                            <p>Official academic record showing all
-                                courses taken, grades earned, and
-                                degrees awarded.</p>
-                        </div>
-
-                        <div class="card service-card" onclick="selectService('Completion Grade Form')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Issuance of Completion Grade Form</h3>
-                            <p>Registrar provides an official grade
-                                form upon student request.</p>
-                        </div>
-                        <div class="card service-card" onclick="selectService('Diploma Issuance')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Issuance of Diploma</h3>
-                            <p>The Registrar issues official
-                                diplomas to graduates as proof
-                                of completion.</p>
-                        </div>
-                        <div class="card service-card" onclick="selectService('Add/Drop Subjects')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Adding/Dropping Subjects</h3>
-                            <p> Process for modifying your current
-                                course load by adding new subjects
-                                or dropping existing ones.</p>
-                        </div>
-                        <div class="card service-card" onclick="selectService('Certification of Grades')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Issuance of Certification of Grades</h3>
-                            <p> The Registrar issues official student
-                                grades upon request for academic
-                                records and verification.</p>
-                        </div>
-                        <div class="card service-card" onclick="selectService('Other Services')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Other Services</h3>
-                            <p> For other registrar services not listed
-                                here. Please describe your concern
-                                when prompted. </p>
-                        </div>
-                    </div>
-
-                    <div class="hero-buttons mt-3">
-                        <button class="btn btn-custom" onclick="viewSelectedServices()">
-                            <i class="bi bi-pencil-square me-1"></i> View Selected Services
-                            <span id="selectedCountBadge" class="badge bg-primary ms-1" style="display: none;">0</span>
-                        </button>
-                    </div>
-                </div>
+        <!-- Home Section -->
+        <div id="home" class="section active">
+          <div class="home-content">
+            <!-- Queue Number Display (shown when user has active queue) -->
+            <div
+              id="queueNumberDisplay"
+              class="queue-number-display"
+              style="display: none"
+            >
+              <h4>Your Current Queue Number</h4>
+              <div class="queue-number" id="currentQueueNumber">A-001</div>
+              <p id="queueStatusMessage">Waiting for approval</p>
             </div>
 
-
-            <!-- Services Section -->
-            <div id="services" class="section">
-                <div class="home-content">
-                    <div class="text-center">
-                        <h2>All Services</h2>
-                        <p>Explore the various services offered by the Registrar's Office.</p>
-                    </div>
-
-                    <div class="services">
-                        <div class="card" onclick="selectService('Transcript of Records')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Transcript of Records</h3>
-                            <p>Official academic record showing all
-                                courses taken, grades earned, and
-                                degrees awarded.</p>
-                        </div>
-
-                        <div class="card" onclick="selectService('Completion Grade Form')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Issuance of Completion Grade Form</h3>
-                            <p>Registrar provides an official grade
-                                form upon student request.</p>
-                        </div>
-                        <div class="card" onclick="selectService('Diploma Issuance')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Issuance of Diploma</h3>
-                            <p>The Registrar issues official
-                                diplomas to graduates as proof
-                                of completion.</p>
-                        </div>
-                        <div class="card" onclick="selectService('Add/Drop Subjects')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Adding/Dropping Subjects</h3>
-                            <p> Process for modifying your current
-                                course load by adding new subjects
-                                or dropping existing ones.</p>
-                        </div>
-                        <div class="card" onclick="selectService('Certification of Grades')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Issuance of Certification of Grades</h3>
-                            <p> The Registrar issues official student
-                                grades upon request for academic
-                                records and verification.</p>
-                        </div>
-                        <div class="card" onclick="selectService('Other Services')">
-                            <h3 class="fw-bold" style="font-size: 20px;">Other Services</h3>
-                            <p> For other registrar services not listed
-                                here. Please describe your concern
-                                when prompted. </p>
-                        </div>
-                    </div>
-
-                    <div class="hero-buttons mt-3">
-                        <button class="btn btn-custom" onclick="viewSelectedServices()">
-                            <i class="bi bi-pencil-square me-1"></i> View Selected Services
-                        </button>
-                    </div>
-                </div>
+            <div class="text-center">
+              <h2>Registrar's Office Services</h2>
+              <p>
+                Select the service you need from the Registrar's Office. <br />
+                Queue numbers will be assigned automatically based on current
+                demand.
+              </p>
             </div>
 
-            <!-- Docs Section -->
-            <div id="docs" class="section">
-                <div class="home-content">
-                    <div class="text-center">
-                        <h2>Forms & Documents</h2>
-                        <p>Download and print the forms you need for your requested services.</p>
-                    </div>
-                    <div class="update-card">
-                        <h4><i class="bi bi-file-earmark-pdf text-danger me-2"></i> Transcript of Records Request Form
-                        </h4>
-                        <p>Use this form to request your official academic transcript.</p>
-                        <button class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-download me-1"></i> Download PDF
-                        </button>
-                    </div>
-
-                    <div class="update-card">
-                        <h4><i class="bi bi-file-earmark-pdf text-danger me-2"></i> Add/Drop Form</h4>
-                        <p>Use this form to add or drop subjects from your current enrollment.</p>
-                        <button class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-download me-1"></i> Download PDF
-                        </button>
-                    </div>
-
-                    <div class="update-card">
-                        <h4><i class="bi bi-file-earmark-pdf text-danger me-2"></i> Completion Form</h4>
-                        <p>Use this form to request completion of grades for your courses.</p>
-                        <button class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-download me-1"></i> Download PDF
-                        </button>
-                    </div>
-
-                    <div class="update-card">
-                        <h4><i class="bi bi-file-earmark-pdf text-danger me-2"></i> Diploma Request Form</h4>
-                        <p>Use this form to request issuance of your diploma.</p>
-                        <button class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-download me-1"></i> Download PDF
-                        </button>
-                    </div>
+            <!-- Profile Warning (shown when profile incomplete) -->
+            <div
+              id="profileWarning"
+              class="profile-warning"
+              style="display: none"
+            >
+              <div class="d-flex align-items-center">
+                <i
+                  class="bi bi-exclamation-triangle-fill me-3 text-warning"
+                  style="font-size: 1.5rem"
+                ></i>
+                <div>
+                  <h5 class="mb-1">Complete Your Profile</h5>
+                  <p class="mb-0">
+                    You need to complete your profile before submitting service
+                    requests.
+                  </p>
                 </div>
+                <button
+                  class="btn btn-warning ms-auto"
+                  onclick="showProfileUpdateModal()"
+                >
+                  Complete Profile
+                </button>
+              </div>
             </div>
 
-            <!-- Updates Section -->
-            <div id="updates" class="section">
-                <div class="home-content">
-                    <div class="text-center mb-4">
-                        <h2>Your Service Requests</h2>
-                        <p>Track the status of your requested services in real-time.</p>
-                        <button class="btn btn-outline-primary btn-sm" onclick="loadUserRequests()">
-                            <i class="bi bi-arrow-clockwise me-1"></i> Refresh
-                        </button>
-                    </div>
+            <div class="services">
+              <div
+                class="card service-card"
+                onclick="selectService('Transcript of Records')"
+              >
+                <h3 class="fw-bold" style="font-size: 20px">
+                  Transcript of Records
+                </h3>
+                <p>
+                  Official academic record showing all courses taken, grades
+                  earned, and degrees awarded.
+                </p>
+              </div>
 
-                    <!-- Real-time status indicators -->
-                    <div class="row mb-4">
-                        <div class="col-md-3">
-                            <div class="stat-card text-center">
-                                <div class="stat-number text-primary" id="totalRequests">0</div>
-                                <div class="stat-label">Total Requests</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stat-card text-center">
-                                <div class="stat-number text-warning" id="pendingRequests">0</div>
-                                <div class="stat-label">Pending</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stat-card text-center">
-                                <div class="stat-number text-success" id="approvedRequests">0</div>
-                                <div class="stat-label">Approved</div>
-                            </div>
-                        </div>
-                        <div class="col-md-3">
-                            <div class="stat-card text-center">
-                                <div class="stat-number text-info" id="processingRequests">0</div>
-                                <div class="stat-label">Processing</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="requestsContainer">
-                        <!-- Requests will be loaded here -->
-                    </div>
-                </div>
+              <div
+                class="card service-card"
+                onclick="selectService('Completion Grade Form')"
+              >
+                <h3 class="fw-bold" style="font-size: 20px">
+                  Issuance of Completion Grade Form
+                </h3>
+                <p>
+                  Registrar provides an official grade form upon student
+                  request.
+                </p>
+              </div>
+              <div
+                class="card service-card"
+                onclick="selectService('Diploma Issuance')"
+              >
+                <h3 class="fw-bold" style="font-size: 20px">
+                  Issuance of Diploma
+                </h3>
+                <p>
+                  The Registrar issues official diplomas to graduates as proof
+                  of completion.
+                </p>
+              </div>
+              <div
+                class="card service-card"
+                onclick="selectService('Add/Drop Subjects')"
+              >
+                <h3 class="fw-bold" style="font-size: 20px">
+                  Adding/Dropping Subjects
+                </h3>
+                <p>
+                  Process for modifying your current course load by adding new
+                  subjects or dropping existing ones.
+                </p>
+              </div>
+              <div
+                class="card service-card"
+                onclick="selectService('Certification of Grades')"
+              >
+                <h3 class="fw-bold" style="font-size: 20px">
+                  Issuance of Certification of Grades
+                </h3>
+                <p>
+                  The Registrar issues official student grades upon request for
+                  academic records and verification.
+                </p>
+              </div>
+              <div
+                class="card service-card"
+                onclick="selectService('Other Services')"
+              >
+                <h3 class="fw-bold" style="font-size: 20px">Other Services</h3>
+                <p>
+                  For other registrar services not listed here. Please describe
+                  your concern when prompted.
+                </p>
+              </div>
             </div>
 
-            <!-- Profile Section -->
-            <div id="profile" class="section">
-                <div class="home-content">
-                    <h2 class="mb-4">Your Profile</h2>
-
-                    <div class="alert-profile">
-                        <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
-                        <strong>Profile Incomplete</strong> - Please update your profile information to access all
-                        features.
-                    </div>
-
-                    <div class="profile-card">
-                        <div class="profile-header">
-                            <div class="profile-avatar">JS</div>
-                            <div class="profile-info">
-                                <h3 id="profileName">John Smith</h3>
-                                <p class="text-muted" id="profileEmail">john.smith@example.com</p>
-                            </div>
-                        </div>
-
-                        <div class="profile-details">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <strong>Student ID:</strong> <span id="profileStudentId">Not set</span>
-                                </div>
-                                <div class="col-md-6">
-                                    <strong>Phone:</strong> <span id="profilePhone">+63 912 345 6789</span>
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <strong>Course:</strong> <span id="profileCourse">Not set</span>
-                                </div>
-                                <div class="col-md-6">
-                                    <strong>Year Level:</strong> <span id="profileYear">Not set</span>
-                                </div>
-                            </div>
-
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <strong>School Year:</strong> <span id="profileSchoolYear">Not set</span>
-                                </div>
-                                <div class="col-md-6">
-                                    <strong>Year Graduated:</strong> <span id="profileYearGraduated">N/A</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="profile-stats">
-                            <div class="stat-item">
-                                <div class="stat-number">5</div>
-                                <div class="stat-label">Services Requested</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">3</div>
-                                <div class="stat-label">Completed</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-number">2</div>
-                                <div class="stat-label">In Progress</div>
-                            </div>
-                        </div>
-
-                        <div class="mt-4">
-                            <button class="btn btn-primary me-2" onclick="showProfileUpdateModal()">
-                                <i class="bi bi-pencil me-1"></i> Update Profile
-                            </button>
-                            <button class="btn btn-outline-danger">
-                                <i class="bi bi-box-arrow-right me-1"></i> Logout
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Profile Update Form (visible when editing) -->
-                    <div id="profileUpdateFormSection" class="profile-update-form" style="display: none;">
-                        <h4 class="mb-4">Update Your Profile</h4>
-                        <form id="inlineProfileForm">
-                            <!-- Form content would go here -->
-                        </form>
-                    </div>
-                </div>
+            <div class="hero-buttons mt-3">
+              <button class="btn btn-custom" onclick="viewSelectedServices()">
+                <i class="bi bi-pencil-square me-1"></i> View Selected Services
+                <span
+                  id="selectedCountBadge"
+                  class="badge bg-primary ms-1"
+                  style="display: none"
+                  >0</span
+                >
+              </button>
             </div>
+          </div>
         </div>
+
+        <!-- Services Section -->
+        <div id="services" class="section">
+          <div class="home-content">
+            <div class="text-center">
+              <h2>All Services</h2>
+              <p>
+                Explore the various services offered by the Registrar's Office.
+              </p>
+            </div>
+
+            <div class="services">
+              <div
+                class="card"
+                onclick="selectService('Transcript of Records')"
+              >
+                <h3 class="fw-bold" style="font-size: 20px">
+                  Transcript of Records
+                </h3>
+                <p>
+                  Official academic record showing all courses taken, grades
+                  earned, and degrees awarded.
+                </p>
+              </div>
+
+              <div
+                class="card"
+                onclick="selectService('Completion Grade Form')"
+              >
+                <h3 class="fw-bold" style="font-size: 20px">
+                  Issuance of Completion Grade Form
+                </h3>
+                <p>
+                  Registrar provides an official grade form upon student
+                  request.
+                </p>
+              </div>
+              <div class="card" onclick="selectService('Diploma Issuance')">
+                <h3 class="fw-bold" style="font-size: 20px">
+                  Issuance of Diploma
+                </h3>
+                <p>
+                  The Registrar issues official diplomas to graduates as proof
+                  of completion.
+                </p>
+              </div>
+              <div class="card" onclick="selectService('Add/Drop Subjects')">
+                <h3 class="fw-bold" style="font-size: 20px">
+                  Adding/Dropping Subjects
+                </h3>
+                <p>
+                  Process for modifying your current course load by adding new
+                  subjects or dropping existing ones.
+                </p>
+              </div>
+              <div
+                class="card"
+                onclick="selectService('Certification of Grades')"
+              >
+                <h3 class="fw-bold" style="font-size: 20px">
+                  Issuance of Certification of Grades
+                </h3>
+                <p>
+                  The Registrar issues official student grades upon request for
+                  academic records and verification.
+                </p>
+              </div>
+              <div class="card" onclick="selectService('Other Services')">
+                <h3 class="fw-bold" style="font-size: 20px">Other Services</h3>
+                <p>
+                  For other registrar services not listed here. Please describe
+                  your concern when prompted.
+                </p>
+              </div>
+            </div>
+
+            <div class="hero-buttons mt-3">
+              <button class="btn btn-custom" onclick="viewSelectedServices()">
+                <i class="bi bi-pencil-square me-1"></i> View Selected Services
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Docs Section -->
+        <div id="docs" class="section">
+          <div class="home-content">
+            <div class="text-center">
+              <h2>Forms & Documents</h2>
+              <p>
+                Download and print the forms you need for your requested
+                services.
+              </p>
+            </div>
+            <div class="update-card">
+              <h4>
+                <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                Transcript of Records Request Form
+              </h4>
+              <p>Use this form to request your official academic transcript.</p>
+              <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-download me-1"></i> Download PDF
+              </button>
+            </div>
+
+            <div class="update-card">
+              <h4>
+                <i class="bi bi-file-earmark-pdf text-danger me-2"></i> Add/Drop
+                Form
+              </h4>
+              <p>
+                Use this form to add or drop subjects from your current
+                enrollment.
+              </p>
+              <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-download me-1"></i> Download PDF
+              </button>
+            </div>
+
+            <div class="update-card">
+              <h4>
+                <i class="bi bi-file-earmark-pdf text-danger me-2"></i>
+                Completion Form
+              </h4>
+              <p>
+                Use this form to request completion of grades for your courses.
+              </p>
+              <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-download me-1"></i> Download PDF
+              </button>
+            </div>
+
+            <div class="update-card">
+              <h4>
+                <i class="bi bi-file-earmark-pdf text-danger me-2"></i> Diploma
+                Request Form
+              </h4>
+              <p>Use this form to request issuance of your diploma.</p>
+              <button class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-download me-1"></i> Download PDF
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Updates Section -->
+        <div id="updates" class="section">
+          <div class="home-content">
+            <div class="text-center mb-4">
+              <h2>Your Service Requests</h2>
+              <p>Track the status of your requested services in real-time.</p>
+              <button
+                class="btn btn-outline-primary btn-sm"
+                onclick="loadUserRequests()"
+              >
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+              </button>
+            </div>
+
+            <!-- Real-time status indicators -->
+            <div class="row mb-4">
+              <div class="col-md-3">
+                <div class="stat-card text-center">
+                  <div class="stat-number text-primary" id="totalRequests">
+                    0
+                  </div>
+                  <div class="stat-label">Total Requests</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stat-card text-center">
+                  <div class="stat-number text-warning" id="pendingRequests">
+                    0
+                  </div>
+                  <div class="stat-label">Pending</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stat-card text-center">
+                  <div class="stat-number text-success" id="approvedRequests">
+                    0
+                  </div>
+                  <div class="stat-label">Approved</div>
+                </div>
+              </div>
+              <div class="col-md-3">
+                <div class="stat-card text-center">
+                  <div class="stat-number text-info" id="processingRequests">
+                    0
+                  </div>
+                  <div class="stat-label">Processing</div>
+                </div>
+              </div>
+            </div>
+
+            <div id="requestsContainer">
+              <!-- Requests will be loaded here -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div id="profile" class="section">
+          <div class="home-content">
+            <h2 class="mb-4">Your Profile</h2>
+
+            <div class="alert-profile">
+              <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+              <strong>Profile Incomplete</strong> - Please update your profile
+              information to access all features.
+            </div>
+
+            <div class="profile-card">
+              <div class="profile-header">
+                <div class="profile-avatar">JS</div>
+                <div class="profile-info">
+                  <h3 id="profileName">John Smith</h3>
+                  <p class="text-muted" id="profileEmail">
+                    john.smith@example.com
+                  </p>
+                </div>
+              </div>
+
+              <div class="profile-details">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <strong>Student ID:</strong>
+                    <span id="profileStudentId">Not set</span>
+                  </div>
+                  <div class="col-md-6">
+                    <strong>Phone:</strong>
+                    <span id="profilePhone">+63 912 345 6789</span>
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <strong>Course:</strong>
+                    <span id="profileCourse">Not set</span>
+                  </div>
+                  <div class="col-md-6">
+                    <strong>Year Level:</strong>
+                    <span id="profileYear">Not set</span>
+                  </div>
+                </div>
+
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <strong>School Year:</strong>
+                    <span id="profileSchoolYear">Not set</span>
+                  </div>
+                  <div class="col-md-6">
+                    <strong>Year Graduated:</strong>
+                    <span id="profileYearGraduated">N/A</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="profile-stats">
+                <div class="stat-item">
+                  <div class="stat-number">5</div>
+                  <div class="stat-label">Services Requested</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number">3</div>
+                  <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number">2</div>
+                  <div class="stat-label">In Progress</div>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <button
+                  class="btn btn-primary me-2"
+                  onclick="showProfileUpdateModal()"
+                >
+                  <i class="bi bi-pencil me-1"></i> Update Profile
+                </button>
+                <button class="btn btn-outline-danger">
+                  <i class="bi bi-box-arrow-right me-1"></i> Logout
+                </button>
+              </div>
+            </div>
+
+            <!-- Profile Update Form (visible when editing) -->
+            <div
+              id="profileUpdateFormSection"
+              class="profile-update-form"
+              style="display: none"
+            >
+              <h4 class="mb-4">Update Your Profile</h4>
+              <form id="inlineProfileForm">
+                <!-- Form content would go here -->
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Bootstrap Bundle JS -->
@@ -639,437 +907,518 @@
     <!-- <script src="/assets/js/dashboard.js"></script> -->
 
     <script>
-        // ===== AUTHENTICATION CHECK =====
-        function checkAuthentication() {
-            const userId = localStorage.getItem("userId");
-            if (!userId) {
-                // Not logged in → redirect to welcome page
-                window.location.href = "/";
-                return false;
-            }
-            return true;
+      // ===== AUTHENTICATION CHECK =====
+      function checkAuthentication() {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          // Not logged in → redirect to welcome page
+          window.location.href = "/";
+          return false;
+        }
+        return true;
+      }
+
+      // ===== UTILITY FUNCTIONS =====
+
+      // Auto logout functionality for security
+      let inactivityTimer;
+
+      function resetInactivityTimer() {
+        // Clear existing timer
+        clearTimeout(inactivityTimer);
+
+        // Set new timer (30 minutes = 1800000 ms)
+        inactivityTimer = setTimeout(logout, 1800000); // 30 minutes
+      }
+
+      function logout() {
+        // Remove user data from localStorage
+        localStorage.removeItem("fullname");
+        localStorage.removeItem("userId");
+        localStorage.removeItem("userPhone");
+        localStorage.removeItem("userEmail");
+        localStorage.removeItem("loginTime");
+
+        // Redirect to login page
+        window.location.href = "/login";
+      }
+
+      function setupActivityListeners() {
+        // Reset timer on any of these events
+        const events = [
+          "mousedown",
+          "mousemove",
+          "keypress",
+          "scroll",
+          "touchstart",
+        ];
+
+        events.forEach((event) => {
+          document.addEventListener(event, resetInactivityTimer);
+        });
+
+        // Initialize the timer
+        resetInactivityTimer();
+      }
+
+      // Check session function
+      function checkSession() {
+        const loginTime = localStorage.getItem("loginTime");
+        const now = new Date().getTime();
+        const sessionDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
+
+        if (loginTime && now - loginTime > sessionDuration) {
+          logout();
+          return false;
+        }
+        return true;
+      }
+
+      // Show profile update modal function
+      function showProfileUpdateModal() {
+        const modal = new bootstrap.Modal(
+          document.getElementById("profileUpdateModal")
+        );
+
+        // Pre-fill phone and email from localStorage
+        const phone = localStorage.getItem("userPhone") || "";
+        const email = localStorage.getItem("userEmail") || "";
+
+        document.getElementById("phone").value = phone;
+        document.getElementById("email").value = email;
+
+        modal.show();
+      }
+
+      // Enhanced profile modal with callback
+      function showProfileUpdateModalWithCallback(callback) {
+        const modal = new bootstrap.Modal(
+          document.getElementById("profileUpdateModal")
+        );
+
+        // Store callback for after profile save
+        window.profileSaveCallback = callback;
+
+        // Pre-fill phone and email from localStorage
+        const phone = localStorage.getItem("userPhone") || "";
+        const email = localStorage.getItem("userEmail") || "";
+
+        document.getElementById("phone").value = phone;
+        document.getElementById("email").value = email;
+
+        modal.show();
+      }
+
+      // Show service confirmation modal function
+      function showServiceConfirmationModal(serviceName) {
+        // Check if service is already selected
+        if (selectedServicesList.includes(serviceName)) {
+          showAlert("This service is already in your selected list.", "info");
+          return; // Don't show the modal if already added
         }
 
-        // ===== UTILITY FUNCTIONS =====
+        const service = servicesData[serviceName];
 
-        // Auto logout functionality for security
-        let inactivityTimer;
+        // --- THIS IS THE NEW LINE ---
+        document.getElementById(
+          "serviceConfirmationModalLabel"
+        ).innerHTML = `<i class="bi bi-info-circle me-2 text-primary"></i> ${serviceName}`;
+        // --- END NEW LINE ---
 
-        function resetInactivityTimer() {
-            // Clear existing timer
-            clearTimeout(inactivityTimer);
+        document.getElementById("serviceDescription").textContent =
+          service.description;
+        document.getElementById("serviceRequirements").innerHTML =
+          service.requirements.map((r) => `<li>${r}</li>`).join("");
+        document.getElementById("serviceFee").textContent = service.price
+          ? `₱${service.price.toFixed(2)}`
+          : "N/A";
 
-            // Set new timer (30 minutes = 1800000 ms)
-            inactivityTimer = setTimeout(logout, 1800000); // 30 minutes
-        }
+        // Update confirm button
+        const confirmBtn = document.getElementById("confirmAddServiceBtn");
+        confirmBtn.onclick = function () {
+          // This function handles the actual "add" logic
+          const addServiceAction = () => {
+            // Double-check it wasn't added in the meantime (unlikely, but safe)
+            if (!selectedServicesList.includes(serviceName)) {
+              selectedServicesList.push(serviceName);
+              updateSelectedCount(); // <-- THIS is where count is updated
+              refreshModal();
 
-        function logout() {
-            // Remove user data from localStorage
-            localStorage.removeItem("fullname");
-            localStorage.removeItem("userId");
-            localStorage.removeItem("userPhone");
-            localStorage.removeItem("userEmail");
-            localStorage.removeItem("loginTime");
-
-            // Redirect to login page
-            window.location.href = "/login";
-        }
-
-        function setupActivityListeners() {
-            // Reset timer on any of these events
-            const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-
-            events.forEach(event => {
-                document.addEventListener(event, resetInactivityTimer);
-            });
-
-            // Initialize the timer
-            resetInactivityTimer();
-        }
-
-        // Check session function
-        function checkSession() {
-            const loginTime = localStorage.getItem("loginTime");
-            const now = new Date().getTime();
-            const sessionDuration = 30 * 60 * 1000; // 30 minutes in milliseconds
-
-            if (loginTime && now - loginTime > sessionDuration) {
-                logout();
-                return false;
-            }
-            return true;
-        }
-
-        // Show profile update modal function
-        function showProfileUpdateModal() {
-            const modal = new bootstrap.Modal(document.getElementById('profileUpdateModal'));
-
-            // Pre-fill phone and email from localStorage
-            const phone = localStorage.getItem("userPhone") || "";
-            const email = localStorage.getItem("userEmail") || "";
-
-            document.getElementById('phone').value = phone;
-            document.getElementById('email').value = email;
-
-            modal.show();
-        }
-
-        // Enhanced profile modal with callback
-        function showProfileUpdateModalWithCallback(callback) {
-            const modal = new bootstrap.Modal(document.getElementById('profileUpdateModal'));
-
-            // Store callback for after profile save
-            window.profileSaveCallback = callback;
-
-            // Pre-fill phone and email from localStorage
-            const phone = localStorage.getItem("userPhone") || "";
-            const email = localStorage.getItem("userEmail") || "";
-
-            document.getElementById('phone').value = phone;
-            document.getElementById('email').value = email;
-
-            modal.show();
-        }
-
-        // Show service confirmation modal function
-        function showServiceConfirmationModal(serviceName) {
-            const service = servicesData[serviceName];
-
-            document.getElementById("serviceDescription").textContent = service.description;
-            document.getElementById("serviceRequirements").innerHTML = service.requirements.map(r => `<li>${r}</li>`).join("");
-            document.getElementById("serviceFee").textContent = service.price ? `₱${service.price.toFixed(2)}` : "N/A";
-
-            // Update confirm button
-            const confirmBtn = document.getElementById("confirmAddServiceBtn");
-            confirmBtn.onclick = function () {
-                if (!userProfileComplete) {
-                    // Show profile modal first
-                    const serviceModal = bootstrap.Modal.getInstance(document.getElementById("serviceConfirmationModal"));
-                    serviceModal.hide();
-                    showProfileUpdateModalWithCallback(() => {
-                        selectedServicesList.push(serviceName);
-                        updateSelectedCount();
-                        refreshModal();
-                    });
-                } else {
-                    selectedServicesList.push(serviceName);
-                    updateSelectedCount();
-                    refreshModal();
-                    const serviceModal = bootstrap.Modal.getInstance(document.getElementById("serviceConfirmationModal"));
-                    serviceModal.hide();
-                }
-            };
-
-            const modal = new bootstrap.Modal(document.getElementById("serviceConfirmationModal"));
-            modal.show();
-        }
-
-        // Update profile display
-        function updateProfileDisplay(user) {
-            if (user.student_id) document.getElementById('profileStudentId').textContent = user.student_id;
-            if (user.course) document.getElementById('profileCourse').textContent = user.course;
-            if (user.year_level) document.getElementById('profileYear').textContent = user.year_level;
-            if (user.school_year) document.getElementById('profileSchoolYear').textContent = user.school_year;
-            if (user.year_graduated) {
-                document.getElementById('profileYearGraduated').textContent = user.year_graduated;
-            } else {
-                document.getElementById('profileYearGraduated').textContent = 'N/A';
-            }
-
-            // Update phone and email display in profile section
-            if (user.phone) document.getElementById('profilePhone').textContent = user.phone;
-            if (user.email) document.getElementById('profileEmail').textContent = user.email;
-        }
-
-        // ===== API FUNCTIONS =====
-
-        // Check if profile is complete
-        async function checkProfileComplete() {
-            const userId = localStorage.getItem("userId");
-
-            if (!userId) {
-                console.error("No user ID found in localStorage");
-                return false;
+              // Add visual feedback to the card
+              const serviceCard = document.querySelector(
+                `.service-card[onclick="selectService('${serviceName}')"]`
+              );
+              if (serviceCard) {
+                serviceCard.classList.add("selected");
+              }
             }
 
-            try {
-                const response = await fetch(`/api/user/can-join-queue?userId=${userId}`);
+            // Hide this modal
+            const serviceModal = bootstrap.Modal.getInstance(
+              document.getElementById("serviceConfirmationModal")
+            );
+            serviceModal.hide();
 
-                // Check if response is OK (status 200-299)
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                return data.success && data.canJoinQueue;
-            } catch (error) {
-                console.error("Error checking profile status:", error);
-                return false;
+            // Auto-show 'View Selected Services' modal if it's the first item
+            if (selectedServicesList.length === 1 && userProfileComplete) {
+              viewSelectedServices();
             }
-        }
+          };
 
-        // Enhanced profile check
-        async function checkUserProfileStatus() {
-            const userId = localStorage.getItem("userId");
-            if (!userId) return false;
-
-            try {
-                const response = await fetch(`/api/user/profile?userId=${userId}`);
-                const data = await response.json();
-
-                if (data.success) {
-                    userProfileComplete = data.user.profile_complete;
-
-                    // Show/hide profile warning
-                    const profileWarning = document.getElementById('profileWarning');
-                    if (profileWarning) {
-                        profileWarning.style.display = userProfileComplete ? 'none' : 'block';
-                    }
-
-                    return userProfileComplete;
-                }
-            } catch (error) {
-                console.error('Error checking profile status:', error);
-            }
-            return false;
-        }
-
-        // Load user profile data
-        async function loadUserProfile() {
-            const userId = localStorage.getItem("userId");
-
-            if (!userId) {
-                console.error("No user ID found in localStorage");
-                return;
-            }
-
-            try {
-                const response = await fetch(`/api/user/profile?userId=${userId}`);
-
-                // Check if response is OK (status 200-299)
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Update profile display
-                    updateProfileDisplay(data.user);
-
-                    // If profile is complete, hide the warning
-                    if (data.user.profile_complete) {
-                        const alert = document.querySelector('.alert-profile');
-                        if (alert) alert.style.display = 'none';
-                    }
-                } else {
-                    console.error("API returned error:", data.message);
-                }
-            } catch (error) {
-                console.error("Error loading user profile:", error);
-                // Don't show alert for 404 errors to avoid confusing users
-                if (!error.message.includes("404")) {
-                    showAlert('Error loading profile data. Please try again later.', 'error');
-                }
-            }
-        }
-
-        // Save profile data to server
-        async function saveProfileToServer(profileData) {
-            const userId = localStorage.getItem("userId");
-
-            try {
-                const response = await fetch('/api/user/update-profile', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        userId: userId,
-                        ...profileData
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Reload profile data
-                    await loadUserProfile();
-                    return true;
-                } else {
-                    showAlert('Error updating profile: ' + data.message, 'error');
-                    return false;
-                }
-            } catch (error) {
-                console.error("Error saving profile:", error);
-                showAlert('Error updating profile. Please try again.', 'error');
-                return false;
-            }
-        }
-
-        // ===== SERVICES DATA AND FUNCTIONS =====
-
-        // Services data
-        const servicesData = {
-            "Transcript of Records": {
-                description: "Official academic record showing all courses taken, grades earned, and degrees awarded.",
-                requirements: [
-                    "Clearance",
-                    "Book-Bounded Thesis",
-                    "Documentary Stamp",
-                    "Receipt of Payment (cashier's office) ₱40.00"
-                ],
-                price: 40.00
-            },
-            "Completion Grade Form": {
-                description: "Registrar provides an official grade form upon student request.",
-                requirements: [
-                    "Completion Form",
-                    "Instructor's Approval",
-                    "Receipt of Payment (cashier's office) ₱30.00"
-                ],
-                price: 20.00
-            },
-            "Diploma Issuance": {
-                description: "The Registrar issues official diplomas to graduates as proof of completion.",
-                requirements: [
-                    "Clearance/Trascript Records",
-                    "Documentary Stamps"
-                ],
-                price: null
-            },
-            "Add/Drop Subjects": {
-                description: "Process for modifying your current course load by adding new subjects or dropping existing ones.",
-                requirements: [
-                    "Adding/Dropping Form",
-                    "Official Receipt (cashier's office) ₱20.00"
-                ],
-                price: 20.00
-            },
-            "Certification of Grades": {
-                description: "The Registrar issues official student grades upon request for academic records and verification.",
-                requirements: [
-                    "Registration Form",
-                    "Grade Slip"
-                ],
-                price: null
-            },
-            "Other Services": {
-                description: "For other registrar services not listed here. Please describe your concern when prompted.",
-                requirements: [
-                    "Requirements vary depending on request"
-                ],
-                price: null
-            }
+          if (!userProfileComplete) {
+            // Show profile modal first
+            const serviceModal = bootstrap.Modal.getInstance(
+              document.getElementById("serviceConfirmationModal")
+            );
+            serviceModal.hide();
+            showProfileUpdateModalWithCallback(addServiceAction); // Pass the action as a callback
+          } else {
+            // Profile is complete, just run the add action
+            addServiceAction();
+          }
         };
 
-        // ===== ENHANCED DASHBOARD FUNCTIONALITY =====
-        let selectedServicesList = [];
-        let autoRefreshInterval;
-        let userProfileComplete = false;
+        const modal = new bootstrap.Modal(
+          document.getElementById("serviceConfirmationModal")
+        );
+        modal.show();
+      }
 
-        // Enhanced service selection with visual feedback
-        function selectService(serviceName) {
-            if (!checkAuthentication() || !checkSession()) return;
-
-            const serviceCard = document.getElementById(`service-${serviceName.replace(/\s+/g, '')}`);
-
-            if (selectedServicesList.includes(serviceName)) {
-                // Deselect service
-                selectedServicesList = selectedServicesList.filter(s => s !== serviceName);
-                if (serviceCard) serviceCard.classList.remove('selected');
-            } else {
-                // Select service
-                if (!userProfileComplete) {
-                    showServiceConfirmationModal(serviceName);
-                    return;
-                }
-                selectedServicesList.push(serviceName);
-                if (serviceCard) serviceCard.classList.add('selected');
-            }
-
-            updateSelectedCount();
-            refreshModal();
-
-            // Auto-show modal if this is the first service selected
-            if (selectedServicesList.length === 1 && userProfileComplete) {
-                const selectedModal = new bootstrap.Modal(document.getElementById("selectedModal"));
-                selectedModal.show();
-            }
+      // Update profile display
+      function updateProfileDisplay(user) {
+        if (user.student_id)
+          document.getElementById("profileStudentId").textContent =
+            user.student_id;
+        if (user.course)
+          document.getElementById("profileCourse").textContent = user.course;
+        if (user.year_level)
+          document.getElementById("profileYear").textContent = user.year_level;
+        if (user.school_year)
+          document.getElementById("profileSchoolYear").textContent =
+            user.school_year;
+        if (user.year_graduated) {
+          document.getElementById("profileYearGraduated").textContent =
+            user.year_graduated;
+        } else {
+          document.getElementById("profileYearGraduated").textContent = "N/A";
         }
 
-        // Update selected services count
-        function updateSelectedCount() {
-            const badge = document.getElementById('selectedCountBadge');
-            if (badge) {
-                if (selectedServicesList.length > 0) {
-                    badge.textContent = selectedServicesList.length;
-                    badge.style.display = 'inline';
-                } else {
-                    badge.style.display = 'none';
-                }
-            }
+        // Update phone and email display in profile section
+        if (user.phone)
+          document.getElementById("profilePhone").textContent = user.phone;
+        if (user.email)
+          document.getElementById("profileEmail").textContent = user.email;
+      }
+
+      // ===== API FUNCTIONS =====
+
+      // Check if profile is complete
+      async function checkProfileComplete() {
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) {
+          console.error("No user ID found in localStorage");
+          return false;
         }
 
-        // Enhanced view services function
-        function viewSelectedServices() {
-            if (!checkAuthentication() || !checkSession()) return;
+        try {
+          const response = await fetch(
+            `/api/user/can-join-queue?userId=${userId}`
+          );
 
-            if (selectedServicesList.length === 0) {
-                showAlert('Please select at least one service first.', 'warning');
-                return;
+          // Check if response is OK (status 200-299)
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          return data.success && data.canJoinQueue;
+        } catch (error) {
+          console.error("Error checking profile status:", error);
+          return false;
+        }
+      }
+
+      // Enhanced profile check
+      async function checkUserProfileStatus() {
+        const userId = localStorage.getItem("userId");
+        if (!userId) return false;
+
+        try {
+          const response = await fetch(`/api/user/profile?userId=${userId}`);
+          const data = await response.json();
+
+          if (data.success) {
+            userProfileComplete = data.user.profile_complete;
+
+            // Show/hide profile warning
+            const profileWarning = document.getElementById("profileWarning");
+            if (profileWarning) {
+              profileWarning.style.display = userProfileComplete
+                ? "none"
+                : "block";
             }
 
-            if (!userProfileComplete) {
-                showProfileUpdateModalWithCallback(() => {
-                    refreshModal();
-                    const selectedModal = new bootstrap.Modal(document.getElementById("selectedModal"));
-                    selectedModal.show();
-                });
-                return;
-            }
+            return userProfileComplete;
+          }
+        } catch (error) {
+          console.error("Error checking profile status:", error);
+        }
+        return false;
+      }
 
+      // Load user profile data
+      async function loadUserProfile() {
+        const userId = localStorage.getItem("userId");
+
+        if (!userId) {
+          console.error("No user ID found in localStorage");
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/user/profile?userId=${userId}`);
+
+          // Check if response is OK (status 200-299)
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Update profile display
+            updateProfileDisplay(data.user);
+
+            // If profile is complete, hide the warning
+            if (data.user.profile_complete) {
+              const alert = document.querySelector(".alert-profile");
+              if (alert) alert.style.display = "none";
+            }
+          } else {
+            console.error("API returned error:", data.message);
+          }
+        } catch (error) {
+          console.error("Error loading user profile:", error);
+          // Don't show alert for 404 errors to avoid confusing users
+          if (!error.message.includes("404")) {
+            showAlert(
+              "Error loading profile data. Please try again later.",
+              "error"
+            );
+          }
+        }
+      }
+
+      // Save profile data to server
+      async function saveProfileToServer(profileData) {
+        const userId = localStorage.getItem("userId");
+
+        try {
+          const response = await fetch("/api/user/update-profile", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              userId: userId,
+              ...profileData,
+            }),
+          });
+
+          const data = await response.json();
+
+          if (data.success) {
+            // Reload profile data
+            await loadUserProfile();
+            return true;
+          } else {
+            showAlert("Error updating profile: " + data.message, "error");
+            return false;
+          }
+        } catch (error) {
+          console.error("Error saving profile:", error);
+          showAlert("Error updating profile. Please try again.", "error");
+          return false;
+        }
+      }
+
+      // ===== SERVICES DATA AND FUNCTIONS =====
+
+      // Services data
+      const servicesData = {
+        "Transcript of Records": {
+          description:
+            "Official academic record showing all courses taken, grades earned, and degrees awarded.",
+          requirements: [
+            "Clearance",
+            "Book-Bounded Thesis",
+            "Documentary Stamp",
+            "Receipt of Payment (cashier's office) ₱40.00",
+          ],
+          price: 40.0,
+        },
+        "Completion Grade Form": {
+          description:
+            "Registrar provides an official grade form upon student request.",
+          requirements: [
+            "Completion Form",
+            "Instructor's Approval",
+            "Receipt of Payment (cashier's office) ₱30.00",
+          ],
+          price: 20.0,
+        },
+        "Diploma Issuance": {
+          description:
+            "The Registrar issues official diplomas to graduates as proof of completion.",
+          requirements: ["Clearance/Trascript Records", "Documentary Stamps"],
+          price: null,
+        },
+        "Add/Drop Subjects": {
+          description:
+            "Process for modifying your current course load by adding new subjects or dropping existing ones.",
+          requirements: [
+            "Adding/Dropping Form",
+            "Official Receipt (cashier's office) ₱20.00",
+          ],
+          price: 20.0,
+        },
+        "Certification of Grades": {
+          description:
+            "The Registrar issues official student grades upon request for academic records and verification.",
+          requirements: ["Registration Form", "Grade Slip"],
+          price: null,
+        },
+        "Other Services": {
+          description:
+            "For other registrar services not listed here. Please describe your concern when prompted.",
+          requirements: ["Requirements vary depending on request"],
+          price: null,
+        },
+      };
+
+      // ===== ENHANCED DASHBOARD FUNCTIONALITY =====
+      let selectedServicesList = [];
+      let autoRefreshInterval;
+      let userProfileComplete = false;
+
+      // Enhanced service selection with visual feedback
+      function selectService(serviceName) {
+        if (!checkAuthentication() || !checkSession()) return;
+
+        // Use a reliable selector to find the card
+        const serviceCard = document.querySelector(
+          `.service-card[onclick="selectService('${serviceName}')"]`
+        );
+
+        if (selectedServicesList.includes(serviceName)) {
+          // Deselect service by clicking the card again
+          selectedServicesList = selectedServicesList.filter(
+            (s) => s !== serviceName
+          );
+          if (serviceCard) serviceCard.classList.remove("selected");
+
+          // Update count and modal list
+          updateSelectedCount();
+          refreshModal();
+        } else {
+          // Service is not selected, so show confirmation modal to add it.
+          // The "Add Service" button in the modal will handle the logic.
+          showServiceConfirmationModal(serviceName);
+        }
+
+        // All other logic (updateSelectedCount, refreshModal, etc.)
+        // has been removed from here. It now lives inside the
+        // confirmation modal's "Add Service" button.
+      }
+
+      // Update selected services count
+      function updateSelectedCount() {
+        const badge = document.getElementById("selectedCountBadge");
+        if (badge) {
+          if (selectedServicesList.length > 0) {
+            badge.textContent = selectedServicesList.length;
+            badge.style.display = "inline";
+          } else {
+            badge.style.display = "none";
+          }
+        }
+      }
+
+      // Enhanced view services function
+      function viewSelectedServices() {
+        if (!checkAuthentication() || !checkSession()) return;
+
+        if (selectedServicesList.length === 0) {
+          showAlert("Please select at least one service first.", "warning");
+          return;
+        }
+
+        if (!userProfileComplete) {
+          showProfileUpdateModalWithCallback(() => {
             refreshModal();
-            const selectedModal = new bootstrap.Modal(document.getElementById("selectedModal"));
+            const selectedModal = new bootstrap.Modal(
+              document.getElementById("selectedModal")
+            );
             selectedModal.show();
+          });
+          return;
         }
 
-        function addServiceToList(serviceName) {
-            if (!selectedServicesList.includes(serviceName)) {
-                selectedServicesList.push(serviceName);
-                refreshModal();
-            }
+        refreshModal();
+        const selectedModal = new bootstrap.Modal(
+          document.getElementById("selectedModal")
+        );
+        selectedModal.show();
+      }
+
+      function addServiceToList(serviceName) {
+        if (!selectedServicesList.includes(serviceName)) {
+          selectedServicesList.push(serviceName);
+          refreshModal();
+        }
+      }
+
+      function removeService(serviceName) {
+        selectedServicesList = selectedServicesList.filter(
+          (s) => s !== serviceName
+        );
+
+        // Use querySelector to find the correct card
+        const serviceCard = document.querySelector(
+          `.service-card[onclick="selectService('${serviceName}')"]`
+        );
+        if (serviceCard) {
+          serviceCard.classList.remove("selected");
         }
 
-        function removeService(serviceName) {
-            selectedServicesList = selectedServicesList.filter(s => s !== serviceName);
-            const serviceCard = document.getElementById(`service-${serviceName.replace(/\s+/g, '')}`);
-            if (serviceCard) serviceCard.classList.remove('selected');
-            updateSelectedCount();
-            refreshModal();
-        }
+        updateSelectedCount();
+        refreshModal();
+      }
 
-        function refreshModal() {
-            const modalBodyLeft = document.getElementById("selectedServicesList");
-            const modalBodyRight = document.getElementById("requirementsList");
-            const totalAmountEl = document.getElementById("totalAmount");
+      function refreshModal() {
+        const modalBodyLeft = document.getElementById("selectedServicesList");
+        const modalBodyRight = document.getElementById("requirementsList");
+        const totalAmountEl = document.getElementById("totalAmount");
 
-            if (selectedServicesList.length === 0) {
-                modalBodyLeft.innerHTML = "<p class='p-3 text-center'>No services selected yet.</p>";
-                modalBodyRight.innerHTML = "";
-                totalAmountEl.textContent = "₱0.00";
-            } else {
-                let total = 0;
-                let servicesHTML = "";
-                let requirementsHTML = "";
+        if (selectedServicesList.length === 0) {
+          modalBodyLeft.innerHTML =
+            "<p class='p-3 text-center'>No services selected yet.</p>";
+          modalBodyRight.innerHTML = "";
+          totalAmountEl.textContent = "₱0.00";
+        } else {
+          let total = 0;
+          let servicesHTML = "";
+          let requirementsHTML = "";
 
-                selectedServicesList.forEach(s => {
-                    const service = servicesData[s];
-                    const price = service.price > 0 ? `₱${service.price.toFixed(2)}` : "N/A";
-                    total += service.price || 0;
+          selectedServicesList.forEach((s) => {
+            const service = servicesData[s];
+            const price =
+              service.price > 0 ? `₱${service.price.toFixed(2)}` : "N/A";
+            total += service.price || 0;
 
-                    servicesHTML += `
+            servicesHTML += `
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 <span><strong>${s}</strong> (${price})</span>
                 <button class="btn btn-sm btn-outline-danger" onclick="removeService('${s}')">
@@ -1078,296 +1427,350 @@
             </li>
         `;
 
-                    requirementsHTML += `
+            requirementsHTML += `
             <div class="mb-3">
                 <strong>${s}</strong>
-                <ul class="mb-0 mt-1">${service.requirements.map(r => `<li class="small">${r}</li>`).join("")}</ul>
+                <ul class="mb-0 mt-1">${service.requirements
+                  .map((r) => `<li class="small">${r}</li>`)
+                  .join("")}</ul>
             </div>
         `;
-                });
+          });
 
-                modalBodyLeft.innerHTML = servicesHTML;
-                modalBodyRight.innerHTML = requirementsHTML;
-                totalAmountEl.textContent = `₱${total.toFixed(2)}`;
-            }
+          modalBodyLeft.innerHTML = servicesHTML;
+          modalBodyRight.innerHTML = requirementsHTML;
+          totalAmountEl.textContent = `₱${total.toFixed(2)}`;
         }
+      }
 
-        // Enhanced join queue function
-        document.getElementById('joinQueueBtn').addEventListener('click', async function () {
-            if (!checkAuthentication() || !checkSession()) return;
+      // Enhanced join queue function
+      document
+        .getElementById("joinQueueBtn")
+        .addEventListener("click", async function () {
+          if (!checkAuthentication() || !checkSession()) return;
 
-            if (selectedServicesList.length === 0) {
-                showAlert('Please select at least one service.', 'warning');
-                return;
-            }
+          if (selectedServicesList.length === 0) {
+            showAlert("Please select at least one service.", "warning");
+            return;
+          }
 
-            if (!userProfileComplete) {
-                showAlert('Please complete your profile before submitting requests.', 'warning');
-                return;
-            }
+          if (!userProfileComplete) {
+            showAlert(
+              "Please complete your profile before submitting requests.",
+              "warning"
+            );
+            return;
+          }
 
-            await submitServiceRequest();
+          await submitServiceRequest();
         });
 
-        // Enhanced service request submission
-        async function submitServiceRequest() {
-            const userId = localStorage.getItem("userId");
+      // Enhanced service request submission
+      async function submitServiceRequest() {
+        const userId = localStorage.getItem("userId");
 
-            try {
-                // Show loading state
-                const joinBtn = document.getElementById('joinQueueBtn');
-                const originalText = joinBtn.innerHTML;
-                joinBtn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i> Submitting...';
-                joinBtn.disabled = true;
+        try {
+          // Show loading state
+          const joinBtn = document.getElementById("joinQueueBtn");
+          const originalText = joinBtn.innerHTML;
+          joinBtn.innerHTML =
+            '<i class="bi bi-hourglass-split me-1"></i> Submitting...';
+          joinBtn.disabled = true;
 
-                // Calculate total amount and prepare requirements
-                let totalAmount = 0;
-                const requirements = [];
+          // Calculate total amount and prepare requirements
+          let totalAmount = 0;
+          const requirements = [];
 
-                selectedServicesList.forEach(serviceName => {
-                    const service = servicesData[serviceName];
-                    totalAmount += service.price || 0;
-                    requirements.push({
-                        service: serviceName,
-                        requirements: service.requirements
-                    });
-                });
-
-                // Submit to backend
-                const response = await fetch('/api/queue/submit-request', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        services: selectedServicesList,
-                        totalAmount: totalAmount,
-                        requirements: requirements
-                    })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    // Close the modal
-                    const selectedModal = bootstrap.Modal.getInstance(document.getElementById('selectedModal'));
-                    if (selectedModal) selectedModal.hide();
-
-                    // Show success message with request ID
-                    showSubmissionSuccessModal(result.requestId);
-
-                    // Clear selected services and reset UI
-                    selectedServicesList = [];
-                    resetServiceSelectionUI();
-                    updateSelectedCount();
-
-                    // Reload user requests
-                    await loadUserRequests();
-
-                } else {
-                    showAlert('Error submitting request: ' + result.message, 'error');
-                }
-
-            } catch (error) {
-                console.error('Error submitting service request:', error);
-                showAlert('Error submitting request. Please try again.', 'error');
-            } finally {
-                // Reset button state
-                const joinBtn = document.getElementById('joinQueueBtn');
-                joinBtn.innerHTML = '<i class="bi bi-arrow-right-circle me-1"></i> Submit Request';
-                joinBtn.disabled = false;
-            }
-        }
-
-        // Reset service selection UI
-        function resetServiceSelectionUI() {
-            // Remove selected class from all service cards
-            document.querySelectorAll('.service-card.selected').forEach(card => {
-                card.classList.remove('selected');
+          selectedServicesList.forEach((serviceName) => {
+            const service = servicesData[serviceName];
+            totalAmount += service.price || 0;
+            requirements.push({
+              service: serviceName,
+              requirements: service.requirements,
             });
+          });
+
+          // Submit to backend
+          const response = await fetch("/api/queue/submit-request", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: userId,
+              services: selectedServicesList,
+              totalAmount: totalAmount,
+              requirements: requirements,
+            }),
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Close the modal
+            const selectedModal = bootstrap.Modal.getInstance(
+              document.getElementById("selectedModal")
+            );
+            if (selectedModal) selectedModal.hide();
+
+            // Show success message with request ID
+            showSubmissionSuccessModal(result.requestId);
+
+            // Clear selected services and reset UI
+            selectedServicesList = [];
+            resetServiceSelectionUI();
+            updateSelectedCount();
+
+            // Reload user requests
+            await loadUserRequests();
+          } else {
+            showAlert("Error submitting request: " + result.message, "error");
+          }
+        } catch (error) {
+          console.error("Error submitting service request:", error);
+          showAlert("Error submitting request. Please try again.", "error");
+        } finally {
+          // Reset button state
+          const joinBtn = document.getElementById("joinQueueBtn");
+          // --- THIS LINE IS CORRECTED ---
+          joinBtn.innerHTML = "Join Queue Now";
+          joinBtn.disabled = false;
         }
+      }
 
-        // Enhanced user requests loading with real-time updates
-        async function loadUserRequests() {
-            const userId = localStorage.getItem("userId");
+      // Reset service selection UI
+      function resetServiceSelectionUI() {
+        // Remove selected class from all service cards
+        document.querySelectorAll(".service-card.selected").forEach((card) => {
+          card.classList.remove("selected");
+        });
+      }
 
-            if (!userId) return;
+      // Enhanced user requests loading with real-time updates
+      async function loadUserRequests() {
+        const userId = localStorage.getItem("userId");
 
-            try {
-                const response = await fetch(`/api/user/service-requests?userId=${userId}`);
-                const result = await response.json();
+        if (!userId) return;
 
-                if (result.success) {
-                    displayUserRequests(result.requests);
-                    updateRequestStats(result.requests);
-                    checkForActiveQueue(result.requests);
-                }
-            } catch (error) {
-                console.error('Error loading user requests:', error);
-            }
+        try {
+          const response = await fetch(
+            `/api/user/service-requests?userId=${userId}`
+          );
+          const result = await response.json();
+
+          if (result.success) {
+            displayUserRequests(result.requests);
+            updateRequestStats(result.requests);
+            checkForActiveQueue(result.requests);
+          }
+        } catch (error) {
+          console.error("Error loading user requests:", error);
         }
+      }
 
-        // Enhanced request display
-        function displayUserRequests(requests) {
-            const container = document.getElementById('requestsContainer');
-            if (!container) return;
+      // Enhanced request display
+      function displayUserRequests(requests) {
+        const container = document.getElementById("requestsContainer");
+        if (!container) return;
 
-            if (requests.length === 0) {
-                container.innerHTML = `
+        if (requests.length === 0) {
+          container.innerHTML = `
             <div class="update-card text-center">
                 <i class="bi bi-inbox display-4 text-muted mb-3"></i>
                 <h4>No Service Requests</h4>
                 <p>You haven't submitted any service requests yet.</p>
             </div>
         `;
-                return;
-            }
+          return;
+        }
 
-            container.innerHTML = requests.map(request => {
-                const statusInfo = getStatusInfo(request.status, request.queue_status);
-                const queueInfo = request.queue_number ?
-                    `<div class="mt-2">
+        container.innerHTML = requests
+          .map((request) => {
+            const statusInfo = getStatusInfo(
+              request.status,
+              request.queue_status
+            );
+            const queueInfo = request.queue_number
+              ? `<div class="mt-2">
                 <strong>Queue Number:</strong> 
                 <span class="badge queue-status-badge bg-secondary">${request.queue_number}</span>
-            </div>` : '';
+            </div>`
+              : "";
 
-                return `
+            return `
             <div class="update-card">
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h4 class="mb-0">${request.services.join(', ')}</h4>
-                    <span class="queue-status-badge ${statusInfo.class}">${statusInfo.text}</span>
+                    <h4 class="mb-0">${request.services.join(", ")}</h4>
+                    <span class="queue-status-badge ${statusInfo.class}">${
+              statusInfo.text
+            }</span>
                 </div>
                 <p class="text-muted">
                     <strong>Request ID:</strong> ${request.request_id} | 
-                    <strong>Submitted:</strong> ${new Date(request.submitted_at).toLocaleString()}
+                    <strong>Submitted:</strong> ${new Date(
+                      request.submitted_at
+                    ).toLocaleString()}
                 </p>
                 ${queueInfo}
-                ${request.status === 'approved' && request.approved_by ? `
+                ${
+                  request.status === "approved" && request.approved_by
+                    ? `
                     <div class="alert alert-success mt-2">
-                        <strong>✓ Approved</strong> by ${request.approved_by} on ${new Date(request.approved_at).toLocaleString()}
-                        ${request.approve_notes ? `<br><strong>Notes:</strong> ${request.approve_notes}` : ''}
+                        <strong>✓ Approved</strong> by ${
+                          request.approved_by
+                        } on ${new Date(request.approved_at).toLocaleString()}
+                        ${
+                          request.approve_notes
+                            ? `<br><strong>Notes:</strong> ${request.approve_notes}`
+                            : ""
+                        }
                     </div>
-                ` : ''}
-                ${request.status === 'declined' && request.declined_by ? `
+                `
+                    : ""
+                }
+                ${
+                  request.status === "declined" && request.declined_by
+                    ? `
                     <div class="alert alert-danger mt-2">
-                        <strong>✗ Declined</strong> by ${request.declined_by} on ${new Date(request.declined_at).toLocaleString()}
+                        <strong>✗ Declined</strong> by ${
+                          request.declined_by
+                        } on ${new Date(request.declined_at).toLocaleString()}
                         <br><strong>Reason:</strong> ${request.decline_reason}
                     </div>
-                ` : ''}
-                <p><strong>Total Amount:</strong> ₱${parseFloat(request.total_amount).toFixed(2)}</p>
-                ${request.queue_status === 'processing' ? `
+                `
+                    : ""
+                }
+                <p><strong>Total Amount:</strong> ₱${parseFloat(
+                  request.total_amount
+                ).toFixed(2)}</p>
+                ${
+                  request.queue_status === "processing"
+                    ? `
                     <div class="alert alert-warning mt-2">
                         <i class="bi bi-gear me-1"></i>
                         <strong>Currently Processing:</strong> Your request is being processed right now.
                     </div>
-                ` : ''}
-                ${request.queue_status === 'completed' ? `
+                `
+                    : ""
+                }
+                ${
+                  request.queue_status === "completed"
+                    ? `
                     <div class="alert alert-success mt-2">
                         <i class="bi bi-check-circle me-1"></i>
                         <strong>Completed:</strong> Your request has been completed and is ready.
                     </div>
-                ` : ''}
+                `
+                    : ""
+                }
             </div>
         `;
-            }).join('');
+          })
+          .join("");
+      }
+
+      // Enhanced status information function
+      function getStatusInfo(status, queueStatus) {
+        // If queue is completed, show completed status regardless of approval status
+        if (queueStatus === "completed") {
+          return { class: "status-completed", text: "✅ Completed" };
         }
 
-        // Enhanced status information function
-        function getStatusInfo(status, queueStatus) {
-            // If queue is completed, show completed status regardless of approval status
-            if (queueStatus === 'completed') {
-                return { class: 'status-completed', text: '✅ Completed' };
-            }
-
-            // If queue is processing, show processing status
-            if (queueStatus === 'processing') {
-                return { class: 'status-processing', text: '⚙️ Processing' };
-            }
-
-            // Otherwise, show the regular approval status
-            switch (status) {
-                case 'pending':
-                    return { class: 'status-pending', text: '⏳ Pending Approval' };
-                case 'approved':
-                    return { class: 'status-approved', text: '✅ Approved' };
-                case 'declined':
-                    return { class: 'status-declined', text: '❌ Declined' };
-                default:
-                    return { class: 'status-pending', text: '⏳ Pending' };
-            }
+        // If queue is processing, show processing status
+        if (queueStatus === "processing") {
+          return { class: "status-processing", text: "⚙️ Processing" };
         }
 
-        // Update request statistics
-        function updateRequestStats(requests) {
-            const total = requests.length;
-            const pending = requests.filter(r => r.status === 'pending').length;
-            const approved = requests.filter(r => r.status === 'approved').length;
-            const processing = requests.filter(r => r.queue_status === 'in_queue').length;
-
-            document.getElementById('totalRequests').textContent = total;
-            document.getElementById('pendingRequests').textContent = pending;
-            document.getElementById('approvedRequests').textContent = approved;
-            document.getElementById('processingRequests').textContent = processing;
+        // Otherwise, show the regular approval status
+        switch (status) {
+          case "pending":
+            return { class: "status-pending", text: "⏳ Pending Approval" };
+          case "approved":
+            return { class: "status-approved", text: "✅ Approved" };
+          case "declined":
+            return { class: "status-declined", text: "❌ Declined" };
+          default:
+            return { class: "status-pending", text: "⏳ Pending" };
         }
+      }
 
-        // Enhanced function to check for active queue
-        function checkForActiveQueue(requests) {
-            const activeRequest = requests.find(r =>
-                (r.status === 'approved' && r.queue_status === 'in_queue') ||
-                (r.status === 'approved' && r.queue_status === 'processing') ||
-                (r.status === 'approved' && r.queue_status === 'completed')
-            );
+      // Update request statistics
+      function updateRequestStats(requests) {
+        const total = requests.length;
+        const pending = requests.filter((r) => r.status === "pending").length;
+        const approved = requests.filter((r) => r.status === "approved").length;
+        const processing = requests.filter(
+          (r) => r.queue_status === "in_queue"
+        ).length;
 
-            const queueDisplay = document.getElementById('queueNumberDisplay');
+        document.getElementById("totalRequests").textContent = total;
+        document.getElementById("pendingRequests").textContent = pending;
+        document.getElementById("approvedRequests").textContent = approved;
+        document.getElementById("processingRequests").textContent = processing;
+      }
 
-            if (activeRequest && queueDisplay) {
-                document.getElementById('currentQueueNumber').textContent = activeRequest.queue_number;
+      // Enhanced function to check for active queue
+      function checkForActiveQueue(requests) {
+        const activeRequest = requests.find(
+          (r) =>
+            (r.status === "approved" && r.queue_status === "in_queue") ||
+            (r.status === "approved" && r.queue_status === "processing") ||
+            (r.status === "approved" && r.queue_status === "completed")
+        );
 
-                // Update status message based on actual queue status
-                let statusMessage = 'In Queue - Waiting for processing';
-                if (activeRequest.queue_status === 'processing') {
-                    statusMessage = 'Currently being processed';
-                } else if (activeRequest.queue_status === 'completed') {
-                    statusMessage = 'Request completed';
-                }
+        const queueDisplay = document.getElementById("queueNumberDisplay");
 
-                document.getElementById('queueStatusMessage').textContent = statusMessage;
-                queueDisplay.style.display = 'block';
-            } else if (queueDisplay) {
-                queueDisplay.style.display = 'none';
-            }
+        if (activeRequest && queueDisplay) {
+          document.getElementById("currentQueueNumber").textContent =
+            activeRequest.queue_number;
+
+          // Update status message based on actual queue status
+          let statusMessage = "In Queue - Waiting for processing";
+          if (activeRequest.queue_status === "processing") {
+            statusMessage = "Currently being processed";
+          } else if (activeRequest.queue_status === "completed") {
+            statusMessage = "Request completed";
+          }
+
+          document.getElementById("queueStatusMessage").textContent =
+            statusMessage;
+          queueDisplay.style.display = "block";
+        } else if (queueDisplay) {
+          queueDisplay.style.display = "none";
         }
+      }
 
-        // Real-time alert system
-        function showAlert(message, type = 'info') {
-            const alertClass = {
-                'success': 'alert-success',
-                'error': 'alert-danger',
-                'warning': 'alert-warning',
-                'info': 'alert-info'
-            }[type] || 'alert-info';
+      // Real-time alert system
+      function showAlert(message, type = "info") {
+        const alertClass =
+          {
+            success: "alert-success",
+            error: "alert-danger",
+            warning: "alert-warning",
+            info: "alert-info",
+          }[type] || "alert-info";
 
-            const alertId = 'alert-' + Date.now();
-            const alertHTML = `
+        const alertId = "alert-" + Date.now();
+        const alertHTML = `
         <div id="${alertId}" class="alert ${alertClass} real-time-alert alert-dismissible fade show" role="alert">
             ${message}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     `;
 
-            document.body.insertAdjacentHTML('beforeend', alertHTML);
+        document.body.insertAdjacentHTML("beforeend", alertHTML);
 
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                const alert = document.getElementById(alertId);
-                if (alert) {
-                    alert.remove();
-                }
-            }, 5000);
-        }
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+          const alert = document.getElementById(alertId);
+          if (alert) {
+            alert.remove();
+          }
+        }, 5000);
+      }
 
-        // Function to show success modal after submission
-        function showSubmissionSuccessModal(requestId) {
-            const successHTML = `
+      // Function to show success modal after submission
+      function showSubmissionSuccessModal(requestId) {
+        const displaySuccessModal = () => {
+          const successHTML = `
 <div class="modal fade" id="submissionSuccessModal" tabindex="-1">
   <div class="modal-dialog">
     <div class="modal-content">
@@ -1397,164 +1800,220 @@
 </div>
 `;
 
-            // Remove existing modal if any
-            const existingModal = document.getElementById('submissionSuccessModal');
-            if (existingModal) {
-                existingModal.remove();
+          // Remove any existing success modal to prevent conflicts
+          const existingModal = document.getElementById(
+            "submissionSuccessModal"
+          );
+          if (existingModal) {
+            existingModal.remove();
+          }
+
+          // Add new modal to body
+          document.body.insertAdjacentHTML("beforeend", successHTML);
+
+          // Get the newly added modal element
+          const successModalEl = document.getElementById(
+            "submissionSuccessModal"
+          );
+
+          // Initialize and show the Bootstrap modal
+          const successModal = new bootstrap.Modal(successModalEl);
+          successModal.show();
+
+          // --- CRITICAL FIX START ---
+          // Use 'hidden.bs.modal' event to remove the modal from DOM
+          // This ensures that after it's visually hidden and transition is done,
+          // the element (and its descendants) are completely gone,
+          // preventing aria-hidden focus issues.
+          successModalEl.addEventListener(
+            "hidden.bs.modal",
+            function () {
+              this.remove();
+            },
+            { once: true }
+          ); // Use { once: true } to remove the listener after it fires
+          // --- CRITICAL FIX END ---
+        };
+
+        // Find all currently open modals
+        const openModals = document.querySelectorAll(".modal.show");
+
+        if (openModals.length > 0) {
+          // If there are open modals, ensure they are all hidden first
+          let modalsToHideCount = openModals.length;
+          let hiddenModalsCounter = 0;
+
+          // Define a callback to show the success modal after all others have hidden
+          const showSuccessAfterOthersHidden = () => {
+            hiddenModalsCounter++;
+            if (hiddenModalsCounter === modalsToHideCount) {
+              displaySuccessModal();
+            }
+          };
+
+          openModals.forEach((modalEl) => {
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) {
+              // Listen for each modal to finish hiding
+              modalEl.addEventListener(
+                "hidden.bs.modal",
+                showSuccessAfterOthersHidden,
+                { once: true }
+              );
+              modalInstance.hide(); // Command it to hide
+            } else {
+              // If for some reason a modal is 'show' but not initialized,
+              // just increment the counter and remove it.
+              modalEl.remove();
+              hiddenModalsCounter++;
+            }
+          });
+        } else {
+          // No modals are open, just show the success modal immediately.
+          displaySuccessModal();
+        }
+      }
+
+      // Enhanced profile save with callback
+      document
+        .getElementById("saveProfileBtn")
+        .addEventListener("click", async function () {
+          const studentId = document.getElementById("studentId").value;
+          const course = document.getElementById("course").value;
+          const major = document.getElementById("major").value;
+          const yearLevel = document.getElementById("yearLevel").value;
+          const schoolYear = document.getElementById("schoolYear").value;
+          const yearGraduated = document.getElementById("yearGraduated").value;
+
+          if (!studentId || !course || !yearLevel || !schoolYear) {
+            showAlert("Please fill in all required fields.", "warning");
+            return;
+          }
+
+          const profileData = {
+            studentId,
+            course,
+            major,
+            yearLevel,
+            schoolYear,
+            yearGraduated: yearGraduated || null,
+          };
+
+          const success = await saveProfileToServer(profileData);
+
+          if (success) {
+            userProfileComplete = true;
+            const modal = bootstrap.Modal.getInstance(
+              document.getElementById("profileUpdateModal")
+            );
+            if (modal) modal.hide();
+
+            // Execute callback if exists
+            if (window.profileSaveCallback) {
+              window.profileSaveCallback();
+              window.profileSaveCallback = null;
             }
 
-            // Add new modal to body
-            document.body.insertAdjacentHTML('beforeend', successHTML);
+            showAlert("Profile updated successfully!", "success");
+          }
+        });
 
-            // Show the modal
-            const successModal = new bootstrap.Modal(document.getElementById('submissionSuccessModal'));
-            successModal.show();
+      // Setup real-time updates
+      function setupRealTimeUpdates() {
+        // Load requests every 30 seconds when on updates page
+        autoRefreshInterval = setInterval(() => {
+          if (document.getElementById("updates").classList.contains("active")) {
+            loadUserRequests();
+          }
+        }, 30000);
+      }
 
-            // Remove modal from DOM after hide
-            document.getElementById('submissionSuccessModal').addEventListener('hidden.bs.modal', function () {
-                this.remove();
-            });
+      // Enhanced initialization
+      document.addEventListener("DOMContentLoaded", async () => {
+        // Check authentication first
+        if (!checkAuthentication()) return;
+
+        // Load user data
+        const fullname = localStorage.getItem("fullname") || "User";
+        const userId = localStorage.getItem("userId") || "N/A";
+        if (!fullname || !userId) {
+          // Not logged in → back to welcome page
+          window.location.href = "/";
+          return;
         }
 
-        // Enhanced profile save with callback
-        document.getElementById('saveProfileBtn').addEventListener('click', async function () {
-            const studentId = document.getElementById('studentId').value;
-            const course = document.getElementById('course').value;
-            const major = document.getElementById('major').value;
-            const yearLevel = document.getElementById('yearLevel').value;
-            const schoolYear = document.getElementById('schoolYear').value;
-            const yearGraduated = document.getElementById('yearGraduated').value;
+        // Set profile information
+        document.getElementById("profileName").textContent = fullname;
 
-            if (!studentId || !course || !yearLevel || !schoolYear) {
-                showAlert('Please fill in all required fields.', 'warning');
-                return;
-            }
+        // Check profile status
+        await checkUserProfileStatus();
 
-            const profileData = {
-                studentId,
-                course,
-                major,
-                yearLevel,
-                schoolYear,
-                yearGraduated: yearGraduated || null
-            };
+        // Load user profile data from server
+        await loadUserProfile();
 
-            const success = await saveProfileToServer(profileData);
-
-            if (success) {
-                userProfileComplete = true;
-                const modal = bootstrap.Modal.getInstance(document.getElementById('profileUpdateModal'));
-                if (modal) modal.hide();
-
-                // Execute callback if exists
-                if (window.profileSaveCallback) {
-                    window.profileSaveCallback();
-                    window.profileSaveCallback = null;
-                }
-
-                showAlert('Profile updated successfully!', 'success');
-            }
-        });
+        // Setup auto-logout functionality
+        setupActivityListeners();
 
         // Setup real-time updates
-        function setupRealTimeUpdates() {
-            // Load requests every 30 seconds when on updates page
-            autoRefreshInterval = setInterval(() => {
-                if (document.getElementById('updates').classList.contains('active')) {
-                    loadUserRequests();
-                }
-            }, 30000);
-        }
+        setupRealTimeUpdates();
 
-        // Enhanced initialization
-        document.addEventListener("DOMContentLoaded", async () => {
-            // Check authentication first
-            if (!checkAuthentication()) return;
+        // Load initial requests
+        await loadUserRequests();
 
-            // Load user data
-            const fullname = localStorage.getItem("fullname") || "User";
-            const userId = localStorage.getItem("userId") || "N/A";
-            if (!fullname || !userId) {
-                // Not logged in → back to welcome page
-                window.location.href = "/";
-                return;
+        // Section switching
+        const navLinks = document.querySelectorAll(".nav-link");
+        const sections = document.querySelectorAll(".section");
+
+        navLinks.forEach((link) => {
+          link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const target = link.getAttribute("data-target");
+
+            // Update active states
+            sections.forEach((sec) => sec.classList.remove("active"));
+            navLinks.forEach((l) => l.classList.remove("active"));
+
+            link.classList.add("active");
+            document.getElementById(target).classList.add("active");
+
+            // Load requests when switching to updates page
+            if (target === "updates") {
+              loadUserRequests();
             }
 
-            // Set profile information
-            document.getElementById("profileName").textContent = fullname;
-
-            // Check profile status
-            await checkUserProfileStatus();
-
-            // Load user profile data from server
-            await loadUserProfile();
-
-            // Setup auto-logout functionality
-            setupActivityListeners();
-
-            // Setup real-time updates
-            setupRealTimeUpdates();
-
-            // Load initial requests
-            await loadUserRequests();
-
-            // Section switching
-            const navLinks = document.querySelectorAll(".nav-link");
-            const sections = document.querySelectorAll(".section");
-
-            navLinks.forEach(link => {
-                link.addEventListener("click", (e) => {
-                    e.preventDefault();
-                    const target = link.getAttribute("data-target");
-
-                    // Update active states
-                    sections.forEach(sec => sec.classList.remove("active"));
-                    navLinks.forEach(l => l.classList.remove("active"));
-
-                    link.classList.add("active");
-                    document.getElementById(target).classList.add("active");
-
-                    // Load requests when switching to updates page
-                    if (target === 'updates') {
-                        loadUserRequests();
-                    }
-
-                    // Close mobile menu if open
-                    const navbar = document.querySelector(".navbar-collapse");
-                    if (navbar.classList.contains("show")) {
-                        new bootstrap.Collapse(navbar).hide();
-                    }
-                });
-            });
-
-            // Navbar scroll effect
-            window.addEventListener('scroll', function () {
-                const navbar = document.querySelector('.navbar');
-                if (window.scrollY > 10) {
-                    navbar.classList.add('scrolled');
-                } else {
-                    navbar.classList.remove('scrolled');
-                }
-            });
-
-            // Add logout button functionality
-            const logoutBtn = document.querySelector('.btn-outline-danger');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function () {
-                    logout();
-                });
+            // Close mobile menu if open
+            const navbar = document.querySelector(".navbar-collapse");
+            if (navbar.classList.contains("show")) {
+              new bootstrap.Collapse(navbar).hide();
             }
-
-            // Clean up interval when page unloads
-            window.addEventListener('beforeunload', () => {
-                if (autoRefreshInterval) {
-                    clearInterval(autoRefreshInterval);
-                }
-            });
+          });
         });
 
+        // Navbar scroll effect
+        window.addEventListener("scroll", function () {
+          const navbar = document.querySelector(".navbar");
+          if (window.scrollY > 10) {
+            navbar.classList.add("scrolled");
+          } else {
+            navbar.classList.remove("scrolled");
+          }
+        });
+
+        // Add logout button functionality
+        const logoutBtn = document.querySelector(".btn-outline-danger");
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", function () {
+            logout();
+          });
+        }
+
+        // Clean up interval when page unloads
+        window.addEventListener("beforeunload", () => {
+          if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+          }
+        });
+      });
     </script>
-
-</body>
-
+  </body>
 </html>
