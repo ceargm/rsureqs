@@ -9,7 +9,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet" />
   <link rel="stylesheet" href="assets/css/improved_admindash.css" />
   <!-- MOVED THE OTHER STYLES IN THE IMPROVED_ADMINDASHB.CSS FOR BETTER ORGANIZATION -->
 </head>
@@ -30,6 +30,7 @@
     <div class="menu-item" data-page="documents">
       <i class="bi bi-file-earmark-text menu-icon"></i>
       <span>Service Requests</span>
+      <span class="notification-dot"></span>
     </div>
 
     <div class="menu-item" data-page="reports">
@@ -126,14 +127,22 @@
                       <option>4th Year</option>
                     </select>
                   </div>
-                  
+
                   <div class="col-md-4">
                     <label class="form-label">Service</label>
                     <select class="form-select" id="manualService" required>
-                      <option value="" disabled selected>Select Service</option>
-                      <option value='["Transcript of Records"]'>Transcript of Records</option>
-                      <option value='["Certificate of Enrollment"]'>Certificate of Enrollment</option>
-                      <option value='["Good Moral Character"]'>Good Moral Character</option>
+                      <option value="" disabled selected>
+                        Select Service
+                      </option>
+                      <option value='["Transcript of Records"]'>
+                        Transcript of Records
+                      </option>
+                      <option value='["Certificate of Enrollment"]'>
+                        Certificate of Enrollment
+                      </option>
+                      <option value='["Good Moral Character"]'>
+                        Good Moral Character
+                      </option>
                       <option value='["Diploma"]'>Diploma</option>
                     </select>
                   </div>
@@ -200,21 +209,31 @@
 
     <!-- Service Request Page -->
     <div id="documents-page" class="page">
-      <div class="header">
-        <h1>Service Request Management</h1>
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-number blue" id="pendingCount">0</div>
-            <div class="stat-label">Pending</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number orange" id="approvedCount">0</div>
-            <div class="stat-label">Approved</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number green" id="declinedCount">0</div>
-            <div class="stat-label">Declined</div>
-          </div>
+      <div class="header d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <h1 class="mb-0 fs-4 fw-bold">Service Request Management</h1>
+
+        <!-- MODERN SEARCH BAR – clean, non-bold, pill-shaped -->
+        <div class="search-wrapper d-flex align-items-center shadow-sm"
+          style="border-radius: 50px; overflow: hidden; background: #f8f9fa">
+          <input type="text" id="serviceRequestSearchInput" class="form-control border-0 bg-transparent" style="
+                height: 40px;
+                font-size: 1rem;
+                font-weight: 400;
+                padding: 0 16px;
+                outline: none;
+                box-shadow: none;
+                color: #212529;
+              " placeholder="Search..." aria-label="Search service requests" />
+          <button class="btn btn-primary d-flex align-items-center justify-content-center" id="serviceRequestSearchBtn"
+            type="button" style="
+                height: 40px;
+                width: 48px;
+                border-radius: 50px;
+                border: none;
+                margin-left: -1px;
+              ">
+            <i class="bi bi-search text-white"></i>
+          </button>
         </div>
       </div>
 
@@ -259,31 +278,65 @@
 
       <div class="charts-grid">
         <div class="info-card">
-          <h3>Peak Hours Statistic <span style="color: #999">(Today)</span></h3>
-          <div class="chart-placeholder">Chart Placeholder - Peak Hours</div>
+          <h3>
+            First Contact Resolution (FCR)
+            <span style="color: #999">(Today)</span>
+          </h3>
+          <p style="
+                font-size: 14px;
+                color: #666;
+                margin-top: -10px;
+                margin-bottom: 15px;
+              ">
+            Based on Approved vs. Declined service requests.
+          </p>
+          <div class="chart-container" style="position: relative; height: 250px; width: 100%">
+            <canvas id="fcrChart"></canvas>
+          </div>
         </div>
 
         <div class="info-card">
-          <h3>Recent Client Requests <span style="color: #999">(Today)</span></h3>
-          <ul class="request-list" id="recentRequestsList">
-            <!-- Recent requests will be populated here -->
-          </ul>
+          <h3>
+            Recent Client Requests <span style="color: #999">(Today)</span>
+          </h3>
+          <ul class="request-list" id="recentRequestsList"></ul>
         </div>
       </div>
 
-      <div class="history-table">
+      <div class="history-table" id="queueReportHistoryContainer">
         <h2 class="history-title">Queue Report History</h2>
-        <div class="history-item" onclick="showReportDetail()">
-          <span class="history-day">Today: Monday 8am-4pm</span>
-          <span class="history-date">August 8, 2025</span>
+        <div class="history-item empty" style="text-align: center; color: #999; padding: 20px 0">
+          No reports found.
         </div>
-        <div class="history-item" onclick="showReportDetail()">
-          <span class="history-day">Friday 8am-4pm</span>
-          <span class="history-date">August 5, 2025</span>
+      </div>
+    </div>
+
+    <div id="report-detail-page" class="page">
+      <div class="header">
+        <h1>Queue Report Details</h1>
+        <button class="btn btn-secondary" onclick="showPage('reports')">
+          <i class="bi bi-arrow-left"></i> Back to Reports
+        </button>
+      </div>
+
+      <div class="report-header">
+        <h2 class="report-title">Queue Report History</h2>
+        <div class="report-date" id="reportDetailDate">Loading...</div>
+
+        <div class="service-summary">
+          <h3 class="summary-title">Overall Service Requested</h3>
+          <div class="summary-grid" id="reportDetailServiceGrid"></div>
+
+          <div class="total-requests">
+            <div class="total-label">Total Requests</div>
+            <div class="total-number" id="reportDetailTotal">0</div>
+          </div>
         </div>
-        <div class="history-item" onclick="showReportDetail()">
-          <span class="history-day">Thursday 8am-4pm</span>
-          <span class="history-date">August 4, 2025</span>
+      </div>
+
+      <div class="data-table" id="reportDetailDataTable">
+        <div style="text-align: center; color: #999; padding: 30px 0">
+          Loading report details...
         </div>
       </div>
     </div>
@@ -355,7 +408,6 @@
         </div>
       </div>
     </div>
-
 
     <!-- --------------------------------------------- SETTINGS PAGE ------------------------------------------------->
     <div id="settings-page" class="page">
@@ -451,6 +503,19 @@
           <div class="settings-item-icon">Aa</div>
           <span>Change Font Size</span>
           <span class="settings-value" id="fontSizeValue">Medium</span>
+        </div>
+        <div class="settings-item d-flex align-items-center justify-content-between">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-moon-stars-fill me-2"></i>
+            <div>
+              <div>Dark Mode</div>
+              <small class="text-muted">Toggle between light and dark theme</small>
+            </div>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="darkModeSwitch" />
+            <label class="form-check-label" for="darkModeSwitch"></label>
+          </div>
         </div>
       </div>
     </div>
@@ -712,15 +777,15 @@
 
   <!-- Add Bootstrap JS Bundle -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
 
   <script>
-
     // -------------------------- BOOTSTRAP OFFCANVAS SIDEBAR FOR MOBILE USING OFFCANVAS COMPONENT--------------------------------------
 
     // Initialize Bootstrap Offcanvas for sidebar on mobile
-    document.querySelectorAll('.menu-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const offcanvasEl = document.getElementById('sidebarOffcanvas');
+    document.querySelectorAll(".menu-item").forEach((item) => {
+      item.addEventListener("click", () => {
+        const offcanvasEl = document.getElementById("sidebarOffcanvas");
         const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
         if (bsOffcanvas && window.innerWidth <= 768) {
           bsOffcanvas.hide();
@@ -735,7 +800,9 @@
           const targetPage = item.getAttribute("data-page");
           // Remove active class from all menu items and pages
           menuItems.forEach((mi) => mi.classList.remove("active"));
-          document.querySelectorAll(".page").forEach((page) => page.classList.remove("active"));
+          document
+            .querySelectorAll(".page")
+            .forEach((page) => page.classList.remove("active"));
           // Add active class to clicked item
           item.classList.add("active");
           // Show target page
@@ -749,7 +816,30 @@
     // -------------------------- SHOW PAGE FUNCTION TO HANDLE PAGE NAVIGATION -----------------------------------------------------
     function showPage(page) {
       // Hide all pages
-      document.querySelectorAll(".page").forEach((p) => p.classList.remove("active"));
+      document.querySelectorAll(".page").forEach((p) => {
+        p.classList.remove("active");
+
+        // --- 🟢 NEW CODE STARTS HERE 🟢 ---
+        // If this is the "documents-page" being hidden, clear its search bar
+        if (p.id === "documents-page") {
+          const searchInput = document.getElementById(
+            "serviceRequestSearchInput"
+          );
+          if (searchInput && searchInput.value !== "") {
+            searchInput.value = ""; // Clear the text
+
+            // Also, trigger the search button's click to reset the filter
+            const searchBtn = document.getElementById(
+              "serviceRequestSearchBtn"
+            );
+            if (searchBtn) {
+              searchBtn.click();
+            }
+          }
+        }
+        // --- 🟢 NEW CODE ENDS HERE 🟢 ---
+      });
+
       // Show target page
       const pageToShow = document.getElementById(page + "-page");
       if (pageToShow) {
@@ -759,9 +849,26 @@
           queueManager.loadQueues();
         } else if (page === "documents" && serviceRequestManager) {
           serviceRequestManager.loadServiceRequests();
+          // ⬇️ REPLACE THE BLOCK ABOVE WITH THIS ⬇️
         } else if (page === "reports") {
+          // 1. Render immediately with existing (pre-fetched) data
+          // This makes the chart appear instantly.
           updateReportsData();
+
+          // 2. Then, start background requests for fresh data.
+          // When these finish, they will update the stats and chart again.
+          if (queueManager) {
+            queueManager.loadQueues().then(() => {
+              updateReportsData(); // Update again when fresh data arrives
+            });
+          }
+          if (serviceRequestManager) {
+            serviceRequestManager.loadServiceRequests().then(() => {
+              updateReportsData(); // Update again when fresh data arrives
+            });
+          }
         } else if (page === "github") {
+          // ⬆️ END OF REPLACEMENT ⬆️
           loadGitHubData();
         }
       } else {
@@ -776,6 +883,7 @@
     let serviceRequestManager;
     let queueManager;
     let isQueuePaused = false;
+    let fcrChartInstance = null;
 
     // Admin Dashboard Authentication Helper
     const adminToken = localStorage.getItem("adminToken");
@@ -933,9 +1041,17 @@
       setupAutoRefresh();
     });
 
-    function showReportDetail() {
+    // ⬇️ REPLACE THIS FUNCTION ⬇️
+    function showReportDetail(reportId) {
+      if (reportId === "today") {
+        // Call the new function to populate the page
+        populateTodayReportDetail();
+      } else {
+        // This can be used later for other reports
+      }
       showPage("report-detail");
     }
+    // ⬆️ END OF REPLACEMENT ⬆️
 
     function toggleQueuePause() {
       isQueuePaused = !isQueuePaused;
@@ -949,21 +1065,265 @@
       }
     }
 
+    // ⬇️ REPLACE THIS FUNCTION ⬇️
     function updateReportsData() {
       // Update report statistics
+
+      // 1. Update from Queue Manager (as before)
       if (queueManager && queueManager.queues) {
+        // Use all queues for a more accurate total
         const total =
           (queueManager.queues.waiting || []).length +
           (queueManager.queues.processing || []).length +
-          (queueManager.queues.completed || []).length;
+          (queueManager.queues.ready || []).length +
+          (queueManager.queues.completed || []).length +
+          (queueManager.queues.priority || []).length;
 
         document.getElementById("totalRequestsSummary").textContent = total;
         document.getElementById("completedSummary").textContent = (
           queueManager.queues.completed || []
         ).length;
         document.getElementById("totalRequestsToday").textContent = total;
+        // 3. Update the Recent Requests list
+        renderRecentRequests(queueManager.queues);
+        // 4. Update the Report History list
+        renderReportHistory(queueManager.queues);
+      }
+
+      // 2. Update FCR Chart from Service Request Manager
+      if (serviceRequestManager && serviceRequestManager.requests) {
+        // --- START OF FIX ---
+        // Get today's date as a string (e.g., "2025-10-31")
+        const todayStr = new Date().toLocaleDateString("en-CA");
+
+        // Filter approved for today
+        const approvedCount = serviceRequestManager.requests.filter((req) => {
+          if (req.status !== "approved" || !req.approved_at) {
+            return false;
+          }
+          const requestDateStr = new Date(req.approved_at).toLocaleDateString(
+            "en-CA"
+          );
+          return requestDateStr === todayStr;
+        }).length;
+
+        // Filter declined for today
+        const declinedCount = serviceRequestManager.requests.filter((req) => {
+          if (req.status !== "declined" || !req.declined_at) {
+            return false;
+          }
+          const requestDateStr = new Date(req.declined_at).toLocaleDateString(
+            "en-CA"
+          );
+          return requestDateStr === todayStr;
+        }).length;
+        // --- END OF FIX ---
+
+        // Call the new chart rendering function
+        renderFCRChart(approvedCount, declinedCount);
+      } else {
+        // If manager isn't ready, render an empty chart
+        renderFCRChart(0, 0);
       }
     }
+    // ⬆️ END OF REPLACEMENT ⬆️
+    // ⬇️ ADD THIS ENTIRE NEW FUNCTION ⬇️
+
+    /**
+     * Renders or updates the First Contact Resolution (FCR) donut chart.
+     * We use (Approved) / (Approved + Declined) as the FCR metric.
+     */
+    function renderFCRChart(approvedCount, declinedCount) {
+      const ctx = document.getElementById("fcrChart");
+      if (!ctx) {
+        console.warn("FCR Chart canvas not found.");
+        return; // Don't do anything if canvas isn't there
+      }
+
+      const totalHandled = approvedCount + declinedCount;
+      const fcrRate =
+        totalHandled > 0
+          ? ((approvedCount / totalHandled) * 100).toFixed(1)
+          : 0;
+
+      const chartData = {
+        labels: ["Resolved (Approved)", "Not Resolved (Declined)"],
+        datasets: [
+          {
+            label: "Request Status",
+            data: [approvedCount, declinedCount],
+            backgroundColor: [
+              "rgba(40, 167, 69, 0.85)", // Bootstrap Success
+              "rgba(220, 53, 69, 0.85)", // Bootstrap Danger
+            ],
+            borderColor: [
+              "rgba(255, 255, 255, 0.7)",
+              "rgba(255, 255, 255, 0.7)",
+            ],
+            borderWidth: 2,
+          },
+        ],
+      };
+
+      const chartConfig = {
+        type: "doughnut",
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "70%", // Makes it a donut
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                padding: 20,
+              },
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  let label = context.label || "";
+                  if (label) {
+                    label += ": ";
+                  }
+                  if (context.parsed !== null) {
+                    const percentage =
+                      totalHandled > 0
+                        ? ((context.parsed / totalHandled) * 100).toFixed(1)
+                        : 0;
+                    label += `${context.parsed} requests (${percentage}%)`;
+                  }
+                  return label;
+                },
+              },
+            },
+            // This adds the "FCR: XX%" text in the middle
+            title: {
+              display: false, // We will draw it manually
+            },
+          },
+          // Custom plugin to draw text in the center
+          animation: {
+            onComplete: (chart) => {
+              const chartCtx = chart.ctx;
+              chartCtx.save();
+              const x = chart.getDatasetMeta(0).data[0].x;
+              const y = chart.getDatasetMeta(0).data[0].y;
+
+              chartCtx.textAlign = "center";
+              chartCtx.textBaseline = "middle";
+
+              // FCR Rate Text
+              chartCtx.font = "bold 24px Poppins, sans-serif";
+              chartCtx.fillStyle = "#333"; // Use body color
+              chartCtx.fillText(`${fcrRate}%`, x, y - 10);
+
+              // "FCR" Label
+              chartCtx.font = "14px Poppins, sans-serif";
+              chartCtx.fillStyle = "#777"; // Muted color
+              chartCtx.fillText("FCR Rate", x, y + 15);
+
+              chartCtx.restore();
+            },
+          },
+        },
+      };
+
+      // If chart doesn't exist, create it
+      if (!fcrChartInstance) {
+        fcrChartInstance = new Chart(ctx, chartConfig);
+      } else {
+        // If it exists, update its data and refresh
+        fcrChartInstance.data = chartData;
+        fcrChartInstance.update();
+      }
+    }
+    // ⬆️ END OF NEW FUNCTION ⬆️
+    // ⬇️ ADD THIS ENTIRE NEW FUNCTION ⬇️
+
+    /**
+     * Populates the 'Recent Client Requests' list on the Reports page.
+     * Gathers all requests from the queueManager, sorts them, and shows the top 5.
+     */
+    function renderRecentRequests(queues) {
+      const listElement = document.getElementById("recentRequestsList");
+      if (!listElement) {
+        console.warn("Recent requests list element not found.");
+        return;
+      }
+
+      // 1. Combine all available queue arrays
+      const allRequests = [
+        ...(queues.waiting || []),
+        ...(queues.processing || []),
+        ...(queues.ready || []),
+        ...(queues.completed || []),
+        ...(queues.priority || []),
+      ];
+
+      // 2. Sort by 'submitted_at' time, most recent first
+      allRequests.sort(
+        (a, b) => new Date(b.submitted_at) - new Date(a.submitted_at)
+      );
+
+      // 3. Use all recent requests (CSS will handle scrolling)
+      const recentRequests = allRequests;
+
+      // 4. Handle empty state
+      if (recentRequests.length === 0) {
+        listElement.innerHTML = `
+          <li class="request-list-item empty">
+            No requests found for today.
+          </li>
+        `;
+        return;
+      }
+
+      // 5. Build and inject the HTML
+      // 5. Build and inject the HTML
+      listElement.innerHTML = recentRequests
+        .map((request) => {
+          // Safely get service name
+          const services = Array.isArray(request.services)
+            ? request.services
+            : [];
+          let mainService = "General Request"; // Default
+          if (services.length > 0) {
+            // Try to parse if it's JSON string, otherwise use as-is
+            try {
+              const parsedServices = JSON.parse(services[0]);
+              mainService = Array.isArray(parsedServices)
+                ? parsedServices[0]
+                : services[0];
+            } catch (e) {
+              mainService = services[0]; // It's just a string
+            }
+          } else if (request.service) {
+            mainService = request.service;
+          }
+
+          // Utility to prevent XSS (HTML injection)
+          const escape = (str) => {
+            if (str === null || str === undefined) return "";
+            return String(str)
+              .replace(/&/g, "&amp;")
+              .replace(/</g, "&lt;")
+              .replace(/>/g, "&gt;");
+          };
+
+          const clientName = escape(request.user_name);
+          const serviceName = escape(mainService);
+
+          return `
+          <li class="request-list-item">
+            <div class="client-name" title="${clientName}">${clientName}</div>
+            <div class="service-name" title="${serviceName}">${serviceName}</div>
+          </li>
+        `;
+        })
+        .join("");
+    }
+    // ⬆️ END OF NEW FUNCTION ⬆️
 
     function setupAutoRefresh() {
       // Refresh queue data every 10 seconds
@@ -1026,8 +1386,22 @@
       localStorage.setItem("adminTheme", currentTheme);
     }
 
+
+    //Apply Font Sizes
+    // Function to apply the font size to the body
+    function applyFontSize(sizeName) {
+      const sizeValue = fontSizeMap[sizeName];
+      if (sizeValue) {
+        document.body.style.fontSize = sizeValue;
+        const valueSpan = document.getElementById("fontSizeValue");
+        if (valueSpan) {
+          valueSpan.textContent = sizeName;
+        }
+      }
+    }
+
     // Font size toggle
-    const fontSizes = ["Small", "Medium", "Large"];
+    const fontSizes = ["Small", "Medium", "Large", "Extra Large"];
     let currentFontSizeIndex = 1;
     function toggleFontSize() {
       currentFontSizeIndex = (currentFontSizeIndex + 1) % fontSizes.length;
@@ -1038,6 +1412,7 @@
         Small: "14px",
         Medium: "16px",
         Large: "18px",
+        "Extra Large": "20px",
       };
 
       document.body.style.fontSize = sizes[fontSize];
@@ -1064,7 +1439,7 @@
       // Load font size
       const savedFontSize = localStorage.getItem("adminFontSize");
       if (savedFontSize) {
-        const sizes = { Small: "14px", Medium: "16px", Large: "18px" };
+        const sizes = { Small: "14px", Medium: "16px", Large: "18px", "Extra Large": "20px" };
         document.body.style.fontSize = sizes[savedFontSize];
         document.getElementById("fontSizeValue").textContent = savedFontSize;
         currentFontSizeIndex = fontSizes.indexOf(savedFontSize);
@@ -1262,29 +1637,27 @@
               request.services.join(", ")
             )}</div>
                                     <div class="document-description">
-                                        Requested by: ${this.escapeHtml(
+    <span class="requester-line">Requested by: ${this.escapeHtml(
               request.user_name
-            )} (${this.escapeHtml(
-              request.student_id
-            )})<br>
-                                        Course: ${this.escapeHtml(
-              request.course
-            )} - ${this.escapeHtml(
-              request.year_level
-            )}<br>
-                                        Total Amount: ₱${parseFloat(
-              request.total_amount || 0
-            ).toFixed(2)}
-                                    </div>
+            )} (${this.escapeHtml(request.student_id)})</span><br>
+    ${request.services
+                ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
+                : ""
+              }
+    ${request.submitted_at
+                ? `Submitted: ${new Date(request.submitted_at).toLocaleString()}`
+                : ""
+              }
+</div>
                                 </div>
                                 <div class="queue-number">Request ID: ${this.escapeHtml(
-              request.request_id
-            )}</div>
+                request.request_id
+              )}</div>
                             </div>
                             <div class="document-meta">
                                 <span>Submitted: ${new Date(
-              request.submitted_at
-            ).toLocaleString()}</span>
+                request.submitted_at
+              ).toLocaleString()}</span>
                                 <div class="button-group" style="margin-top: 10px;">
                                     <button class="btn btn-success btn-sm" onclick="serviceRequestManager.showApproveModal('${request.request_id
               }')">
@@ -1312,16 +1685,25 @@
         );
         if (!container) return;
 
-        const approvedRequests = this.requests.filter(
-          (req) => req.status === "approved"
-        );
+        // 1. Get the start of today (midnight)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 2. Filter for approved AND approved_at date is on or after today
+        const approvedRequests = this.requests.filter((req) => {
+          return (
+            req.status === "approved" &&
+            req.approved_at && // Make sure the date exists
+            new Date(req.approved_at) >= today
+          ); // Compare it
+        });
 
         if (approvedRequests.length === 0) {
           container.innerHTML = `
                     <div class="empty-state">
                         <div style="text-align: center; padding: 40px; color: #999;">
                             <div style="font-size: 3rem;"></div>
-                            <p style="margin-top: 10px;">No approved service requests.</p>
+                            <p style="margin-top: 10px;">No approved service requests for today.</p>
                         </div>
                     </div>
                 `;
@@ -1338,24 +1720,18 @@
               request.services.join(", ")
             )}</div>
                                     <div class="document-description">
-                                        Requested by: ${this.escapeHtml(
+    <span class="requester-line">Requested by: ${this.escapeHtml(
               request.user_name
-            )} (${this.escapeHtml(
-              request.student_id
-            )})<br>
-                                        ${request.approved_by
-                ? `Approved by: ${this.escapeHtml(
-                  request.approved_by
-                )}<br>`
+            )} (${this.escapeHtml(request.student_id)})</span><br>
+    ${request.services
+                ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
                 : ""
               }
-                                        ${request.approved_at
-                ? `Approved at: ${new Date(
-                  request.approved_at
-                ).toLocaleString()}`
+    ${request.approved_at
+                ? `Approved at: ${new Date(request.approved_at).toLocaleString()}`
                 : ""
               }
-                                    </div>
+</div>
                                 </div>
                                 <div class="queue-number">
                                     <span class="badge approved-badge">Approved</span>
@@ -1378,16 +1754,25 @@
         );
         if (!container) return;
 
-        const declinedRequests = this.requests.filter(
-          (req) => req.status === "declined"
-        );
+        // 1. Get the start of today (midnight)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // 2. Filter for declined AND declined_at date is on or after today
+        const declinedRequests = this.requests.filter((req) => {
+          return (
+            req.status === "declined" &&
+            req.declined_at && // Make sure the date exists
+            new Date(req.declined_at) >= today
+          ); // Compare it
+        });
 
         if (declinedRequests.length === 0) {
           container.innerHTML = `
                     <div class="empty-state">
                         <div style="text-align: center; padding: 40px; color: #999;">
                             <div style="font-size: 3rem;"></div>
-                            <p style="margin-top: 10px;">No declined service requests.</p>
+                            <p style="margin-top: 10px;">No declined service requests for today.</p>
                         </div>
                     </div>
                 `;
@@ -1404,24 +1789,18 @@
               request.services.join(", ")
             )}</div>
                                     <div class="document-description">
-                                        Requested by: ${this.escapeHtml(
+    <span class="requester-line">Requested by: ${this.escapeHtml(
               request.user_name
-            )} (${this.escapeHtml(
-              request.student_id
-            )})<br>
-                                        ${request.declined_by
-                ? `Declined by: ${this.escapeHtml(
-                  request.declined_by
-                )}<br>`
+            )} (${this.escapeHtml(request.student_id)})</span><br>
+    ${request.services
+                ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
                 : ""
               }
-                                        ${request.decline_reason
-                ? `Reason: ${this.escapeHtml(
-                  request.decline_reason
-                )}`
+    ${request.declined_at
+                ? `Declined at: ${new Date(request.declined_at).toLocaleString()}`
                 : ""
               }
-                                    </div>
+</div>
                                 </div>
                                 <div class="queue-number">
                                     <span class="badge declined-badge">Declined</span>
@@ -1442,15 +1821,35 @@
       }
 
       updateStats() {
+        // Get today's date as a string (e.g., "2025-10-31")
+        const todayStr = new Date().toLocaleDateString("en-CA");
+
+        // Pending requests are always "current"
         const pendingCount = this.requests.filter(
           (req) => req.status === "pending"
         ).length;
-        const approvedCount = this.requests.filter(
-          (req) => req.status === "approved"
-        ).length;
-        const declinedCount = this.requests.filter(
-          (req) => req.status === "declined"
-        ).length;
+
+        // Filter approved for today
+        const approvedCount = this.requests.filter((req) => {
+          if (req.status !== "approved" || !req.approved_at) {
+            return false;
+          }
+          const requestDateStr = new Date(req.approved_at).toLocaleDateString(
+            "en-CA"
+          );
+          return requestDateStr === todayStr;
+        }).length;
+
+        // Filter declined for today
+        const declinedCount = this.requests.filter((req) => {
+          if (req.status !== "declined" || !req.declined_at) {
+            return false;
+          }
+          const requestDateStr = new Date(req.declined_at).toLocaleDateString(
+            "en-CA"
+          );
+          return requestDateStr === todayStr;
+        }).length;
 
         const pendingElement = document.getElementById("pendingCount");
         const approvedElement = document.getElementById("approvedCount");
@@ -1459,6 +1858,26 @@
         if (pendingElement) pendingElement.textContent = pendingCount;
         if (approvedElement) approvedElement.textContent = approvedCount;
         if (declinedElement) declinedElement.textContent = declinedCount;
+
+        // --- 🟢 NEW CODE STARTS HERE 🟢 ---
+        // This updates the notification dot in the sidebar
+        const serviceMenu = document.querySelector(
+          '.menu-item[data-page="documents"]'
+        );
+        const dot = serviceMenu
+          ? serviceMenu.querySelector(".notification-dot")
+          : null;
+
+        if (serviceMenu && dot) {
+          if (pendingCount > 0) {
+            dot.textContent = pendingCount; // Set the number
+            serviceMenu.classList.add("has-notification");
+          } else {
+            dot.textContent = ""; // Clear the number
+            serviceMenu.classList.remove("has-notification");
+          }
+        }
+        // --- 🟢 NEW CODE ENDS HERE 🟢 ---
       }
 
       showApproveModal(requestId) {
@@ -1773,6 +2192,81 @@
           .replace(/'/g, "&#039;");
       }
     }
+    /* --------------------------------------------------------------
+ SERVICE REQUEST SEARCH — BY REQUESTER NAME ONLY
+ -------------------------------------------------------------- */
+    document.addEventListener("DOMContentLoaded", () => {
+      const searchInput = document.getElementById(
+        "serviceRequestSearchInput"
+      );
+      const searchBtn = document.getElementById("serviceRequestSearchBtn");
+
+      if (!searchInput || !searchBtn) return;
+
+      const performSearch = () => {
+        const term = searchInput.value.trim().toLowerCase();
+        if (!serviceRequestManager?.requests?.length) return;
+
+        ["pending", "approved", "declined"].forEach((status) => {
+          const containerId = {
+            pending: "pendingRequestsContainer",
+            approved: "approvedRequestsContainer",
+            declined: "declinedRequestsContainer",
+          }[status];
+
+          const container = document.getElementById(containerId);
+          if (!container) return;
+
+          const items = container.querySelectorAll(".document-item");
+          let visible = 0;
+
+          items.forEach((item) => {
+            // ---- NEW: only look at the line that has class "requester-line" ----
+            const requesterEl = item.querySelector(".requester-line");
+            const requesterName = requesterEl
+              ? requesterEl.textContent
+                .replace(/^Requested by:\s*/i, "")
+                .trim()
+                .toLowerCase()
+              : "";
+
+            const show = term === "" || requesterName.includes(term);
+            item.style.display = show ? "" : "none";
+            if (show) visible++;
+          });
+
+          // ---- Show / hide “no results” message ----
+          let noResult = container.querySelector(".no-result-msg");
+          if (!noResult && visible === 0 && term !== "") {
+            noResult = document.createElement("div");
+            noResult.className = "no-result-msg text-center text-muted py-4";
+            noResult.innerHTML = `<em>No ${status} requests found for "${searchInput.value}"</em>`;
+            container.appendChild(noResult);
+          } else if (noResult && (visible > 0 || term === "")) {
+            noResult.remove();
+          }
+        });
+      };
+
+      // Button click
+      searchBtn.addEventListener("click", performSearch);
+
+      // Live search (debounced)
+      let debounceTimer;
+      searchInput.addEventListener("input", () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(performSearch, 300);
+      });
+
+      // Re-apply after every render
+      const originalRender = serviceRequestManager.renderRequests.bind(
+        serviceRequestManager
+      );
+      serviceRequestManager.renderRequests = function () {
+        originalRender();
+        performSearch();
+      };
+    });
 
     // Queue Manager
     class QueueManager {
@@ -1809,6 +2303,10 @@
               completed: [],
               priority: [],
             };
+
+            // --- 🟢 REVERTED: The .reverse() line has been REMOVED 🟢 ---
+            // The sorting is now handled correctly by the server.
+
             this.renderQueueDashboard();
             this.updateQueueStats();
             updateReportsData();
@@ -2552,26 +3050,21 @@
 
     // Enhanced auto-refresh with error handling
     function setupEnhancedAutoRefresh() {
-      // Refresh every 5 seconds when on queue page
+      // Refresh queue data every 5 seconds (runs in background)
       setInterval(() => {
-        if (
-          !isQueuePaused &&
-          document.getElementById("queue-page").classList.contains("active")
-        ) {
+        if (!isQueuePaused) {
+          // We removed the page check so this always runs,
+          // updating stats like "Total Requests Today".
           queueManager.loadQueues();
         }
-      }, 5000);
+      }, 5000); // You can keep this at 5s, or change to 10s (10000) if 5s is too frequent
 
-      // Refresh service requests every 30 seconds
+      // Refresh service requests every 30 seconds (runs in background)
       setInterval(() => {
-        if (
-          document
-            .getElementById("documents-page")
-            .classList.contains("active")
-        ) {
-          serviceRequestManager.loadServiceRequests();
-        }
-      }, 30000);
+        // We removed the page check so this always runs,
+        // updating the notification dot.
+        serviceRequestManager.loadServiceRequests();
+      }, 30000); // 30s is good, but you can make it 15s (15000) if you want it faster
     }
 
     // Initialize with enhanced features
@@ -2581,6 +3074,9 @@
       // Initialize managers
       serviceRequestManager = new ServiceRequestManager();
       queueManager = new QueueManager();
+      // Pre-load data in the background on page load
+      serviceRequestManager.loadServiceRequests();
+      queueManager.loadQueues();
 
       // Set up navigation
       setupNavigation();
@@ -2660,6 +3156,220 @@
           );
         }
       });
+    // ⬇️ ADD THESE TWO NEW FUNCTIONS ⬇️
+
+    /**
+     * Populates the 'Queue Report History' list on the Reports page.
+     * For now, it just checks for today's completed requests.
+     */
+    function renderReportHistory(queues) {
+      const container = document.getElementById(
+        "queueReportHistoryContainer"
+      );
+      if (!container) return;
+
+      const completedRequests = queues.completed || [];
+
+      if (completedRequests.length > 0) {
+        // Format today's date
+        const today = new Date();
+        const day = today.toLocaleDateString("en-US", { weekday: "long" });
+        const date = today.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        container.innerHTML = `
+          <h2 class="history-title">Queue Report History</h2>
+          <div class="history-item" onclick="showReportDetail('today')">
+            <span class="history-day">Today's Report</span>
+            <span class="history-date">${day}, ${date}</span>
+          </div>
+          `;
+      } else {
+        container.innerHTML = `
+          <h2 class="history-title">Queue Report History</h2>
+          <div class="history-item empty" style="text-align: center; color: #999; padding: 20px 0;">
+            No completed requests for today.
+          </div>
+        `;
+      }
+    }
+
+    /**
+     * Populates the Report Detail page with data from 'today' (queueManager.queues.completed)
+     */
+    function populateTodayReportDetail() {
+      const completedRequests = queueManager.queues.completed || [];
+
+      // --- 1. Set Date and Total ---
+      const today = new Date();
+      const day = today.toLocaleDateString("en-US", { weekday: "long" });
+      const date = today.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+
+      const dateEl = document.getElementById("reportDetailDate");
+      const totalEl = document.getElementById("reportDetailTotal");
+
+      if (dateEl) dateEl.innerHTML = `Today: ${day} <br/> ${date}`;
+      if (totalEl) totalEl.textContent = completedRequests.length;
+
+      // --- 2. Group services and create summary ---
+      const serviceSummary = new Map();
+      const requestsByService = new Map();
+
+      // Utility to prevent XSS (HTML injection)
+      const escape = (str) => {
+        if (str === null || str === undefined) return "";
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      };
+
+      completedRequests.forEach((req) => {
+        let services = [];
+        try {
+          if (
+            typeof req.services === "string" &&
+            req.services.startsWith("[")
+          ) {
+            services = JSON.parse(req.services);
+          } else if (Array.isArray(req.services)) {
+            services = req.services;
+          } else if (req.services) {
+            services = [String(req.services)]; // Handle as single string
+          }
+        } catch (e) {
+          console.warn("Could not parse services:", req.services);
+        }
+
+        if (services.length === 0) {
+          services = ["Other"]; // Fallback
+        }
+
+        services.forEach((serviceName) => {
+          const cleanServiceName = escape(serviceName);
+          // Add to summary count
+          serviceSummary.set(
+            cleanServiceName,
+            (serviceSummary.get(cleanServiceName) || 0) + 1
+          );
+
+          // Add request to service group
+          if (!requestsByService.has(cleanServiceName)) {
+            requestsByService.set(cleanServiceName, []);
+          }
+          requestsByService.get(cleanServiceName).push(req);
+        });
+      });
+
+      // --- 3. Populate Service Grid ---
+      const gridContainer = document.getElementById(
+        "reportDetailServiceGrid"
+      );
+      let gridHtml = "<div>"; // Start first column
+      let count = 0;
+      serviceSummary.forEach((count, serviceName) => {
+        gridHtml += `
+          <div class="service-item">
+            <span class="service-name">${serviceName}:</span>
+            <span class="service-count">${count}</span>
+          </div>
+        `;
+        count++;
+        // Split into two columns
+        if (count % 5 === 0 && count < serviceSummary.size) {
+          gridHtml += "</div><div>";
+        }
+      });
+      gridHtml += "</div>";
+
+      if (gridContainer) {
+        gridContainer.innerHTML =
+          serviceSummary.size > 0
+            ? gridHtml
+            : '<div style="color: #999; font-size: 14px;">No services recorded.</div>';
+      }
+
+      // --- 4. Populate Data Table ---
+      const tableContainer = document.getElementById("reportDetailDataTable");
+      let tableHtml = "";
+
+      requestsByService.forEach((requests, serviceName) => {
+        tableHtml += `
+          <div class="table-section">
+            <div class="table-header-title">${serviceName}</div>
+            <div class="table-row header-row">
+              <div class="table-cell header">Name</div>
+              <div class="table-cell header">Year/Course</div>
+              <div class="table-cell header">Student ID</div>
+            </div>
+        `;
+
+        requests.forEach((req) => {
+          tableHtml += `
+            <div class="table-row">
+              <div class="table-cell">${escape(req.user_name)}</div>
+              <div class="table-cell">${escape(req.course || "N/A")} - ${escape(
+            req.year_level || "N/A"
+          )}</div>
+              <div class="table-cell">${escape(req.student_id || "N/A")}</div>
+            </div>
+          `;
+        });
+
+        tableHtml += "</div>"; // End table-section
+      });
+
+      if (tableContainer) {
+        tableContainer.innerHTML =
+          requestsByService.size > 0
+            ? tableHtml
+            : `
+          <div style="text-align: center; color: #999; padding: 30px 0;">
+            No detailed request data to display.
+          </div>
+        `;
+      }
+    }
+    // ⬆️ END OF NEW FUNCTIONS ⬆️
+    // ────── Theme toggle (only on Settings page) ──────
+    document.addEventListener("DOMContentLoaded", () => {
+      const body = document.body;
+      const darkSwitch = document.getElementById("darkModeSwitch");
+
+      // Load saved preference
+      if (localStorage.getItem("theme") === "dark") {
+        body.classList.add("dark-theme");
+        if (darkSwitch) darkSwitch.checked = true;
+      }
+
+      // Toggle handler
+      if (darkSwitch) {
+        darkSwitch.addEventListener("change", () => {
+          if (darkSwitch.checked) {
+            body.classList.add("dark-theme");
+            localStorage.setItem("theme", "dark");
+          } else {
+            body.classList.remove("dark-theme");
+            localStorage.setItem("theme", "light");
+          }
+        });
+      }
+    });
+    // Apply dark-theme only once – no inline !important overrides
+    document.addEventListener("DOMContentLoaded", () => {
+      if (localStorage.getItem("theme") === "dark") {
+        document.body.classList.add("dark-theme");
+        const sw = document.getElementById("darkModeSwitch");
+        if (sw) sw.checked = true;
+      }
+    });
   </script>
 </body>
 

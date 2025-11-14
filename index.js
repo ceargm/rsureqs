@@ -732,7 +732,7 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
         success: true,
         message: "Queue completed successfully",
         completedBy: adminName,
-        nextQueueStarted: false // Always false now
+        nextQueueStarted: false, // Always false now
       });
     });
   });
@@ -1209,42 +1209,78 @@ app.post("/api/admin/move-to-regular", authenticateAdmin, (req, res) => {
   );
 });
 
+// THIS IS THE CORRECTED "MAKE-CURRENT" LOGIC
 app.post("/api/admin/make-current", authenticateAdmin, (req, res) => {
   const { queueId } = req.body;
+  const adminId = req.admin.adminId;
+  const adminName = req.admin.full_name;
 
-  db.query(
-    `UPDATE queue SET status = 'waiting' WHERE status = 'processing'`,
-    (err) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Database error",
+  if (!queueId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Queue ID is required" });
+  }
+
+  // 1. Find the timestamp of the *current* (oldest) processing item
+  const findOldestQuery = `
+    SELECT started_at 
+    FROM queue 
+    WHERE status = 'processing' 
+      AND DATE(submitted_at) = CURDATE()
+    ORDER BY started_at ASC 
+    LIMIT 1
+  `;
+
+  db.query(findOldestQuery, (err, results) => {
+    if (err) {
+      console.error("Database error (findOldest):", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    let newTimestamp;
+    if (results.length > 0) {
+      // 2. Found an old item. Set new timestamp 1 second *before* it.
+      const oldestTime = new Date(results[0].started_at);
+      oldestTime.setSeconds(oldestTime.getSeconds() - 1);
+      newTimestamp = oldestTime;
+    } else {
+      // 3. No other item is processing. Just set to NOW().
+      newTimestamp = new Date();
+    }
+
+    // 4. Update the selected queue item with this new, *older* timestamp
+    db.query(
+      `UPDATE queue 
+       SET 
+         status = 'processing', 
+         started_at = ?,  -- This is the new, older timestamp
+         processed_by = ?,
+         processed_by_id = ?
+       WHERE queue_id = ?`,
+      [newTimestamp, adminName, adminId, queueId],
+      (err, result) => {
+        if (err) {
+          console.error("Database error (update):", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Database error" });
+        }
+
+        if (result.affectedRows === 0) {
+          return res
+            .status(404)
+            .json({ success: false, message: "Queue not found" });
+        }
+
+        res.json({
+          success: true,
+          message: "Queue item set as current",
         });
       }
-
-      db.query(
-        `UPDATE queue 
-         SET status = 'processing', started_at = NOW()
-         WHERE queue_id = ?`,
-        [queueId],
-        (err, result) => {
-          if (err) {
-            console.error("Database error:", err);
-            return res.status(500).json({
-              success: false,
-              message: "Database error",
-            });
-          }
-
-          res.json({
-            success: true,
-            message: "Queue item set as current",
-          });
-        }
-      );
-    }
-  );
+    );
+  });
 });
 
 app.post("/api/admin/clear-priority", authenticateAdmin, (req, res) => {
@@ -1407,29 +1443,30 @@ app.post("/api/admin/add-to-queue", authenticateAdmin, (req, res) => {
 app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
   const query = `
     SELECT 
-      queue_id,
-      queue_number,
-      user_id,
-      user_name,
-      student_id,
-      course,
-      year_level,
-      request_id,
-      services,
-      total_amount,
-      status,
-      is_priority,
-      priority_type,
-      submitted_at,
-      started_at,
-      completed_at
+      queue_id, queue_number, user_id, user_name, student_id, course,
+      year_level, request_id, services, total_amount, status,
+      is_priority, priority_type, submitted_at, started_at, completed_at
     FROM queue
     WHERE DATE(submitted_at) = CURDATE()
     ORDER BY 
+      -- 🟢 START OF FIX 🟢
+      -- Sort processing items first
       CASE 
-        WHEN is_priority = 1 THEN 0 
-        ELSE 1 
-      END,
+        WHEN status = 'processing' THEN 1
+        WHEN status = 'waiting' THEN 2
+        ELSE 3
+      END ASC,
+      -- For processing items, sort by PRIORITY first
+      is_priority DESC,
+      -- Then, sort by started_at (oldest first)
+      started_at ASC,
+      -- 🟢 END OF FIX 🟢
+
+      -- Fallback sorting for other statuses
+      CASE 
+        WHEN status = 'completed' THEN completed_at 
+        ELSE NULL 
+      END DESC,
       submitted_at ASC
   `;
 
@@ -1634,49 +1671,60 @@ app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
   });
 });
 // === END MANUAL QUEUE ENTRY ===
-// New public API endpoint for queue status (no authentication needed)
+// New public API endpoint for queue status (no authentication needed) - FIXED DAILY RESET
 app.get("/api/queue/status", (req, res) => {
-  // Get now serving (single processing queue)
+  const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+  // --- 🟢 FIX: Sort by Priority, then Time 🟢 ---
   const nowServingQuery = `
-  SELECT queue_number 
-  FROM queue 
-  WHERE status = 'processing' 
-  ORDER BY is_priority DESC, started_at ASC 
-  LIMIT 1
-`;
-  db.query(nowServingQuery, (err, nowServingResult) => {
+    SELECT queue_number 
+    FROM queue 
+    WHERE status = 'processing' 
+      AND DATE(submitted_at) = ?
+    ORDER BY is_priority DESC, started_at ASC 
+    LIMIT 1
+  `;
+
+  db.query(nowServingQuery, [today], (err, nowServingResult) => {
     if (err) {
-      console.error("Database error:", err);
+      console.error("Database error (nowServing):", err);
       return res
         .status(500)
         .json({ success: false, message: "Database error" });
     }
     const nowServing =
-      nowServingResult.length > 0 ? nowServingResult[0].queue_number : null;
+      nowServingResult.length > 0 ? nowServingResult[0].queue_number : "None";
 
-    // Get coming next: Next 4 items AFTER the one currently being served (from processing)
+    // --- 🟢 FIX: Sort by Priority, then Time 🟢 ---
     const comingNextQuery = `
-  SELECT queue_number 
-  FROM queue 
-  WHERE status = 'processing' 
-  ORDER BY is_priority DESC, started_at ASC 
-  LIMIT 4 OFFSET 1
-`;
-    db.query(comingNextQuery, (err, comingNextResult) => {
+      SELECT queue_number 
+      FROM queue 
+      WHERE status = 'processing' 
+        AND DATE(submitted_at) = ?
+      ORDER BY is_priority DESC, started_at ASC 
+      LIMIT 3 OFFSET 1
+    `;
+    db.query(comingNextQuery, [today], (err, comingNextResult) => {
       if (err) {
-        console.error("Database error:", err);
+        console.error("Database error (comingNext):", err);
         return res
           .status(500)
           .json({ success: false, message: "Database error" });
       }
       const comingNext = comingNextResult.map((row) => row.queue_number);
 
-      // Get ready to claim (up to 10, newest first) - now reads from 'completed' status
-      const readyToClaimQuery =
-        "SELECT queue_number FROM queue WHERE status = 'completed' ORDER BY completed_at DESC LIMIT 10";
-      db.query(readyToClaimQuery, (err, readyToClaimResult) => {
+      // READY TO CLAIM: Only today's completed
+      const readyToClaimQuery = `
+        SELECT queue_number 
+        FROM queue 
+        WHERE status = 'completed' 
+          AND DATE(completed_at) = ?
+        ORDER BY completed_at DESC
+      `;
+
+      db.query(readyToClaimQuery, [today], (err, readyToClaimResult) => {
         if (err) {
-          console.error("Database error:", err);
+          console.error("Database error (readyToClaim):", err);
           return res
             .status(500)
             .json({ success: false, message: "Database error" });
@@ -1695,45 +1743,45 @@ app.get("/api/queue/status", (req, res) => {
 });
 
 // Add/Complete protected admin route for marking done (sets to 'ready')
-app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
-  const { queueId } = req.body;
-  if (!queueId) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Queue ID is required" });
-  }
+// app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
+//   const { queueId } = req.body;
+//   if (!queueId) {
+//     return res
+//       .status(400)
+//       .json({ success: false, message: "Queue ID is required" });
+//   }
 
-  const completedBy = req.admin.full_name;
-  const completedById = req.admin.adminId;
+//   const completedBy = req.admin.full_name;
+//   const completedById = req.admin.adminId;
 
-  const updateQuery = `
-    UPDATE queue 
-    SET status = 'ready', completed_at = NOW(), completed_by = ?, completed_by_id = ?
-    WHERE queue_id = ? AND status = 'processing'
-  `;
+//   const updateQuery = `
+//     UPDATE queue
+//     SET status = 'ready', completed_at = NOW(), completed_by = ?, completed_by_id = ?
+//     WHERE queue_id = ? AND status = 'processing'
+//   `;
 
-  db.query(
-    updateQuery,
-    [completedBy, completedById, queueId],
-    (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error" });
-      }
+//   db.query(
+//     updateQuery,
+//     [completedBy, completedById, queueId],
+//     (err, result) => {
+//       if (err) {
+//         console.error("Database error:", err);
+//         return res
+//           .status(500)
+//           .json({ success: false, message: "Database error" });
+//       }
 
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Queue not found or not in processing",
-        });
-      }
+//       if (result.affectedRows === 0) {
+//         return res.status(404).json({
+//           success: false,
+//           message: "Queue not found or not in processing",
+//         });
+//       }
 
-      res.json({ success: true, message: "Request marked as ready to claim" });
-    }
-  );
-});
+//       res.json({ success: true, message: "Request marked as ready to claim" });
+//     }
+//   );
+// });
 
 // Start server
 const PORT = 3000;

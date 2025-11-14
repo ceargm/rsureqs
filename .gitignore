@@ -1,0 +1,12 @@
+# Ignore the huge folder of third-party dependencies
+node_modules/
+
+# Ignore configuration files that contain secrets
+*.env
+
+# Ignore VS Code settings folder
+.vscode/
+
+# Ignore system files created by macOS and Windows
+.DS_Store
+Thumbs.db
