@@ -1,206 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RSU REQS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <link href="/assets/css/style.css" rel="stylesheet">
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+    <link href="/assets/css/style.css" rel="stylesheet" />
 
     <style>
-        .hero-buttons {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 1rem;
-            margin-top: 1.5rem;
-            width: 100%;
-        }
+      .hero-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        width: 100%;
+      }
 
-        .hero-buttons .btn-login-register {
-            background: #f5f6f4;
-            color: #313a3f;
-        }
+      .hero-buttons .btn-login-register {
+        background: #f5f6f4;
+        color: #313a3f;
+      }
 
-        .hero-buttons .btn-login-register:hover {
-            background: rgb(5, 218, 87);
-            color: #313a3f;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transform: translateY(-2px);
-        }
+      .hero-buttons .btn-login-register:hover {
+        background: rgb(5, 218, 87);
+        color: #313a3f;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+      }
 
-        .btn-secondary {
-            background: #ccc;
-            color: #313a3f;
-            font-weight: 600;
-            border-radius: 15px;
-            padding: 8px 25px;
-            transition: 0.3s;
-            text-decoration: none;
-            min-width: 100px;
-            white-space: nowrap;
-            border: 2px solid #034538;
-        }
+      .btn-secondary {
+        background: #ccc;
+        color: #313a3f;
+        font-weight: 600;
+        border-radius: 15px;
+        padding: 8px 25px;
+        transition: 0.3s;
+        text-decoration: none;
+        min-width: 100px;
+        white-space: nowrap;
+        border: 2px solid #034538;
+      }
 
-        .btn-secondary:hover {
-            background: #ccc;
-            color: #313a3f;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transform: translateY(-2px);
-            border: 2px solid #034538;
-        }
+      .btn-secondary:hover {
+        background: #ccc;
+        color: #313a3f;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+        border: 2px solid #034538;
+      }
 
+      .btn-primary {
+        background: rgb(5, 218, 87);
+        color: #313a3f;
+        border: 2px solid #034538;
+        font-weight: bold;
+        border-radius: 15px;
+        padding: 8px 25px;
+        transition: 0.3s;
+        text-decoration: none;
+        min-width: 250px;
+        white-space: nowrap;
+      }
 
-        .btn-primary {
-            background: rgb(5, 218, 87);
-            color: #313a3f;
-            border: 2px solid #034538;
-            font-weight: bold;
-            border-radius: 15px;
-            padding: 8px 25px;
-            transition: 0.3s;
-            text-decoration: none;
-            min-width: 250px;
-            white-space: nowrap;
-        }
-
-        .btn-primary:hover {
-            background: rgb(5, 218, 87);
-            color: #313a3f;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-            transform: translateY(-2px);
-            border: 2px solid #034538;
-        }
+      .btn-primary:hover {
+        background: rgb(5, 218, 87);
+        color: #313a3f;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transform: translateY(-2px);
+        border: 2px solid #034538;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-
+  <body>
     <!-- Data Privacy Modal -->
-    <div class="modal fade" id="privacyModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        aria-labelledby="privacyModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-3 shadow">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="privacyModalLabel">📢 Data Privacy Notice</h5>
-                </div>
-                <div class="modal-body">
-                    By using the <strong>RSU REQS</strong>, you agree that your personal
-                    information (e.g., name, email, phone number, course/ major, year level, student ID)
-                    may be collected and processed in accordance with the Data Privacy Act of 2012.
-                    <a href="/privacy" target="_blank">View Full Privacy Policy</a>.
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-custom btn-primary" data-bs-dismiss="modal">
-                        <i class="bi bi-check-lg"></i> Agree & Continue</button>
-                </div>
-            </div>
+    <div
+      class="modal fade"
+      id="privacyModal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="privacyModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow">
+          <div class="modal-header">
+            <h5 class="modal-title" id="privacyModalLabel">
+              📢 Data Privacy Notice
+            </h5>
+          </div>
+          <div class="modal-body">
+            By using the <strong>RSU REQS</strong>, you agree that your personal
+            information (e.g., name, email, phone number, course/ major, year
+            level, student ID) may be collected and processed in accordance with
+            the Data Privacy Act of 2012.
+            <a href="/privacy" target="_blank">View Full Privacy Policy</a>.
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-custom btn-primary"
+              data-bs-dismiss="modal"
+            >
+              <i class="bi bi-check-lg"></i> Agree & Continue
+            </button>
+          </div>
         </div>
+      </div>
     </div>
 
     <!-- CONTENT -->
-    <div class="d-flex flex-grow-1 justify-content-center align-items-center margin-auto">
-        <div class="card-custom">
-            <div class="logo d-flex flex-column justify-content-center align-items-center">
-                <div class="d-flex flex-row justify-content-center align-items-center mb-2">
-                    <img src="/assets/img/rsu_logo.png" alt="RSU Logo" width="55" height="55" class="me-2">
-                    <img src="/assets/img/registrar_logo.png" alt="Registrar Logo" width="40" height="40" class="me-2">
-                </div>
-                <a href="/">
-                    <div class="d-flex flex-column lh-sm">
-                        <p class="fw-bold">Registrar's Office</p>
-                        <p class="fw-bold">Romblon State University - Odiongan</p>
-                    </div>
-                </a>
+    <div
+      class="d-flex flex-grow-1 justify-content-center align-items-center margin-auto"
+    >
+      <div class="card-custom">
+        <div
+          class="logo d-flex flex-column justify-content-center align-items-center"
+        >
+          <div
+            class="d-flex flex-row justify-content-center align-items-center mb-2"
+          >
+            <img
+              src="/assets/img/rsu_logo.png"
+              alt="RSU Logo"
+              width="55"
+              height="55"
+              class="me-2"
+            />
+            <img
+              src="/assets/img/registrar_logo.png"
+              alt="Registrar Logo"
+              width="40"
+              height="40"
+              class="me-2"
+            />
+          </div>
+          <a href="/">
+            <div class="d-flex flex-column lh-sm">
+              <p class="fw-bold">Registrar's Office</p>
+              <p class="fw-bold">Romblon State University - Odiongan</p>
             </div>
-            <div class="content" style="padding-top:10px">
-                <!-- ------------------------START of Bootstrap alert------------------------ -->
-                <div id="serviceAlert" class="alert alert-danger d-none" role="alert">
-                    ⚠ Service is currently unavailable. Please check back tomorrow at 9:00 AM.
-                </div>
-                <!-- -------------------------END of Bootstrap alert------------------------- -->
-                <h2>Welcome to RSU REQS</h2>
-                <p>
-                    A convenient portal for Registrar’s Office services. <br>
-                    Request tokens, track your service progress, and get real-time updates via email or SMS.
-                </p>
-                <div class="hero-buttons gap-3 mb-4">
-                    <a href="/login" class="btn btn-custom btn-login">
-                        <i class="bi bi-box-arrow-in-right me-1"></i> Login
-                    </a>
-                    <a href="/register" class="btn btn-custom btn-register">
-                        <i class="bi bi-pencil-square me-1"></i> Register
-                    </a>
-                    <a href="/queue" class="btn btn-custom btn-guest">
-                        <i class="bi bi-people-fill me-1"></i> View Queue Status
-                    </a>
-                </div>
-            </div>
+          </a>
         </div>
+        <div class="content" style="padding-top: 10px">
+          <!-- ------------------------START of Bootstrap alert------------------------ -->
+          <div id="serviceAlert" class="alert alert-danger d-none" role="alert">
+            ⚠ Service is currently unavailable. Please check back tomorrow at
+            9:00 AM.
+          </div>
+          <!-- -------------------------END of Bootstrap alert------------------------- -->
+          <h2>Welcome to RSU REQS</h2>
+          <p>
+            A convenient portal for Registrar’s Office services. <br />
+            Request tokens, track your service progress, and get real-time
+            updates via email or SMS.
+          </p>
+          <div class="hero-buttons gap-3 mb-4">
+            <a href="/login" class="btn btn-custom btn-login">
+              <i class="bi bi-box-arrow-in-right me-1"></i> Login
+            </a>
+            <a href="/register" class="btn btn-custom btn-register">
+              <i class="bi bi-pencil-square me-1"></i> Register
+            </a>
+            <a href="/queue" class="btn btn-custom btn-guest">
+              <i class="bi bi-people-fill me-1"></i> View Queue Status
+            </a>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        function updateServiceStatus() {
-            const now = new Date();
-            const hours = now.getHours();
-            const serviceAlert = document.getElementById("serviceAlert");
-            const loginBtn = document.querySelector(".btn-login");
-            const registerBtn = document.querySelector(".btn-register");
-            const queueBtn = document.querySelector(".btn-guest");
+      function updateServiceStatus() {
+        const now = new Date();
+        const hours = now.getHours();
+        const serviceAlert = document.getElementById("serviceAlert");
+        const loginBtn = document.querySelector(".btn-login");
+        const registerBtn = document.querySelector(".btn-register");
+        const queueBtn = document.querySelector(".btn-guest");
 
-            const openHour = 0;  
-            const closeHour = 24; 
+        const openHour = 0;
+        const closeHour = 24;
 
-            // Check if current time is between 9 AM and 4 PM
-            const isOpen = hours >= openHour && hours < closeHour;
+        // Check if current time is between 9 AM and 4 PM
+        const isOpen = hours >= openHour && hours < closeHour;
 
-            if (isOpen) {
-                // Enable buttons
-                loginBtn.classList.remove("disabled");
-                registerBtn.classList.remove("disabled");
-                queueBtn.classList.remove("disabled");
-                loginBtn.removeAttribute("tabindex");
-                registerBtn.removeAttribute("tabindex");
-                queueBtn.removeAttribute("tabindex");
-                // Hide alert if service is available
-                serviceAlert.classList.add("d-none");
-            } else {
-                // Disable buttons
-                loginBtn.classList.add("disabled");
-                registerBtn.classList.add("disabled");
-                queueBtn.classList.add("disabled");
-                loginBtn.setAttribute("tabindex", "-1");
-                registerBtn.setAttribute("tabindex", "-1");
-                queueBtn.setAttribute("tabindex", "-1");
-                // Show alert
-                serviceAlert.classList.remove("d-none");
+        if (isOpen) {
+          // Enable buttons
+          loginBtn.classList.remove("disabled");
+          registerBtn.classList.remove("disabled");
+          queueBtn.classList.remove("disabled");
+          loginBtn.removeAttribute("tabindex");
+          registerBtn.removeAttribute("tabindex");
+          queueBtn.removeAttribute("tabindex");
+          // Hide alert if service is available
+          serviceAlert.classList.add("d-none");
+        } else {
+          // Disable buttons
+          loginBtn.classList.add("disabled");
+          registerBtn.classList.add("disabled");
+          queueBtn.classList.add("disabled");
+          loginBtn.setAttribute("tabindex", "-1");
+          registerBtn.setAttribute("tabindex", "-1");
+          queueBtn.setAttribute("tabindex", "-1");
+          // Show alert
+          serviceAlert.classList.remove("d-none");
 
-                // Optional: Update alert message based on time
-                if (hours < openHour) {
-                    serviceAlert.innerHTML = `Service opens at ${openHour}:00 AM`;
-                } else {
-                    serviceAlert.innerHTML = `Service closed for today. Opens tomorrow at ${openHour}:00 AM`;
-                }
-            }
+          // Optional: Update alert message based on time
+          if (hours < openHour) {
+            serviceAlert.innerHTML = `Service opens at ${openHour}:00 AM`;
+          } else {
+            serviceAlert.innerHTML = `Service closed for today. Opens tomorrow at ${openHour}:00 AM`;
+          }
         }
+      }
 
-        setInterval(updateServiceStatus, 1000);
-        updateServiceStatus();
+      setInterval(updateServiceStatus, 1000);
+      updateServiceStatus();
 
-        // modal popup
-        document.addEventListener("DOMContentLoaded", function () {
-            var myModal = new bootstrap.Modal(document.getElementById('privacyModal'));
-            myModal.show();
-        });
-        // // Handle agree button
-        // document.getElementById('agreeBtn').addEventListener('click', () => {
-        //     privacyModal.hide();
-        // });
+      // modal popup
+      document.addEventListener("DOMContentLoaded", function () {
+        var myModal = new bootstrap.Modal(
+          document.getElementById("privacyModal")
+        );
+        myModal.show();
+      });
+      // // Handle agree button
+      // document.getElementById('agreeBtn').addEventListener('click', () => {
+      //     privacyModal.hide();
+      // });
     </script>
-</body>
-
+  </body>
 </html>
