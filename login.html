@@ -34,6 +34,21 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
         transform: translateY(-2px);
       }
+      .password-wrapper {
+        position: relative;
+      }
+      .password-wrapper .form-control {
+        /* Add space on the right so text doesn't go under the icon */
+        padding-right: 40px;
+      }
+      .password-wrapper i {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        color: #6c757d; /* A softer gray color */
+      }
     </style>
   </head>
 
@@ -70,8 +85,8 @@
               class="me-2"
             />
             <img
-              src="/assets/img/registrar_logo.png"
-              alt="Registrar Logo"
+              src="/assets/img/updated_RegistrarLogo.jpg"
+              alt="Admission, Registration, and Scholarship & Grants Office"
               width="40"
               height="40"
               class="me-2"
@@ -112,26 +127,29 @@
                 required
               />
             </div>
-            <div class="mb-3 d-flex justify-content-between align-items-center">
-              <label for="loginPassword" class="form-label mb-0"
-                >Password</label
-              >
-              <a
-                href="./forgot.html"
-                style="font-size: 0.9rem; color: #888; font-weight: 600"
-                >Forgot Password?</a
-              >
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <label for="loginPassword" class="form-label mb-2"
+                  >Password</label
+                >
+                <a
+                  href="./forgot.html"
+                  style="font-size: 0.9rem; color: #888; font-weight: 600"
+                  >Forgot Password?</a
+                >
+              </div>
+              <div class="password-wrapper">
+                <input
+                  type="password"
+                  id="loginPassword"
+                  name="password"
+                  class="form-control"
+                  placeholder="Enter your password"
+                  required
+                />
+                <i class="bi bi-eye-fill" id="toggleIcon"></i>
+              </div>
             </div>
-            <input
-              type="password"
-              id="loginPassword"
-              name="password"
-              class="form-control mb-3"
-              placeholder="Enter your password"
-              required
-            />
-
-            <div id="loginAlert" class="alert d-none" role="alert"></div>
             <div class="hero-buttons">
               <button
                 type="submit"

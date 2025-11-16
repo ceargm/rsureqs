@@ -60,22 +60,23 @@
   margin-bottom: 15px;
 }
 
-.request-details .info-row {
-  display: flex;
-  justify-content: space-between;
+..request-details .info-row {
+  display: grid;
+  grid-template-columns: 140px auto; /* 140px for label, rest for value */
+  gap: 8px;
   margin-bottom: 10px;
-  padding: 8px 0;
-  border-bottom: 1px solid #f0f0f0;
+  font-size: 1rem;
+  line-height: 1.5;
 }
-
 .request-details .info-label {
-  color: #666;
-  font-weight: 500;
+  font-weight: 600;
+  color: #555;
+  grid-column: 1 / 2;
 }
-
 .request-details .info-value {
-  color: #333;
-  font-weight: 500;
+  color: #222;
+  word-break: break-word;
+  grid-column: 2 / 3;
 }
 
 .btn-sm {
@@ -1642,4 +1643,123 @@ body.dark-theme .form-check-input:checked {
   border-color: #22c55e !important;
   /* This prevents the "double circle" bug */
   background-image: none !important;
+}
+.request-details .info-row {
+  display: flex;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+.request-details .info-label {
+  font-weight: 600;
+  color: #555;
+  width: 140px;
+  flex-shrink: 0;
+}
+.request-details .info-value {
+  color: #222;
+  word-break: break-word;
+}
+.request-details h4 {
+  color: #0056b3; /* Primary color */
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 5px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  font-size: 1.25rem;
+}
+.request-details h5 {
+  font-weight: 600;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+.services-list-modal,
+.requirements-list-modal {
+  list-style-type: none;
+  padding-left: 0;
+}
+.services-list-modal li {
+  background: #f4f4f4;
+  padding: 8px 12px;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+.requirements-list-modal li {
+  padding: 5px 0;
+}
+.requirements-list-modal a {
+  text-decoration: none;
+  font-weight: 500;
+  color: #0d6efd;
+}
+.requirements-list-modal a:hover {
+  text-decoration: underline;
+}
+.requirements-list-modal i {
+  margin-right: 8px;
+  color: #6c757d;
+}
+.request-details .info-row {
+  display: flex;
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+.request-details .info-label {
+  font-weight: 600;
+  color: #555;
+  width: 140px;
+  flex-shrink: 0;
+}
+.request-details .info-value {
+  color: #222;
+  word-break: break-word;
+}
+.request-details h4 {
+  color: #0056b3; /* Primary color */
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 5px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+  font-size: 1.25rem;
+}
+.request-details h5 {
+  font-weight: 600;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+.services-list-modal,
+.requirements-list-modal {
+  list-style-type: none;
+  padding-left: 0;
+}
+.services-list-modal li {
+  background: #f4f4f4;
+  padding: 8px 12px;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+.requirements-list-modal li {
+  padding: 5px 0;
+}
+.requirements-list-modal a {
+  text-decoration: none;
+  font-weight: 500;
+  color: #0d6efd;
+}
+.requirements-list-modal a:hover {
+  text-decoration: underline;
+}
+.requirements-list-modal i {
+  margin-right: 8px;
+  color: #6c757d;
+}
+.school-id-preview {
+  width: 150px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.school-id-preview:hover {
+  transform: scale(1.05);
 }

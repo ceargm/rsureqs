@@ -27,7 +27,6 @@ loginForm.addEventListener("submit", async (e) => {
       localStorage.setItem("phone", data.phone);
       localStorage.setItem("email", data.email);
       localStorage.setItem("loginTime", new Date().getTime()); // For session tracking
-   
 
       // redirect to dashboard
       window.location.href = "/dashboard";
@@ -42,5 +41,29 @@ loginForm.addEventListener("submit", async (e) => {
     loginAlert.classList.remove("d-none", "alert-success");
     loginAlert.classList.add("alert-danger");
     loginAlert.textContent = "Something went wrong. Please try again.";
+  }
+});
+document.addEventListener("DOMContentLoaded", function () {
+  // Get elements for the password field
+  const password = document.getElementById("loginPassword");
+  const toggleIcon = document.getElementById("toggleIcon"); // This is the <i> tag
+
+  // Add click listener *directly to the icon*
+  if (toggleIcon) {
+    toggleIcon.addEventListener("click", function () {
+      // Toggle the type
+      const type =
+        password.getAttribute("type") === "password" ? "text" : "password";
+      password.setAttribute("type", type);
+
+      // Toggle the icon
+      if (type === "password") {
+        toggleIcon.classList.remove("bi-eye-slash-fill");
+        toggleIcon.classList.add("bi-eye-fill");
+      } else {
+        toggleIcon.classList.remove("bi-eye-fill");
+        toggleIcon.classList.add("bi-eye-slash-fill");
+      }
+    });
   }
 });

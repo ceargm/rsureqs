@@ -24,6 +24,22 @@
       .service-card {
         transition: all 0.3s ease;
         cursor: pointer;
+        position: relative; /* This is required for the counter */
+      }
+
+      /* This is the new counter badge style */
+      .service-counter {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background-color: #6c757d; /* Bootstrap 'secondary' gray */
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        line-height: 1;
+        z-index: 2; /* Sits on top of the card content */
       }
 
       .service-card:hover {
@@ -113,6 +129,17 @@
         padding: 15px;
         margin-bottom: 20px;
       }
+      .nav-item .notification-dot {
+    position: absolute;
+    top: 10px; /* Adjust as needed */
+    right: 10px; /* Adjust as needed */
+    width: 10px;
+    height: 10px;
+    background-color: #0d6efd; /* Bootstrap 'primary' blue */
+    border-radius: 50%;
+    border: 2px solid #fff; /* Makes it look clean on the green bg */
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+  }
     </style>
   </head>
 
@@ -223,7 +250,6 @@
       </div>
     </div>
 
-    <!-- Profile Update Modal -->
     <div
       class="modal fade"
       id="profileUpdateModal"
@@ -252,6 +278,65 @@
             </div>
 
             <form id="profileUpdateForm">
+              <h6 class="fw-bold mb-3 mt-0">Personal Information</h6>
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label for="lastName" class="form-label required-field"
+                    >Last Name</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="lastName"
+                    required
+                  />
+                </div>
+                <div class="col-md-4">
+                  <label for="firstName" class="form-label required-field"
+                    >First Name</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="firstName"
+                    required
+                  />
+                </div>
+                <div class="col-md-4">
+                  <label for="middleName" class="form-label">Middle Name</label>
+                  <input type="text" class="form-control" id="middleName" />
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="gender" class="form-label required-field"
+                    >Gender</label
+                  >
+                  <select class="form-select" id="gender" required>
+                    <option value="" selected disabled>Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label for="phone" class="form-label required-field"
+                    >Phone Number</label
+                  >
+                  <input
+                    type="tel"
+                    class="form-control"
+                    id="phone"
+                    required
+                    placeholder="+639..."
+                  />
+                  <div class="form-text">
+                    Use the same number from registration.
+                  </div>
+                </div>
+              </div>
+
+              <h6 class="fw-bold mb-3 mt-4">Academic Information</h6>
               <div class="row mb-3">
                 <div class="col-md-6">
                   <label for="studentId" class="form-label required-field"
@@ -262,17 +347,19 @@
                     class="form-control"
                     id="studentId"
                     required
+                    placeholder="000-0000-000000"
+                    maxlength="15"
                   />
                   <div class="form-text">
-                    Your official student ID number (not the unique account ID)
+                    Format: 000-0000-000000
                   </div>
                 </div>
                 <div class="col-md-6">
-                  <label for="course" class="form-label required-field"
-                    >Course</label
+                  <label for="program" class="form-label required-field"
+                    >Program</label
                   >
-                  <select class="form-select" id="course" required>
-                    <option value="" selected disabled>Select Course</option>
+                  <select class="form-select" id="program" required>
+                    <option value="" selected disabled>Select Program</option>
                     <option value="BS Computer Science">
                       BS Computer Science
                     </option>
@@ -288,6 +375,50 @@
                     <option value="BS Accountancy">BS Accountancy</option>
                     <option value="BS Psychology">BS Psychology</option>
                   </select>
+                </div>
+              </div>
+
+              <div class="row mb-3 align-items-center">
+                <div class="col-md-6">
+                  <label for="schoolIdPicture" class="form-label required-field"
+                    >School ID Picture (Front)</label
+                  >
+                  <input
+                    type="file"
+                    class="form-control"
+                    id="schoolIdPicture"
+                    accept="image/*"
+                  />
+                  <div class="form-text">
+                    Upload a clear picture of your School ID.
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">ID Preview:</label>
+                  <div
+                    id="schoolIdPicturePreview"
+                    class="mt-1"
+                    style="
+                      width: 150px;
+                      height: 95px;
+                      overflow: hidden;
+                      border: 1px solid #ddd;
+                      border-radius: 5px;
+                      display: none;
+                      background: #f8f9fa;
+                    "
+                  >
+                    <img
+                      src=""
+                      alt="ID Preview"
+                      style="
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                        display: block;
+                      "
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -340,26 +471,118 @@
                     id="yearGraduated"
                     min="2000"
                     max="2030"
+                    placeholder="e.g. 2024"
                   />
                 </div>
               </div>
 
+              <h6 class="fw-bold mb-3 mt-4">Additional Information</h6>
               <div class="row mb-3">
                 <div class="col-md-6">
-                  <label for="phone" class="form-label required-field"
-                    >Phone Number</label
+                  <label for="campus" class="form-label required-field"
+                    >Campus/College</label
                   >
                   <input
-                    type="tel"
+                    type="text"
                     class="form-control"
-                    id="phone"
+                    id="campus"
+                    placeholder="e.g. Main Campus, CAS, etc."
                     required
-                    value="+63 912 345 6789"
                   />
-                  <div class="form-text">
-                    This should be the same number you used during registration
-                  </div>
                 </div>
+                <div class="col-md-6">
+                  <label for="dob" class="form-label required-field"
+                    >Date of Birth</label
+                  >
+                  <input type="date" class="form-control" id="dob" required />
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label for="pob" class="form-label required-field"
+                    >Place of Birth</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="pob"
+                    placeholder="City, Province"
+                    required
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label for="nationality" class="form-label required-field"
+                    >Nationality</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="nationality"
+                    placeholder="e.g. Filipino"
+                    required
+                  />
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-12">
+                  <label for="home_address" class="form-label required-field"
+                    >Home Address</label
+                  >
+                  <textarea
+                    class="form-control"
+                    id="home_address"
+                    rows="2"
+                    placeholder="Street, Barangay, City/Municipality, Province"
+                    required
+                  ></textarea>
+                </div>
+              </div>
+              <div class="row mb-3">
+                <div class="col-12">
+                  <label for="previous_school" class="form-label"
+                    >Previous School Attended (if applicable)</label
+                  >
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="previous_school"
+                    placeholder="Name of last school attended"
+                  />
+                </div>
+              </div>
+              <h6 class="fw-bold mb-3 mt-4">Education Background</h6>
+          <div class="row mb-3">
+            <div class="col-12">
+              <label for="primary_school" class="form-label required-field"
+                >Primary (Elementary)</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="primary_school"
+                placeholder="Name of your primary/elementary school"
+                required
+              />
+            </div>
+          </div>
+          <div class="row mb-3">
+            <div class="col-12">
+              <label for="secondary_school" class="form-label required-field"
+                >Secondary (High School)</label
+              >
+              <input
+                type="text"
+                class="form-control"
+                id="secondary_school"
+                placeholder="Name of your secondary/high school"
+                required
+              />
+            </div>
+          </div>
+          ```
+
+              <h6 class="fw-bold mb-3 mt-4">Contact Information</h6>
+              <div class="row mb-3">
                 <div class="col-md-6">
                   <label for="email" class="form-label required-field"
                     >Email Address</label
@@ -369,10 +592,10 @@
                     class="form-control"
                     id="email"
                     required
-                    value="john.smith@example.com"
+                    placeholder="example@gmail.com"
                   />
                   <div class="form-text">
-                    This should be the same email you used during registration
+                    Use the same email from registration.
                   </div>
                 </div>
               </div>
@@ -403,8 +626,8 @@
             <!-- Brand (Logo + Text) -->
             <a class="navbar-brand" href="#">
               <img
-                src="../assets/img/registrar_logo.png"
-                alt="RSU Logo"
+                src="../assets/img/updated_RegistrarLogo.jpg"
+                alt="Admission, Registration, and Scholarship & Grants Office"
                 class="me-2"
               />
               <span class="info text-white fw-bold">
@@ -448,11 +671,12 @@
                     <i class="bi bi-file-earmark-pdf me-1"></i> Docs
                   </a>
                 </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="#" data-target="updates">
-                    <i class="bi bi-megaphone me-1"></i> Updates
-                  </a>
-                </li>
+                <li class="nav-item" style="position: relative;">
+              <a class="nav-link" href="#" data-target="updates">
+                <i class="bi bi-megaphone me-1"></i> Updates
+              </a>
+              <span class="notification-dot" id="updates-notification-dot" style="display: none;"></span>
+            </li>
                 <li class="nav-item">
                   <a class="nav-link" href="#" data-target="profile">
                     <i class="bi bi-person-circle me-1"></i> Profile
@@ -512,91 +736,193 @@
                 </button>
               </div>
             </div>
+            <div class="text-center mt-4" id="homeActionBtnContainer">
+              <button
+                id="viewServicesBtn"
+                class="btn btn-primary btn-lg"
+                style="display: none"
+                onclick="showSection('services')"
+              >
+                <i class="bi bi-list-check me-1"></i> View Services
+              </button>
+            </div>
+            <div class="container mt-5">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="card mb-4">
+                    <div
+                      class="card-header bg-dark text-white fw-bold text-center"
+                    >
+                      REMINDERS
+                    </div>
+                    <div class="card-body">
+                      <ol class="list-unstyled">
+                        <li>
+                          <p>
+                            Under existing laws, only the record owner may
+                            request or claim documents related to their school
+                            records. To verify the identity of the requester or
+                            claimant, one (1) valid ID must be presented when
+                            requesting or claiming documents. Acceptable IDs
+                            include: Student ID, PhilHealth ID, National ID,
+                            Police Clearance, Driver's License, Passport, UMID,
+                            PRC ID, Voter's ID, Postal ID, TIN ID, or any valid
+                            ID with the requester's or claimant's photo and
+                            signature.
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            RSU reserves the right to deny or cancel any
+                            document request due to incomplete requirements or
+                            pending accountabilities.
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            When claiming documents, present the claim stub
+                            along with the Official Receipt and a valid ID. If a
+                            representative will pick up the documents, they must
+                            present an authorization letter and a valid ID.
+                          </p>
+                        </li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
 
-            <div class="services">
-              <div
-                class="card service-card"
-                onclick="selectService('Transcript of Records')"
-              >
-                <h3 class="fw-bold" style="font-size: 20px">
-                  Transcript of Records
-                </h3>
-                <p>
-                  Official academic record showing all courses taken, grades
-                  earned, and degrees awarded.
-                </p>
-              </div>
-
-              <div
-                class="card service-card"
-                onclick="selectService('Completion Grade Form')"
-              >
-                <h3 class="fw-bold" style="font-size: 20px">
-                  Issuance of Completion Grade Form
-                </h3>
-                <p>
-                  Registrar provides an official grade form upon student
-                  request.
-                </p>
-              </div>
-              <div
-                class="card service-card"
-                onclick="selectService('Diploma Issuance')"
-              >
-                <h3 class="fw-bold" style="font-size: 20px">
-                  Issuance of Diploma
-                </h3>
-                <p>
-                  The Registrar issues official diplomas to graduates as proof
-                  of completion.
-                </p>
-              </div>
-              <div
-                class="card service-card"
-                onclick="selectService('Add/Drop Subjects')"
-              >
-                <h3 class="fw-bold" style="font-size: 20px">
-                  Adding/Dropping Subjects
-                </h3>
-                <p>
-                  Process for modifying your current course load by adding new
-                  subjects or dropping existing ones.
-                </p>
-              </div>
-              <div
-                class="card service-card"
-                onclick="selectService('Certification of Grades')"
-              >
-                <h3 class="fw-bold" style="font-size: 20px">
-                  Issuance of Certification of Grades
-                </h3>
-                <p>
-                  The Registrar issues official student grades upon request for
-                  academic records and verification.
-                </p>
-              </div>
-              <div
-                class="card service-card"
-                onclick="selectService('Other Services')"
-              >
-                <h3 class="fw-bold" style="font-size: 20px">Other Services</h3>
-                <p>
-                  For other registrar services not listed here. Please describe
-                  your concern when prompted.
-                </p>
+                <div class="col-md-6">
+                  <div class="card mb-4">
+                    <div
+                      class="card-header bg-dark text-white fw-bold text-center"
+                    >
+                      PROCEDURES
+                    </div>
+                    <div class="card-body">
+                      <ol class="list-unstyled">
+                        <li>
+                          <p>
+                            <strong>Obtain and Fill-Out the Form:</strong>
+                            Secure this form from the Registration Unit. Ensure
+                            all required fields are properly filled out.
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            <strong>Make payment:</strong> Visit the Cashier's
+                            Office to pay the fee for the documents.
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            <strong>Return to the Registration Unit:</strong>
+                            After payment, submit this form to the Registration
+                            Unit for student record verification and other
+                            instructions.
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            <strong>Submit Lacking Documents:</strong> If
+                            notified of any lacking documents, provide them to
+                            complete your request.
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            <strong>Collect the Claim Stub:</strong> Once
+                            verification is complete, receive the claim stub
+                            from the Registration Unit.
+                          </p>
+                        </li>
+                        <li>
+                          <p>
+                            <strong>Pick Up Your Documents:</strong> On the date
+                            indicated on your claim stub, return to the
+                            Registration Unit to collect your documents.
+                          </p>
+                        </li>
+                      </ol>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-
-            <div class="hero-buttons mt-3">
-              <button class="btn btn-custom" onclick="viewSelectedServices()">
-                <i class="bi bi-pencil-square me-1"></i> View Selected Services
-                <span
-                  id="selectedCountBadge"
-                  class="badge bg-primary ms-1"
-                  style="display: none"
-                  >0</span
-                >
-              </button>
+          </div>
+          <div class="container mt-5 mb-5">
+            <div class="card">
+              <div
+                class="card-header bg-dark text-white fw-bold text-center py-3"
+              >
+                PROCESSING FEE AND TIME
+              </div>
+              <div class="card-body p-0">
+                <div class="table-responsive">
+                  <table class="table table-bordered table-striped mb-0">
+                    <thead>
+                      <tr>
+                        <th scope="col">Document Type</th>
+                        <th scope="col">Document Fee</th>
+                        <th scope="col">Processing Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>CAV Graduate/ Undergraduate</td>
+                        <td>25.00</td>
+                        <td>5 working days</td>
+                      </tr>
+                      <tr>
+                        <td>Certificate of Upper 25</td>
+                        <td>25.00</td>
+                        <td>14 working days</td>
+                      </tr>
+                      <tr>
+                        <td>Certificate of Graduation</td>
+                        <td>25.00</td>
+                        <td>5 working days</td>
+                      </tr>
+                      <tr>
+                        <td>Certificate of Honors/ PD907</td>
+                        <td>25.00</td>
+                        <td>5 working days</td>
+                      </tr>
+                      <tr>
+                        <td>Certificate of Grades</td>
+                        <td>25.00</td>
+                        <td>7 working days</td>
+                      </tr>
+                      <tr>
+                        <td>Certificate of Enrolment</td>
+                        <td>25.00</td>
+                        <td>5 working days</td>
+                      </tr>
+                      <tr>
+                        <td>Certificate of Units Earned</td>
+                        <td>25.00</td>
+                        <td>5 working days</td>
+                      </tr>
+                      <tr>
+                        <td>
+                          Certificate of English as a Medium of Instruction
+                        </td>
+                        <td>25.00</td>
+                        <td>5 working days</td>
+                      </tr>
+                      <tr>
+                        <td>Transcript of Records (Duplicate Copy)</td>
+                        <td>40.00/page</td>
+                        <td>7 working days</td>
+                      </tr>
+                      <tr>
+                        <td>Diploma (Duplicate Copy)</td>
+                        <td>100.00</td>
+                        <td>1 month</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -611,13 +937,14 @@
               </p>
             </div>
 
-            <div class="services">
+<div class="services">
               <div
                 class="card"
                 onclick="selectService('Transcript of Records')"
               >
+                <span class="service-counter" style="display: none;"></span>
                 <h3 class="fw-bold" style="font-size: 20px">
-                  Transcript of Records
+                 Issuance of Transcript of Records
                 </h3>
                 <p>
                   Official academic record showing all courses taken, grades
@@ -629,6 +956,7 @@
                 class="card"
                 onclick="selectService('Completion Grade Form')"
               >
+                <span class="service-counter" style="display: none;"></span>
                 <h3 class="fw-bold" style="font-size: 20px">
                   Issuance of Completion Grade Form
                 </h3>
@@ -638,6 +966,7 @@
                 </p>
               </div>
               <div class="card" onclick="selectService('Diploma Issuance')">
+                <span class="service-counter" style="display: none;"></span>
                 <h3 class="fw-bold" style="font-size: 20px">
                   Issuance of Diploma
                 </h3>
@@ -646,41 +975,31 @@
                   of completion.
                 </p>
               </div>
-              <div class="card" onclick="selectService('Add/Drop Subjects')">
-                <h3 class="fw-bold" style="font-size: 20px">
-                  Adding/Dropping Subjects
-                </h3>
-                <p>
-                  Process for modifying your current course load by adding new
-                  subjects or dropping existing ones.
-                </p>
-              </div>
               <div
-                class="card"
-                onclick="selectService('Certification of Grades')"
-              >
-                <h3 class="fw-bold" style="font-size: 20px">
-                  Issuance of Certification of Grades
-                </h3>
-                <p>
-                  The Registrar issues official student grades upon request for
-                  academic records and verification.
-                </p>
-              </div>
-              <div class="card" onclick="selectService('Other Services')">
-                <h3 class="fw-bold" style="font-size: 20px">Other Services</h3>
-                <p>
-                  For other registrar services not listed here. Please describe
-                  your concern when prompted.
-                </p>
-              </div>
+            class="card"
+            onclick="selectService('Issuance of Transfer Credentials')"
+          >
+            <span class="service-counter" style="display: none;"></span>
+            <h3 class="fw-bold" style="font-size: 20px">
+              Issuance of Transfer Credentials
+            </h3>
+            <p>
+              The Registrar issues official Transfer Credentials upon request to officially certify that a student is eligible to transfer to another educational institution.
+            </p>
+          </div>
             </div>
 
-            <div class="hero-buttons mt-3">
-              <button class="btn btn-custom" onclick="viewSelectedServices()">
-                <i class="bi bi-pencil-square me-1"></i> View Selected Services
-              </button>
-            </div>
+<div class="hero-buttons mt-3">
+  <button class="btn btn-custom" onclick="viewSelectedServices()">
+    <i class="bi bi-pencil-square me-1"></i> View Selected Services
+    <span
+      id="selectedCountBadge"
+      class="badge bg-primary ms-1"
+      style="display: none"
+      >0</span
+    >
+  </button>
+</div>
           </div>
         </div>
 
@@ -758,6 +1077,16 @@
                 <i class="bi bi-arrow-clockwise me-1"></i> Refresh
               </button>
             </div>
+            <div class="mb-3 px-3">
+            <label for="serviceFilter" class="form-label fw-bold">Filter by Service:</label>
+            <select class="form-select" id="serviceFilter" onchange="filterRequests()">
+              <option value="all" selected>All Services</option>
+              <option value="Transcript of Records">Issuance of Transcript of Records</option>
+              <option value="Completion Grade Form">Issuance of Completion Grade Form</option>
+              <option value="Diploma Issuance">Issuance of Diploma</option>
+              <option value="Issuance of Transfer Credentials">Issuance of Transfer Credentials</option>
+            </select>
+          </div>
 
             <!-- Real-time status indicators -->
             <div class="row mb-4">
@@ -806,24 +1135,30 @@
           <div class="home-content">
             <h2 class="mb-4">Your Profile</h2>
 
-            <div class="alert-profile">
-              <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
-              <strong>Profile Incomplete</strong> - Please update your profile
-              information to access all features.
-            </div>
-
+            <div class="alert-profile" id="profilePageWarning" style="display: none;">
+          <i class="bi bi-exclamation-triangle-fill me-2 text-warning"></i>
+          <strong>Profile Incomplete</strong> - Please update your profile information to access all features.
+        </div>
             <div class="profile-card">
               <div class="profile-header">
-                <div class="profile-avatar">JS</div>
+                <div class="profile-avatar" id="profileAvatarInitials">JS</div>
                 <div class="profile-info">
                   <h3 id="profileName">John Smith</h3>
-                  <p class="text-muted" id="profileEmail">
-                    john.smith@example.com
-                  </p>
+                  <p class="text-muted" id="profileEmail"></p>
                 </div>
               </div>
 
               <div class="profile-details">
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <strong>Full Name:</strong>
+                    <span id="profileNameDisplay">Not set</span>
+                  </div>
+                  <div class="col-md-6">
+                    <strong>Gender:</strong>
+                    <span id="profileGender">Not set</span>
+                  </div>
+                </div>
                 <div class="row mb-3">
                   <div class="col-md-6">
                     <strong>Student ID:</strong>
@@ -856,19 +1191,70 @@
                     <span id="profileYearGraduated">N/A</span>
                   </div>
                 </div>
+                <hr />
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <strong>Campus/College:</strong>
+                    <span id="profileCampus">Not set</span>
+                  </div>
+                  <div class="col-md-6">
+                    <strong>Date of Birth:</strong>
+                    <span id="profileDob">Not set</span>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col-md-6">
+                    <strong>Place of Birth:</strong>
+                    <span id="profilePob">Not set</span>
+                  </div>
+                  <div class="col-md-6">
+                    <strong>Nationality:</strong>
+                    <span id="profileNationality">Not set</span>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col-12">
+                    <strong>Home Address:</strong>
+                    <span id="profileHomeAddress">Not set</span>
+                  </div>
+                </div>
+                <div class="row mb-3">
+                  <div class="col-12">
+                    <strong>Previous School:</strong>
+                    <span id="profilePreviousSchool">N/A</span>
+                  </div>
+            </div>
+            <hr />
+            <div class="row mb-3">
+              <div class="col-12">
+                <strong>Primary (Elementary):</strong>
+                <span id="profilePrimarySchool">Not set</span>
               </div>
+            </div>
+            <div class="row mb-3">
+              <div class="col-12">
+                <strong>Secondary (High School):</strong>
+                <span id="profileSecondarySchool">Not set</span>
+              </div>
+            </div>
 
-              <div class="profile-stats">
+            <div class="profile-id-preview" id="profileIdPictureContainer" style="display: none; margin-top: 20px; text-align: center;">
+              <h6 class="fw-bold">Your School ID</h6>
+              <div style="max-width: 250px; border: 1px solid #ddd; border-radius: 8px; padding: 5px; background: #f9f9f9; margin: 0 auto;">
+                <img id="profileIdPicture" src="" alt="School ID Preview" style="width: 100%; height: auto; border-radius: 5px;">
+              </div>
+            </div>
+            <div class="profile-stats">
                 <div class="stat-item">
-                  <div class="stat-number">5</div>
+                  <div class="stat-number" id="profileStatTotal">0</div>
                   <div class="stat-label">Services Requested</div>
                 </div>
                 <div class="stat-item">
-                  <div class="stat-number">3</div>
+                  <div class="stat-number" id="profileStatCompleted">0</div>
                   <div class="stat-label">Completed</div>
                 </div>
                 <div class="stat-item">
-                  <div class="stat-number">2</div>
+                  <div class="stat-number" id="profileStatInProgress">0</div>
                   <div class="stat-label">In Progress</div>
                 </div>
               </div>
@@ -973,21 +1359,34 @@
         }
         return true;
       }
+      // --- NEW: Function to check for unread notifications ---
+async function checkNotificationStatus() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) return;
+
+  try {
+    const response = await fetch(
+      `/api/user/notifications-status?userId=${userId}`
+    );
+    const data = await response.json();
+
+    const dot = document.getElementById("updates-notification-dot");
+    if (data.success && data.hasUnread) {
+      if (dot) dot.style.display = "block";
+    } else {
+      if (dot) dot.style.display = "none";
+    }
+  } catch (error) {
+    console.error("Error checking notifications:", error);
+  }
+}
 
       // Show profile update modal function
+      // Show profile update modal function
       function showProfileUpdateModal() {
-        const modal = new bootstrap.Modal(
-          document.getElementById("profileUpdateModal")
-        );
-
-        // Pre-fill phone and email from localStorage
-        const phone = localStorage.getItem("userPhone") || "";
-        const email = localStorage.getItem("userEmail") || "";
-
-        document.getElementById("phone").value = phone;
-        document.getElementById("email").value = email;
-
-        modal.show();
+        // This function now calls loadUserProfile() to pre-fill all fields
+        // from the database before showing the modal.
+        loadUserProfile();
       }
 
       // Enhanced profile modal with callback
@@ -1028,7 +1427,7 @@
         document.getElementById("serviceDescription").textContent =
           service.description;
         document.getElementById("serviceRequirements").innerHTML =
-          service.requirements.map((r) => `<li>${r}</li>`).join("");
+  service.requirements.map((r) => `<li>${r.name}</li>`).join("");
         document.getElementById("serviceFee").textContent = service.price
           ? `₱${service.price.toFixed(2)}`
           : "N/A";
@@ -1084,8 +1483,37 @@
         modal.show();
       }
 
-      // Update profile display
+// Update profile display
       function updateProfileDisplay(user) {
+        // NEW: Update name fields in the modal for editing
+        const avatar = document.getElementById("profileAvatarInitials");
+        if (avatar && user.first_name && user.last_name) {
+          // Get first letter of last name (e.g., "M" from "Mantes")
+          const lastNameInitial = user.last_name.charAt(0);
+          // Get first letter of first name (e.g., "V" from "Vuns")
+          const firstNameInitial = user.first_name.charAt(0);
+          
+          // Combine them and set the text
+          avatar.textContent = (lastNameInitial + firstNameInitial).toUpperCase();
+        }
+        if (user.first_name)
+          document.getElementById("firstName").value = user.first_name;
+        if (user.last_name)
+          document.getElementById("lastName").value = user.last_name;
+        if (user.middle_name)
+          document.getElementById("middleName").value = user.middle_name;
+        if (user.gender) document.getElementById("gender").value = user.gender;
+
+        // NEW: Update profile display
+        if (user.fullname) {
+          document.getElementById("profileName").textContent = user.fullname;
+          document.getElementById("profileNameDisplay").textContent =
+            user.fullname;
+        }
+        if (user.gender)
+          document.getElementById("profileGender").textContent = user.gender;
+
+        // Existing fields
         if (user.student_id)
           document.getElementById("profileStudentId").textContent =
             user.student_id;
@@ -1108,7 +1536,140 @@
           document.getElementById("profilePhone").textContent = user.phone;
         if (user.email)
           document.getElementById("profileEmail").textContent = user.email;
+
+        // Also update email in the modal
+        if (user.email) document.getElementById("email").value = user.email;
+
+        // --- ADDED NEW FIELDS ---
+        document.getElementById("profileCampus").textContent =
+          user.campus || "Not set";
+        document.getElementById("profileDob").textContent = user.dob
+          ? new Date(user.dob).toLocaleDateString()
+          : "Not set";
+        document.getElementById("profilePob").textContent =
+          user.pob || "Not set";
+        document.getElementById("profileNationality").textContent =
+          user.nationality || "Not set";
+        document.getElementById("profileHomeAddress").textContent =
+          user.home_address || "Not set";
+        document.getElementById("profilePreviousSchool").textContent =
+          user.previous_school || "N/A";
+        document.getElementById("profilePrimarySchool").textContent =
+          user.primary_school || "Not set";
+        document.getElementById("profileSecondarySchool").textContent =
+          user.secondary_school || "Not set";
+          // --- END ADDED FIELDS ---
+
+        const idContainer = document.getElementById(
+          "profileIdPictureContainer"
+        );
+        const idImage = document.getElementById("profileIdPicture");
+
+        if (user.school_id_picture) {
+          // We have a picture, set the src and show the container
+          // The path is /uploads/ + the filename stored in the database
+          idImage.src = "/uploads/" + user.school_id_picture;
+          idContainer.style.display = "block";
+        } else {
+          // No picture, hide the container
+          idContainer.style.display = "none";
+        }
       }
+
+      // ---
+      // === ADD THIS ENTIRE NEW FUNCTION ===
+      // ---
+      function updateServiceRequestCounters(requests) {
+        const serviceCounts = {};
+
+        // 1. Count all past services
+        for (const request of requests) {
+          // request.services is an array, e.g., ["Transcript of Records"]
+          if (Array.isArray(request.services)) {
+            for (const serviceName of request.services) {
+              serviceCounts[serviceName] = (serviceCounts[serviceName] || 0) + 1;
+            }
+          }
+        }
+
+        // 2. Hide all counters first to reset them on refresh
+        document.querySelectorAll('.service-counter').forEach(counter => {
+          counter.style.display = 'none';
+          counter.textContent = '';
+        });
+
+        // 3. Update the DOM for each service that has a count
+        for (const serviceName in serviceCounts) {
+          const count = serviceCounts[serviceName];
+          if (count > 0) {
+            // Find the card using the unique onclick attribute
+            const serviceCard = document.querySelector(
+              `.card[onclick="selectService('${serviceName}')"]`
+            );
+            
+            if (serviceCard) {
+              // Find the counter element *inside* that specific card
+              const counterElement = serviceCard.querySelector('.service-counter');
+              if (counterElement) {
+                counterElement.textContent = `Requested: ${count}`;
+                counterElement.style.display = 'inline-block'; // Make it visible
+              }
+            }
+          }
+        }
+      }
+      // ---
+      // === END OF NEW FUNCTION ===
+      // ---
+
+// ===== NAVIGATION FUNCTION =====
+function showSection(targetId) {
+  const sections = document.querySelectorAll(".section");
+  const navLinks = document.querySelectorAll(".nav-link");
+
+  // Update active states
+  sections.forEach((sec) => sec.classList.remove("active"));
+  navLinks.forEach((l) => l.classList.remove("active"));
+
+  const targetLink = document.querySelector(
+    `.nav-link[data-target="${targetId}"]`
+  );
+  if (targetLink) {
+    targetLink.classList.add("active");
+  }
+
+  const targetSection = document.getElementById(targetId);
+  if (targetSection) {
+    targetSection.classList.add("active");
+  }
+
+  // --- NEW LOGIC FOR NOTIFICATIONS ---
+  if (targetId === "updates") {
+    // 1. Instantly hide the dot
+    const dot = document.getElementById("updates-notification-dot");
+    if (dot) dot.style.display = "none";
+
+    // 2. Tell the backend to mark all as read
+    const userId = localStorage.getItem("userId");
+    if (userId) {
+      fetch("/api/user/mark-notifications-read", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userId }),
+      }).catch((err) => console.error("Error marking read:", err));
+    }
+
+    // 3. Load the requests
+    loadUserRequests();
+  }
+  // --- END NEW LOGIC ---
+
+  // Close mobile menu if open
+  const navbar = document.querySelector(".navbar-collapse");
+  if (navbar.classList.contains("show")) {
+    new bootstrap.Collapse(navbar).hide();
+  }
+}
 
       // ===== API FUNCTIONS =====
 
@@ -1140,77 +1701,158 @@
         }
       }
 
-      // Enhanced profile check
-      async function checkUserProfileStatus() {
-        const userId = localStorage.getItem("userId");
-        if (!userId) return false;
+async function checkUserProfileStatus() {
+  const userId = localStorage.getItem("userId");
+  if (!userId) return false;
 
-        try {
-          const response = await fetch(`/api/user/profile?userId=${userId}`);
-          const data = await response.json();
+  try {
+    const response = await fetch(`/api/user/profile?userId=${userId}`);
+    const data = await response.json();
 
-          if (data.success) {
-            userProfileComplete = data.user.profile_complete;
+    if (data.success) {
+      // --- THIS IS THE FIX ---
+      // This line displays your name, ID, image, etc. on the profile tab
+      updateProfileDisplay(data.user);
+      // --- END OF FIX ---
 
-            // Show/hide profile warning
-            const profileWarning = document.getElementById("profileWarning");
-            if (profileWarning) {
-              profileWarning.style.display = userProfileComplete
-                ? "none"
-                : "block";
-            }
+      // Check if profile is complete (1 = complete, 0 = incomplete)
+      userProfileComplete = data.user.profile_complete;
 
-            return userProfileComplete;
-          }
-        } catch (error) {
-          console.error("Error checking profile status:", error);
-        }
-        return false;
+      // Get elements for BOTH warnings
+      const homeTabWarning = document.getElementById("profileWarning");
+      const profileTabWarning = document.getElementById("profilePageWarning"); // <-- The new ID
+      const viewServicesBtn = document.getElementById("viewServicesBtn");
+
+      // Show/hide warnings based on completion status
+      if (homeTabWarning) {
+        homeTabWarning.style.display = userProfileComplete ? "none" : "flex";
+      }
+      if (profileTabWarning) {
+        profileTabWarning.style.display = userProfileComplete
+          ? "none"
+          : "block";
       }
 
-      // Load user profile data
-      async function loadUserProfile() {
-        const userId = localStorage.getItem("userId");
+      // Show/hide view services button
+      if (viewServicesBtn) {
+        viewServicesBtn.style.display = userProfileComplete ? "block" : "none";
+      }
 
-        if (!userId) {
-          console.error("No user ID found in localStorage");
-          return;
-        }
+      // --- This line was already correct ---
+      checkAllFilesUploaded(); // Re-check button status after profile state changes
+
+      // If profile is NOT complete, call loadUserProfile()
+      // which will pre-fill what it can, and then show the modal.
+      if (!userProfileComplete) {
+        await loadUserProfile(); // Load data into modal and show it
+      }
+
+      return userProfileComplete;
+    }
+  } catch (error) {
+    console.error("Error checking profile status:", error);
+  }
+  return false;
+}
+
+// Locate your loadUserProfile() function
+      async function loadUserProfile() {
+        // --- ⬇️ FIX ⬇️ ---
+        // Changed "token" to "userId"
+        const userId = localStorage.getItem("userId");
+        if (!userId) return;
+        // --- ⬆️ END OF FIX ⬆️ ---
 
         try {
+          // --- ⬇️ FIX ⬇️ ---
+          // Changed the URL to be correct and removed the broken "token" header
           const response = await fetch(`/api/user/profile?userId=${userId}`);
+          // --- ⬆️ END OF FIX ⬆️ ---
 
-          // Check if response is OK (status 200-299)
           if (!response.ok) {
+            if (response.status === 404) {
+              // User profile not found, likely a new user. Keep modal open.
+              const modal = new bootstrap.Modal(
+                document.getElementById("profileUpdateModal")
+              );
+              modal.show();
+              return;
+            }
             throw new Error(`HTTP error! status: ${response.status}`);
           }
 
           const data = await response.json();
+          const user = data.user; // Get the nested user object
 
-          if (data.success) {
-            // Update profile display
-            updateProfileDisplay(data.user);
+          // Populate the form fields in the modal
+          document.getElementById("lastName").value = user.last_name || "";
+          document.getElementById("firstName").value = user.first_name || "";
+          document.getElementById("middleName").value = user.middle_name || "";
+          document.getElementById("gender").value = user.gender || "";
+          document.getElementById("phone").value = user.phone || "";
+          document.getElementById("studentId").value = user.student_id || "";
+          document.getElementById("program").value = user.course || ""; // Use 'course' from DB for 'program' field
+          document.getElementById("major").value = user.major || "";
+          document.getElementById("yearLevel").value = user.year_level || "";
+          document.getElementById("schoolYear").value = user.school_year || "";
+          document.getElementById("yearGraduated").value =
+            user.year_graduated || "";
+          document.getElementById("email").value = user.email || "";
 
-            // If profile is complete, hide the warning
-            if (data.user.profile_complete) {
-              const alert = document.querySelector(".alert-profile");
-              if (alert) alert.style.display = "none";
-            }
+          // --- ADDED NEW FIELDS ---
+          document.getElementById("campus").value = user.campus || "";
+          // Format date for <input type="date"> which requires YYYY-MM-DD
+          document.getElementById("dob").value = user.dob
+            ? user.dob.split("T")[0]
+            : "";
+          document.getElementById("pob").value = user.pob || "";
+          document.getElementById("nationality").value = user.nationality || "";
+          document.getElementById("home_address").value =
+            user.home_address || "";
+          document.getElementById("previous_school").value =
+            user.previous_school || "";
+          document.getElementById("primary_school").value = 
+            user.primary_school || "";
+          document.getElementById("secondary_school").value =
+            user.secondary_school || "";
+          // --- END ADDED FIELDS ---
+
+          // Handle school ID picture preview in the modal
+          const previewContainer = document.getElementById(
+            "schoolIdPicturePreview"
+          );
+          const imgElement = previewContainer.querySelector("img");
+          if (user.school_id_picture) {
+            imgElement.src = `/uploads/${user.school_id_picture}`;
+            previewContainer.style.display = "block";
+            userHasExistingId = true; // Set flag
           } else {
-            console.error("API returned error:", data.message);
+            previewContainer.style.display = "none";
+            userHasExistingId = false; // Set flag
           }
+
+          // Also update the main profile display just in case
+          updateProfileDisplay(user);
+
+          // ---
+          // === THIS IS THE FIX ===
+          // ---
+          // Always show the modal after loading data, whether profile is complete or not.
+          const modal = new bootstrap.Modal(
+            document.getElementById("profileUpdateModal")
+          );
+          modal.show();
+          // ---
+          // === END OF FIX ===
+          // ---
         } catch (error) {
           console.error("Error loading user profile:", error);
-          // Don't show alert for 404 errors to avoid confusing users
-          if (!error.message.includes("404")) {
-            showAlert(
-              "Error loading profile data. Please try again later.",
-              "error"
-            );
-          }
+          const modal = new bootstrap.Modal(
+            document.getElementById("profileUpdateModal")
+          );
+          modal.show();
         }
       }
-
       // Save profile data to server
       async function saveProfileToServer(profileData) {
         const userId = localStorage.getItem("userId");
@@ -1247,61 +1889,60 @@
       // ===== SERVICES DATA AND FUNCTIONS =====
 
       // Services data
-      const servicesData = {
-        "Transcript of Records": {
-          description:
-            "Official academic record showing all courses taken, grades earned, and degrees awarded.",
-          requirements: [
-            "Clearance",
-            "Book-Bounded Thesis",
-            "Documentary Stamp",
-            "Receipt of Payment (cashier's office) ₱40.00",
-          ],
-          price: 40.0,
-        },
-        "Completion Grade Form": {
-          description:
-            "Registrar provides an official grade form upon student request.",
-          requirements: [
-            "Completion Form",
-            "Instructor's Approval",
-            "Receipt of Payment (cashier's office) ₱30.00",
-          ],
-          price: 20.0,
-        },
-        "Diploma Issuance": {
-          description:
-            "The Registrar issues official diplomas to graduates as proof of completion.",
-          requirements: ["Clearance/Trascript Records", "Documentary Stamps"],
-          price: null,
-        },
-        "Add/Drop Subjects": {
-          description:
-            "Process for modifying your current course load by adding new subjects or dropping existing ones.",
-          requirements: [
-            "Adding/Dropping Form",
-            "Official Receipt (cashier's office) ₱20.00",
-          ],
-          price: 20.0,
-        },
-        "Certification of Grades": {
-          description:
-            "The Registrar issues official student grades upon request for academic records and verification.",
-          requirements: ["Registration Form", "Grade Slip"],
-          price: null,
-        },
-        "Other Services": {
-          description:
-            "For other registrar services not listed here. Please describe your concern when prompted.",
-          requirements: ["Requirements vary depending on request"],
-          price: null,
-        },
-      };
+const servicesData = {
+  "Transcript of Records": {
+    description:
+      "Official academic record showing all courses taken, grades earned, and degrees awarded.",
+    requirements: [
+      { name: "Clearance" },
+      { name: "Book-Bounded Thesis" },
+      { name: "Documentary Stamp" },
+      { name: "Receipt of Payment (cashier's office) ₱40.00" },
+    ],
+    price: 40.0,
+  },
+  "Completion Grade Form": {
+    description:
+      "Registrar provides an official grade form upon student request.",
+    requirements: [
+      { name: "Completion Form" },
+      { name: "Instructor's Approval" },
+      { name: "Receipt of Payment (cashier's office) ₱30.00" },
+    ],
+    price: 20.0,
+  },
+  "Diploma Issuance": {
+    description:
+      "The Registrar issues official diplomas to graduates as proof of completion.",
+    requirements: [
+      { name: "Clearance/Transcript Records" },
+      { name: "Documentary Stamps" },
+    ],
+    price: null,
+  },
+  // --- Note: I've updated this service name to match your HTML ---
+  "Issuance of Transfer Credentials": {
+    description:
+      "The Registrar issues official Transfer Credentials upon request to officially certify that a student is eligible to transfer to another educational institution.",
+    requirements: [
+      { name: "Adding/Dropping Form" },
+      { name: "Official Receipt (cashier's office) ₱20.00" },
+    ],
+    price: 20.0,
+  },
+  "Other Services": {
+    description:
+      "For other registrar services not listed here. Please describe your concern when prompted.",
+    requirements: [{ name: "Request Letter" }],
+    price: null,
+  },
+};
 
       // ===== ENHANCED DASHBOARD FUNCTIONALITY =====
       let selectedServicesList = [];
       let autoRefreshInterval;
       let userProfileComplete = false;
+      let userHasExistingId = false;
 
       // Enhanced service selection with visual feedback
       function selectService(serviceName) {
@@ -1345,6 +1986,39 @@
           }
         }
       }
+      // --- NEW FUNCTION: Checks if all required files are uploaded ---
+function checkAllFilesUploaded() {
+  const joinQueueBtn = document.getElementById("joinQueueBtn");
+  const requiredUploadInputs = document.querySelectorAll(
+    ".requirement-upload[required]"
+  );
+
+  // If no services are selected, or no required inputs, the button should be disabled by default
+  if (selectedServicesList.length === 0) {
+    joinQueueBtn.disabled = true;
+    return;
+  }
+
+  let allFilesProvided = true;
+  requiredUploadInputs.forEach((input) => {
+    if (input.files.length === 0) {
+      allFilesProvided = false;
+    }
+  });
+
+  // Enable button only if all required files are provided AND profile is complete
+  joinQueueBtn.disabled = !allFilesProvided || !userProfileComplete;
+
+  // Optional: Add/remove a class for styling if you want a visual change
+  if (joinQueueBtn.disabled) {
+    joinQueueBtn.classList.remove("btn-success");
+    joinQueueBtn.classList.add("btn-secondary"); // Gray out
+  } else {
+    joinQueueBtn.classList.remove("btn-secondary");
+    joinQueueBtn.classList.add("btn-success"); // Green
+  }
+}
+// --- END NEW FUNCTION ---
 
       // Enhanced view services function
       function viewSelectedServices() {
@@ -1397,73 +2071,214 @@
         refreshModal();
       }
 
-      function refreshModal() {
-        const modalBodyLeft = document.getElementById("selectedServicesList");
-        const modalBodyRight = document.getElementById("requirementsList");
-        const totalAmountEl = document.getElementById("totalAmount");
+function refreshModal() {
+  const modalBodyLeft = document.getElementById("selectedServicesList");
+  const modalBodyRight = document.getElementById("requirementsList");
+  const totalAmountEl = document.getElementById("totalAmount");
+  const joinQueueBtn = document.getElementById("joinQueueBtn"); // Get the button here
 
-        if (selectedServicesList.length === 0) {
-          modalBodyLeft.innerHTML =
-            "<p class='p-3 text-center'>No services selected yet.</p>";
-          modalBodyRight.innerHTML = "";
-          totalAmountEl.textContent = "₱0.00";
-        } else {
-          let total = 0;
-          let servicesHTML = "";
-          let requirementsHTML = "";
+  if (selectedServicesList.length === 0) {
+    modalBodyLeft.innerHTML =
+      "<p class='p-3 text-center'>No services selected yet.</p>";
+    modalBodyRight.innerHTML = "";
+    totalAmountEl.textContent = "₱0.00";
+    joinQueueBtn.disabled = true; // Disable if no services are selected
+  } else {
+    let total = 0;
+    let servicesHTML = "";
+    let requirementsHTML = "";
 
-          selectedServicesList.forEach((s) => {
-            const service = servicesData[s];
-            const price =
-              service.price > 0 ? `₱${service.price.toFixed(2)}` : "N/A";
-            total += service.price || 0;
+    selectedServicesList.forEach((s, serviceIndex) => {
+      const service = servicesData[s.trim()];
 
-            servicesHTML += `
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <span><strong>${s}</strong> (${price})</span>
-                <button class="btn btn-sm btn-outline-danger" onclick="removeService('${s}')">
-                    <i class="bi bi-x-circle"></i>
-                </button>
-            </li>
+      if (!service) {
+        console.error("Service not found in servicesData:", s);
+        servicesHTML += `
+          <li class="list-group-item d-flex justify-content-between align-items-center bg-danger-subtle">
+              <span><strong>${s}</strong> (Error)</span>
+              <button class="btn btn-sm btn-outline-danger" onclick="removeService('${s}')">
+                  <i class="bi bi-x-circle"></i>
+              </button>
+          </li>
         `;
-
-            requirementsHTML += `
-            <div class="mb-3">
-                <strong>${s}</strong>
-                <ul class="mb-0 mt-1">${service.requirements
-                  .map((r) => `<li class="small">${r}</li>`)
-                  .join("")}</ul>
-            </div>
-        `;
-          });
-
-          modalBodyLeft.innerHTML = servicesHTML;
-          modalBodyRight.innerHTML = requirementsHTML;
-          totalAmountEl.textContent = `₱${total.toFixed(2)}`;
-        }
+        requirementsHTML += `<div class="alert alert-danger">Could not find requirements for "${s}". Please remove and re-add it.</div>`;
+        return;
       }
 
-      // Enhanced join queue function
-      document
-        .getElementById("joinQueueBtn")
-        .addEventListener("click", async function () {
-          if (!checkAuthentication() || !checkSession()) return;
+      const price =
+        service.price > 0 ? `₱${service.price.toFixed(2)}` : "N/A";
+      total += service.price || 0;
 
-          if (selectedServicesList.length === 0) {
-            showAlert("Please select at least one service.", "warning");
-            return;
-          }
+      servicesHTML += `
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span><strong>${s}</strong> (${price})</span>
+            <button class="btn btn-sm btn-outline-danger" onclick="removeService('${s}')">
+                <i class="bi bi-x-circle"></i>
+            </button>
+        </li>
+      `;
 
-          if (!userProfileComplete) {
-            showAlert(
-              "Please complete your profile before submitting requests.",
-              "warning"
-            );
-            return;
-          }
+      requirementsHTML += `
+        <div class="mb-3 p-2 border rounded">
+            <h6 class="fw-bold text-primary">${s}</h6>
+      `;
 
-          await submitServiceRequest();
+      if (service.requirements && service.requirements.length > 0) {
+        service.requirements.forEach((req, reqIndex) => {
+          const inputId = `file-${serviceIndex}-${reqIndex}`;
+          requirementsHTML += `
+            <div class="mb-2">
+              <label for="${inputId}" class="form-label mb-1 small">
+                <i class="bi bi-file-earmark-arrow-up me-1"></i>
+                ${req.name} <span class="text-danger">*</span>
+              </label>
+              <input
+                type="file"
+                class="form-control form-control-sm requirement-upload"
+                id="${inputId}"
+                data-service-name="${s}"
+                data-requirement-name="${req.name}"
+                accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                required
+                onchange="checkAllFilesUploaded()" // <-- ADD THIS LINE
+              />
+            </div>
+          `;
         });
+      } else {
+        requirementsHTML += `<p class="small text-muted">No specific requirements listed.</p>`;
+      }
+
+      requirementsHTML += `</div>`;
+    });
+
+    modalBodyLeft.innerHTML = servicesHTML;
+    modalBodyRight.innerHTML = requirementsHTML;
+    totalAmountEl.textContent = `₱${total.toFixed(2)}`;
+
+    // After refreshing, check file upload status
+    checkAllFilesUploaded(); // <-- CALL THE NEW FUNCTION HERE
+  }
+}
+
+      // Enhanced join queue function
+document
+  .getElementById("joinQueueBtn")
+  .addEventListener("click", async function () {
+    if (!checkAuthentication() || !checkSession()) return;
+
+    if (selectedServicesList.length === 0) {
+      showAlert("Please select at least one service.", "warning");
+      return;
+    }
+
+    if (!userProfileComplete) {
+      showAlert(
+        "Please complete your profile before submitting requests.",
+        "warning"
+      );
+      return;
+    }
+
+    // --- NEW VALIDATION LOGIC ---
+    const fileInputs = document.querySelectorAll(
+      ".requirement-upload[required]"
+    );
+    let allFilesUploaded = true;
+
+    fileInputs.forEach((input) => {
+      if (input.files.length === 0) {
+        allFilesUploaded = false;
+        input.classList.add("is-invalid"); // Add red border
+      } else {
+        input.classList.remove("is-invalid");
+      }
+    });
+
+    if (!allFilesUploaded) {
+      showAlert("Please upload all required files.", "error");
+      return; // Stop submission
+    }
+    // --- END NEW VALIDATION LOGIC ---
+
+    // --- NEW SUBMISSION LOGIC (using FormData) ---
+    const userId = localStorage.getItem("userId");
+    const formData = new FormData();
+
+    // Add user ID
+    formData.append("userId", userId);
+
+    // Add selected services (as an array)
+    selectedServicesList.forEach((service) => {
+      formData.append("services[]", service.trim()); // Use trim() for safety
+    });
+
+    // Add all uploaded files
+    let totalFiles = 0;
+    fileInputs.forEach((input) => {
+      if (input.files.length > 0) {
+        // "requirements_files" MUST match the name in your index.js multer middleware
+        formData.append("requirements_files", input.files[0]);
+
+        // --- THIS IS THE NEW LINE ---
+        // Send the name of the requirement for this file
+        formData.append("requirement_names[]", input.dataset.requirementName);
+        // --- END NEW LINE ---
+
+        totalFiles++;
+      }
+    });
+
+    console.log(
+      `Submitting request for user ${userId} with ${selectedServicesList.length} services and ${totalFiles} files.`
+    );
+
+    try {
+      // Show loading state
+      const joinBtn = document.getElementById("joinQueueBtn");
+      const originalText = joinBtn.innerHTML;
+      joinBtn.innerHTML =
+        '<i class="bi bi-hourglass-split me-1"></i> Submitting...';
+      joinBtn.disabled = true;
+
+      // Submit to backend
+      const response = await fetch("/api/queue/submit-request", {
+        method: "POST",
+        body: formData, // Send FormData (no 'Content-Type' header needed)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Close the modal
+        const selectedModal = bootstrap.Modal.getInstance(
+          document.getElementById("selectedModal")
+        );
+        if (selectedModal) selectedModal.hide();
+
+        // Show success message with request ID
+        showSubmissionSuccessModal(result.requestId);
+
+        // Clear selected services and reset UI
+        selectedServicesList = [];
+        resetServiceSelectionUI();
+        updateSelectedCount();
+
+        // Reload user requests
+        await loadUserRequests();
+      } else {
+        showAlert("Error submitting request: " + result.message, "error");
+      }
+    } catch (error) {
+      console.error("Error submitting service request:", error);
+      showAlert("Error submitting request. Please try again.", "error");
+    } finally {
+      // Reset button state
+      const joinBtn = document.getElementById("joinQueueBtn");
+      joinBtn.innerHTML = "Join Queue Now";
+      joinBtn.disabled = false;
+    }
+  });
 
       // Enhanced service request submission
       async function submitServiceRequest() {
@@ -1556,10 +2371,14 @@
           );
           const result = await response.json();
 
-          if (result.success) {
+         if (result.success) {
             displayUserRequests(result.requests);
             updateRequestStats(result.requests);
             checkForActiveQueue(result.requests);
+
+            // --- THIS IS THE NEW LINE ---
+            updateServiceRequestCounters(result.requests);
+            // --- END NEW LINE ---
           }
         } catch (error) {
           console.error("Error loading user requests:", error);
@@ -1666,6 +2485,48 @@
           })
           .join("");
       }
+// --- NEW FUNCTION: Filters requests on the "Updates" page ---
+function filterRequests() {
+  const filterValue = document.getElementById("serviceFilter").value;
+  const requestCards = document.querySelectorAll("#requestsContainer .update-card");
+  let visibleCount = 0;
+
+  requestCards.forEach((card) => {
+    // Check if it's an empty state card, if so, ignore it
+    if (card.querySelector(".bi-inbox")) {
+      return;
+    }
+
+    const titleElement = card.querySelector("h4");
+    if (!titleElement) return; // Safety check
+
+    const servicesText = titleElement.textContent; // e.g., "Transcript of Records, Completion Grade Form"
+
+    if (filterValue === "all" || servicesText.includes(filterValue)) {
+      card.style.display = "block";
+      visibleCount++;
+    } else {
+      card.style.display = "none";
+    }
+  });
+
+  // Handle "No results" message
+  const container = document.getElementById("requestsContainer");
+  let noResultMsg = container.querySelector(".no-results-message");
+
+  if (visibleCount === 0 && requestCards.length > 0 && filterValue !== 'all') {
+    if (!noResultMsg) {
+      noResultMsg = document.createElement("div");
+      noResultMsg.className = "update-card text-center text-muted no-results-message";
+      container.appendChild(noResultMsg);
+    }
+    noResultMsg.innerHTML = `<i class="bi bi-search display-4 mb-3"></i><h4>No requests found</h4><p>No requests match the filter "${filterValue}".</p>`;
+    noResultMsg.style.display = 'block';
+  } else if (noResultMsg) {
+    noResultMsg.style.display = 'none'; // Just hide it
+  }
+}
+// --- END OF NEW FUNCTION ---
 
       // Enhanced status information function
       function getStatusInfo(status, queueStatus) {
@@ -1694,17 +2555,36 @@
 
       // Update request statistics
       function updateRequestStats(requests) {
+        // --- Calculations ---
         const total = requests.length;
         const pending = requests.filter((r) => r.status === "pending").length;
-        const approved = requests.filter((r) => r.status === "approved").length;
+        const approved = requests.filter(
+          (r) => r.status === "approved" && r.queue_status === "in_queue"
+        ).length;
+        
+        // FIX: This now correctly counts "processing" status
         const processing = requests.filter(
-          (r) => r.queue_status === "in_queue"
+          (r) => r.queue_status === "processing"
         ).length;
 
+        // --- NEW: Profile Stat Calculations ---
+        const completed = requests.filter(
+          (r) => r.queue_status === "completed"
+        ).length;
+
+        // "In Progress" = pending + approved (in_queue) + processing
+        const inProgress = pending + approved + processing; 
+
+        // --- Update "Updates" Tab Stats ---
         document.getElementById("totalRequests").textContent = total;
         document.getElementById("pendingRequests").textContent = pending;
         document.getElementById("approvedRequests").textContent = approved;
         document.getElementById("processingRequests").textContent = processing;
+
+        // --- NEW: Update "Profile" Tab Stats ---
+        document.getElementById("profileStatTotal").textContent = total;
+        document.getElementById("profileStatCompleted").textContent = completed;
+        document.getElementById("profileStatInProgress").textContent = inProgress;
       }
 
       // Enhanced function to check for active queue
@@ -1873,48 +2753,138 @@
           displaySuccessModal();
         }
       }
-
-      // Enhanced profile save with callback
+// REPLACES the "saveProfileBtn" click listener to handle FormData AND auto-refresh
       document
         .getElementById("saveProfileBtn")
         .addEventListener("click", async function () {
-          const studentId = document.getElementById("studentId").value;
-          const course = document.getElementById("course").value;
-          const major = document.getElementById("major").value;
-          const yearLevel = document.getElementById("yearLevel").value;
-          const schoolYear = document.getElementById("schoolYear").value;
-          const yearGraduated = document.getElementById("yearGraduated").value;
 
-          if (!studentId || !course || !yearLevel || !schoolYear) {
-            showAlert("Please fill in all required fields.", "warning");
-            return;
+          const formData = new FormData();
+          const userId = localStorage.getItem("userId");
+
+          if (!userId) {
+              showAlert("User session not found. Please log in again.", "error");
+              return;
           }
 
-          const profileData = {
-            studentId,
-            course,
-            major,
-            yearLevel,
-            schoolYear,
-            yearGraduated: yearGraduated || null,
-          };
+          formData.append("userId", userId);
 
-          const success = await saveProfileToServer(profileData);
+          // Personal Info
+          formData.append("lastName", document.getElementById("lastName").value);
+          formData.append("firstName", document.getElementById("firstName").value);
+          formData.append("middleName", document.getElementById("middleName").value);
+          formData.append("gender", document.getElementById("gender").value);
 
-          if (success) {
-            userProfileComplete = true;
-            const modal = bootstrap.Modal.getInstance(
-              document.getElementById("profileUpdateModal")
+          // Academic Info
+          // ---
+          // === THIS IS THE FIX: Get studentId value directly ===
+          // ---
+          const studentIdValue = document.getElementById("studentId").value;
+          formData.append("studentId", studentIdValue);
+          // ---
+          // === END OF FIX ===
+          // ---
+          formData.append("course", document.getElementById("program").value); 
+          formData.append("major", document.getElementById("major").value);
+          formData.append("yearLevel", document.getElementById("yearLevel").value);
+          formData.append("schoolYear", document.getElementById("schoolYear").value);
+
+          const yearGraduated = document.getElementById("yearGraduated").value;
+          formData.append("yearGraduated", yearGraduated || null);
+
+          // Contact Info
+          formData.append("email", document.getElementById("email").value);
+          formData.append("phone", document.getElementById("phone").value);
+
+          // --- ADDED NEW FIELDS ---
+          formData.append("campus", document.getElementById("campus").value);
+          formData.append("dob", document.getElementById("dob").value);
+          formData.append("pob", document.getElementById("pob").value);
+          formData.append("nationality", document.getElementById("nationality").value);
+          formData.append("home_address", document.getElementById("home_address").value);
+          formData.append("previous_school", document.getElementById("previous_school").value);
+          formData.append("primary_school", document.getElementById("primary_school").value);
+          formData.append("secondary_school", document.getElementById("secondary_school").value);
+          // --- END ADDED FIELDS ---
+
+          // Get the file
+          const schoolIdFile = document.getElementById("schoolIdPicture").files[0];
+          if (schoolIdFile) {
+            formData.append("school_id_picture", schoolIdFile);
+          }
+
+          // --- ⬇️ MODIFIED VALIDATION BLOCK ⬇️ ---
+
+          // --- 1. ADD NEW, SPECIFIC VALIDATION FOR STUDENT ID ---
+          const studentIdRegex = /^\d{3}-\d{4}-\d{6}$/;
+          if (!studentIdRegex.test(studentIdValue)) {
+            showAlert(
+              "Invalid Student ID format. Please use 000-0000-000000.",
+              "warning"
             );
-            if (modal) modal.hide();
+            return; // Stop execution
+          }
+          // --- END OF NEW VALIDATION ---
 
-            // Execute callback if exists
-            if (window.profileSaveCallback) {
-              window.profileSaveCallback();
-              window.profileSaveCallback = null;
+
+          // --- 2. REMOVE studentId check from the main 'if' block ---
+          if (
+            !formData.get("lastName") ||
+            !formData.get("firstName") ||
+            !formData.get("gender") ||
+            // !formData.get("studentId") || <-- THIS LINE IS REMOVED
+            !formData.get("course") || 
+            !formData.get("yearLevel") ||
+            !formData.get("schoolYear") ||
+            !formData.get("email") ||
+            !formData.get("campus") ||
+            !formData.get("dob") ||
+            !formData.get("pob") ||
+            !formData.get("nationality") ||
+            !formData.get("home_address") ||
+            !formData.get("primary_school") ||
+            !formData.get("secondary_school") ||
+            (!schoolIdFile && !userHasExistingId) // Validated ID check
+          ) {
+            // Updated error message
+            showAlert( "Please fill in all required fields. The School ID Picture is required for first-time profile completion.", "warning" );
+            return;
+          }
+          // --- ⬆️ END OF MODIFICATION ⬆️ ---
+
+          try {
+            const response = await fetch("/api/user/update-profile", {
+              method: "POST",
+              body: formData, 
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+              userProfileComplete = true;
+              const modal = bootstrap.Modal.getInstance(
+                document.getElementById("profileUpdateModal")
+              );
+              if (modal) modal.hide();
+
+              showAlert("Profile updated successfully!", "success");
+
+              // await loadUserProfile(); // <-- THIS LINE WAS THE BUG. IT IS NOW REMOVED.
+
+              // This function will now fetch the new data, update the
+              // profile page, and hide the warning banners.
+              await checkUserProfileStatus(); 
+
+              if (window.profileSaveCallback) {
+                window.profileSaveCallback();
+                window.profileSaveCallback = null;
+              }
+
+            } else {
+               showAlert("Error updating profile: " + data.message, "error");
             }
-
-            showAlert("Profile updated successfully!", "success");
+          } catch (error) {
+            console.error("Error saving profile:", error);
+            showAlert("Error updating profile. Please try again.", "error");
           }
         });
 
@@ -1928,10 +2898,37 @@
         }, 30000);
       }
 
-      // Enhanced initialization
+// Enhanced initialization
       document.addEventListener("DOMContentLoaded", async () => {
         // Check authentication first
         if (!checkAuthentication()) return;
+
+        // ---
+        // === STUDENT ID Auto-formatting ===
+        // ---
+        const studentIdInput = document.getElementById("studentId");
+        if (studentIdInput) {
+          studentIdInput.addEventListener("input", function (e) {
+            let input = e.target.value.replace(/\D/g, ""); // Remove all non-digits
+            let formattedInput = "";
+
+            if (input.length > 0) {
+              formattedInput = input.substring(0, 3);
+            }
+            if (input.length > 3) {
+              formattedInput += "-" + input.substring(3, 7);
+            }
+            if (input.length > 7) {
+              // 3 digits + 4 digits = 7. Max 6 in last part.
+              formattedInput += "-" + input.substring(7, 13);
+            }
+
+            e.target.value = formattedInput;
+          });
+        }
+        // ---
+        // === END OF BLOCK ===
+        // ---
 
         // Load user data
         const fullname = localStorage.getItem("fullname") || "User";
@@ -1945,11 +2942,17 @@
         // Set profile information
         document.getElementById("profileName").textContent = fullname;
 
-        // Check profile status
+        // Check profile status (This will now also show modal if incomplete)
         await checkUserProfileStatus();
 
-        // Load user profile data from server
-        await loadUserProfile();
+        checkNotificationStatus(); // Check for notifications on page load
+        setInterval(checkNotificationStatus, 10000); // Check every 10 seconds
+
+        // ---
+        // === THIS IS THE FIX (LINE REMOVED) ===
+        // === END OF FIX ===
+        // ---
+
 
         // Setup auto-logout functionality
         setupActivityListeners();
@@ -1962,30 +2965,12 @@
 
         // Section switching
         const navLinks = document.querySelectorAll(".nav-link");
-        const sections = document.querySelectorAll(".section");
 
         navLinks.forEach((link) => {
           link.addEventListener("click", (e) => {
             e.preventDefault();
             const target = link.getAttribute("data-target");
-
-            // Update active states
-            sections.forEach((sec) => sec.classList.remove("active"));
-            navLinks.forEach((l) => l.classList.remove("active"));
-
-            link.classList.add("active");
-            document.getElementById(target).classList.add("active");
-
-            // Load requests when switching to updates page
-            if (target === "updates") {
-              loadUserRequests();
-            }
-
-            // Close mobile menu if open
-            const navbar = document.querySelector(".navbar-collapse");
-            if (navbar.classList.contains("show")) {
-              new bootstrap.Collapse(navbar).hide();
-            }
+            showSection(target);
           });
         });
 
