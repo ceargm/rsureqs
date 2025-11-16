@@ -85,43 +85,6 @@
   </head>
 
   <body>
-    <!-- Data Privacy Modal -->
-    <div
-      class="modal fade"
-      id="privacyModal"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-labelledby="privacyModalLabel"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content rounded-3 shadow">
-          <div class="modal-header">
-            <h5 class="modal-title" id="privacyModalLabel">
-              📢 Data Privacy Notice
-            </h5>
-          </div>
-          <div class="modal-body">
-            By using the <strong>RSU REQS</strong>, you agree that your personal
-            information (e.g., name, email, phone number, course/ major, year
-            level, student ID) may be collected and processed in accordance with
-            the Data Privacy Act of 2012.
-            <a href="/privacy" target="_blank">View Full Privacy Policy</a>.
-          </div>
-          <div class="modal-footer">
-            <button
-              type="button"
-              class="btn btn-custom btn-primary"
-              data-bs-dismiss="modal"
-            >
-              <i class="bi bi-check-lg"></i> Agree & Continue
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <!-- CONTENT -->
     <div
       class="d-flex flex-grow-1 justify-content-center align-items-center margin-auto"
@@ -141,8 +104,8 @@
               class="me-2"
             />
             <img
-              src="/assets/img/updated_RegistrarLogo.jpg"
-              alt="Admission, Registration, and Scholarship & Grants Office"
+              src="/assets/img/registrar_logo.png"
+              alt="Registrar Logo"
               width="40"
               height="40"
               class="me-2"
@@ -178,6 +141,43 @@
             <a href="/queue" class="btn btn-custom btn-guest">
               <i class="bi bi-people-fill me-1"></i> View Queue Status
             </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ----------------------------------------------- DATA PRIVACY MODAL ----------------------------------------------- -->
+    <div
+      class="modal fade"
+      id="privacyModal"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-labelledby="privacyModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-3 shadow">
+          <div class="modal-header">
+            <h5 class="modal-title" id="privacyModalLabel">
+              📢 Data Privacy Notice
+            </h5>
+          </div>
+          <div class="modal-body">
+            By using the <strong>RSU REQS</strong>, you agree that your personal
+            information (e.g., name, email, phone number, course/ major, year
+            level, student ID) may be collected and processed in accordance with
+            the Data Privacy Act of 2012.
+            <a href="/privacy" target="_blank">View Full Privacy Policy</a>.
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-custom btn-primary"
+              data-bs-dismiss="modal"
+            >
+              <i class="bi bi-check-lg"></i> Agree & Continue
+            </button>
           </div>
         </div>
       </div>

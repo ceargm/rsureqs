@@ -309,14 +309,14 @@
               </div>
               <div class="row mb-3">
                 <div class="col-md-6">
-                  <label for="gender" class="form-label required-field"
-                    >Gender</label
+                  <label for="sex" class="form-label required-field"
+                    >Sex</label
                   >
-                  <select class="form-select" id="gender" required>
-                    <option value="" selected disabled>Select Gender</option>
+                  <select class="form-select" id="sex" required>
+                    <option value="" selected disabled>Select Sex</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <!-- <option value="Other">Other</option> -->
                   </select>
                 </div>
                 <div class="col-md-6">
@@ -449,10 +449,10 @@
 
               <div class="row mb-3">
                 <div class="col-md-6">
-                  <label for="schoolYear" class="form-label required-field"
+                  <label for="schoolYear" class="form-label"
                     >School Year</label
                   >
-                  <select class="form-select" id="schoolYear" required>
+                  <select class="form-select" id="schoolYear">
                     <option value="" selected disabled>
                       Select School Year
                     </option>
@@ -579,8 +579,6 @@
               />
             </div>
           </div>
-          ```
-
               <h6 class="fw-bold mb-3 mt-4">Contact Information</h6>
               <div class="row mb-3">
                 <div class="col-md-6">
@@ -1502,7 +1500,7 @@ async function checkNotificationStatus() {
           document.getElementById("lastName").value = user.last_name;
         if (user.middle_name)
           document.getElementById("middleName").value = user.middle_name;
-        if (user.gender) document.getElementById("gender").value = user.gender;
+        if (user.sex) document.getElementById("sex").value = user.sex;
 
         // NEW: Update profile display
         if (user.fullname) {
@@ -1510,8 +1508,8 @@ async function checkNotificationStatus() {
           document.getElementById("profileNameDisplay").textContent =
             user.fullname;
         }
-        if (user.gender)
-          document.getElementById("profileGender").textContent = user.gender;
+        if (user.sex)
+          document.getElementById("profileGender").textContent = user.sex;
 
         // Existing fields
         if (user.student_id)
@@ -1788,7 +1786,7 @@ async function checkUserProfileStatus() {
           document.getElementById("lastName").value = user.last_name || "";
           document.getElementById("firstName").value = user.first_name || "";
           document.getElementById("middleName").value = user.middle_name || "";
-          document.getElementById("gender").value = user.gender || "";
+          document.getElementById("sex").value = user.sex || "";
           document.getElementById("phone").value = user.phone || "";
           document.getElementById("studentId").value = user.student_id || "";
           document.getElementById("program").value = user.course || ""; // Use 'course' from DB for 'program' field
@@ -2772,7 +2770,7 @@ function filterRequests() {
           formData.append("lastName", document.getElementById("lastName").value);
           formData.append("firstName", document.getElementById("firstName").value);
           formData.append("middleName", document.getElementById("middleName").value);
-          formData.append("gender", document.getElementById("gender").value);
+          formData.append("sex", document.getElementById("sex").value);
 
           // Academic Info
           // ---
@@ -2830,7 +2828,7 @@ function filterRequests() {
           if (
             !formData.get("lastName") ||
             !formData.get("firstName") ||
-            !formData.get("gender") ||
+            !formData.get("sex") ||
             // !formData.get("studentId") || <-- THIS LINE IS REMOVED
             !formData.get("course") || 
             !formData.get("yearLevel") ||

@@ -4,88 +4,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import multer from "multer"; // <--- KEEP THIS LINE
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// --- ⬇️ PASTE THE NEW CODE BLOCK HERE ⬇️ ---
-// Configure Multer for file uploads
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Files will be saved in the 'uploads/' directory
-  },
-  filename: function (req, file, cb) {
-    // Create a unique filename to prevent conflicts
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    const extension = path.extname(file.originalname);
-    cb(null, file.fieldname + "-" + uniqueSuffix + extension);
-  },
-});
-
-// ------------------- THIS IS THE FIX -------------------
-// Secure file filter to only allow images
-const imageFileFilter = (req, file, cb) => {
-  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
-    cb(null, true);
-  } else {
-    // Reject file
-    cb(
-      new Error("Invalid file type. Only JPEG, PNG, or GIF are allowed."),
-      false
-    );
-  }
-};
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB file size limit
-  },
-  fileFilter: imageFileFilter,
-});
-// ----------------- END OF FIX ------------------
-
-// Serve static files from the 'uploads' directory
-// This allows dashboard.html to show the image using a URL like /uploads/filename.jpg
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-// --- NEW: Multer config for service requirements (allows docs, pdf, images) ---
-const documentFileFilter = (req, file, cb) => {
-  const allowedMimes = [
-    "image/jpeg",
-    "image/png",
-    "application/pdf",
-    "application/msword",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
-    "application/vnd.ms-excel",
-    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
-  ];
-  if (allowedMimes.includes(file.mimetype)) {
-    cb(null, true);
-  } else {
-    cb(
-      new Error(
-        "Invalid file type. Only images, PDF, Word, or Excel files are allowed."
-      ),
-      false
-    );
-  }
-};
-
-const requirementsUpload = multer({
-  storage: storage, // We re-use the same storage destination
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit for documents
-  },
-  fileFilter: documentFileFilter,
-});
-// --- END OF NEW BLOCK ---
-
 // JWT Secret Key
 const JWT_SECRET = process.env.JWT_SECRET || "rsu-reqs-admin-secret-key-2024";
-// ...
 
 // MySQL connection
 const db = mysql.createConnection({
@@ -106,7 +32,71 @@ db.connect((err) => {
   createQueueTable();
   createAdminStaffTable();
   createServiceRequestsTable(); // Add this line
+  createUsersTable(); // Add this line
 });
+
+// Create or update users table with comprehensive fields
+function createUsersTable() {
+  const usersTable = `
+    CREATE TABLE IF NOT EXISTS users (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      
+      -- Academic Information
+      student_number VARCHAR(50) UNIQUE,
+      campus VARCHAR(100),
+      program VARCHAR(100),
+      
+      -- Personal Information
+      last_name VARCHAR(100) NOT NULL,
+      first_name VARCHAR(100) NOT NULL,
+      middle_name VARCHAR(100),
+      sex ENUM('Male', 'Female'),
+      date_of_birth DATE,
+      place_of_birth VARCHAR(255),
+      nationality VARCHAR(100),
+      
+      -- Contact Information
+      mobile VARCHAR(20),
+      email VARCHAR(255) UNIQUE NOT NULL,
+      home_address TEXT,
+      
+      -- Education Details
+      previous_school VARCHAR(255),
+      primary_school VARCHAR(255),
+      secondary_school VARCHAR(255),
+      
+      -- Account Information
+      password VARCHAR(255) NOT NULL,
+      profile_complete BOOLEAN DEFAULT FALSE,
+      
+      -- Additional fields from your existing table
+      fullname VARCHAR(255),
+      phone VARCHAR(20),
+      student_id VARCHAR(50),
+      course VARCHAR(255),
+      major VARCHAR(100),
+      year_level VARCHAR(50),
+      school_year VARCHAR(50),
+      year_graduated VARCHAR(50),
+      
+      -- Timestamps
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+      
+      INDEX idx_student_number (student_number),
+      INDEX idx_email (email),
+      INDEX idx_campus (campus)
+    )
+  `;
+
+  db.query(usersTable, (err) => {
+    if (err) {
+      console.error("Error creating users table:", err);
+    } else {
+      console.log("✅ users table ready with comprehensive fields");
+    }
+  });
+}
 
 // Create or update service_requests table
 function createServiceRequestsTable() {
@@ -133,7 +123,6 @@ function createServiceRequestsTable() {
       declined_by_id INT,
       declined_at DATETIME,
       decline_reason TEXT,
-      is_viewed_by_user TINYINT(1) DEFAULT 0,
       contact_email VARCHAR(255),
       contact_phone VARCHAR(20),
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
@@ -498,8 +487,8 @@ app.post("/api/admin/approve-request", authenticateAdmin, (req, res) => {
 
   db.query(
     `UPDATE service_requests 
- SET status = 'approved', approved_by = ?, approved_by_id = ?, approved_at = NOW(), approve_notes = ?, is_viewed_by_user = 0
- WHERE request_id = ?`,
+     SET status = 'approved', approved_by = ?, approved_by_id = ?, approved_at = NOW(), approve_notes = ?
+     WHERE request_id = ?`,
     [approvedBy, adminId, approveNotes || "", requestId],
     (err, result) => {
       if (err) {
@@ -542,8 +531,8 @@ app.post("/api/admin/decline-request", authenticateAdmin, (req, res) => {
 
   db.query(
     `UPDATE service_requests 
- SET status = 'declined', declined_by = ?, declined_by_id = ?, declined_at = NOW(), decline_reason = ?, is_viewed_by_user = 0
- WHERE request_id = ?`,
+     SET status = 'declined', declined_by = ?, declined_by_id = ?, declined_at = NOW(), decline_reason = ?
+     WHERE request_id = ?`,
     [declinedBy, adminId, declineReason, requestId],
     (err, result) => {
       if (err) {
@@ -785,10 +774,10 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
       // ✅ CRITICAL FIX: Also update the service_requests table
       if (requestId) {
         const updateServiceRequestQuery = `
-      UPDATE service_requests 
-      SET queue_status = 'completed', is_viewed_by_user = 0
-      WHERE request_id = ?
-    `;
+          UPDATE service_requests 
+          SET queue_status = 'completed'
+          WHERE request_id = ?
+        `;
 
         db.query(updateServiceRequestQuery, [requestId], (err) => {
           if (err) {
@@ -901,127 +890,310 @@ app.post("/api/admin/add-manual-queue", authenticateAdmin, (req, res) => {
 app.post("/api/login", (req, res) => {
   const { emailOrPhone, password } = req.body;
 
+  // Allow login with email, phone, or student number
   db.query(
-    "SELECT * FROM users WHERE email = ? OR phone = ?",
-    [emailOrPhone, emailOrPhone],
+    "SELECT * FROM users WHERE email = ? OR mobile = ? OR student_number = ?",
+    [emailOrPhone, emailOrPhone, emailOrPhone],
     async (err, results) => {
-      if (err)
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error" });
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Database error"
+        });
+      }
 
       if (results.length === 0) {
-        return res.json({ success: false, message: "Invalid credentials" });
+        return res.json({
+          success: false,
+          message: "Invalid credentials"
+        });
       }
 
       const user = results[0];
       const isMatch = await bcrypt.compare(password, user.password);
 
       if (isMatch) {
-        console.log("User from DB:", user);
+        console.log("User logged in:", user.email);
 
         return res.json({
           success: true,
           message: "Login successful",
           userId: user.id,
-          fullname: user.fullname,
-          phone: user.phone,
+          fullname: user.fullname || `${user.first_name} ${user.last_name}`,
+          phone: user.mobile,
           email: user.email,
+          studentNumber: user.student_number,
+          profileComplete: user.profile_complete
         });
       } else {
-        return res.json({ success: false, message: "Invalid credentials" });
+        return res.json({
+          success: false,
+          message: "Invalid credentials"
+        });
       }
     }
   );
 });
 
 app.post("/api/register", async (req, res) => {
-  const { lastName, firstName, middleName, gender, email, phone, password } =
-    req.body;
+  const {
+    // Academic Information
+    studentNumber,
+    campus,
+    program,
 
-  if (!lastName || !firstName || !gender || !email || !phone || !password) {
-    return res
-      .status(400)
-      .json({ success: false, message: "All fields are required" });
+    // Personal Information
+    lastName,
+    firstName,
+    middleName,
+    sex,
+    dob,
+    pob,
+    nationality,
+
+    // Contact Information
+    mobile,
+    email,
+    homeAddress,
+
+    // Education Details
+    previousSchool,
+    primarySchool,
+    secondarySchool,
+
+    // Password
+    password
+  } = req.body;
+
+  // Validate required fields
+  const requiredFields = [
+    'studentNumber', 'campus', 'program',
+    'lastName', 'firstName', 'sex', 'dob', 'pob', 'nationality',
+    'mobile', 'email', 'homeAddress',
+    'primarySchool', 'secondarySchool',
+    'password'
+  ];
+
+  const missingFields = requiredFields.filter(field => !req.body[field]);
+
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      success: false,
+      message: `Missing required fields: ${missingFields.join(', ')}`
+    });
   }
 
-  db.query(
-    "SELECT * FROM users WHERE email = ? OR phone = ?",
-    [email, phone],
-    async (err, results) => {
-      if (err)
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error" });
+  // Validate email format
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+  if (!emailRegex.test(email)) {
+    return res.json({
+      success: false,
+      message: "Please enter a valid Gmail address"
+    });
+  }
 
-      if (results.length > 0) {
-        return res.json({
-          success: false,
-          message: "Email or phone already registered",
-        });
-      }
+  // Validate phone format
+  const phoneRegex = /^09\d{9}$/;
+  if (!phoneRegex.test(mobile)) {
+    return res.json({
+      success: false,
+      message: "Mobile number must be 11 digits and start with 09"
+    });
+  }
 
-      try {
+  // Validate password strength
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+  if (!passwordRegex.test(password)) {
+    return res.json({
+      success: false,
+      message: "Password does not meet security requirements"
+    });
+  }
+
+  try {
+    // Check for existing user
+    db.query(
+      "SELECT * FROM users WHERE email = ? OR student_number = ? OR mobile = ?",
+      [email, studentNumber, mobile],
+      async (err, results) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({
+            success: false,
+            message: "Database error during registration"
+          });
+        }
+
+        if (results.length > 0) {
+          const existingUser = results[0];
+          let message = "Registration failed. ";
+
+          if (existingUser.email === email) {
+            message += "Email already registered.";
+          } else if (existingUser.student_number === studentNumber) {
+            message += "Student number already registered.";
+          } else if (existingUser.mobile === mobile) {
+            message += "Mobile number already registered.";
+          }
+
+          return res.json({
+            success: false,
+            message: message
+          });
+        }
+
+        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
-        const fullName = `${lastName}, ${firstName}${
-          middleName ? " " + middleName : ""
-        }`; // Construct full name
 
-        // --- UPDATED INSERT QUERY ---
+        // Generate fullname from first and last name
+        const fullname = `${firstName} ${lastName}`.trim();
+
+        // Insert new user
+        const insertQuery = `
+          INSERT INTO users (
+            student_number, campus, program,
+            last_name, first_name, middle_name, sex, date_of_birth, place_of_birth, nationality,
+            mobile, email, home_address,
+            previous_school, primary_school, secondary_school,
+            password, fullname, phone, profile_complete
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `;
+
         db.query(
-          `INSERT INTO users (last_name, first_name, middle_name, gender, fullname, email, phone, password) 
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          insertQuery,
           [
-            lastName,
-            firstName,
-            middleName || null,
-            gender,
-            fullName,
-            email,
-            phone,
-            hashedPassword,
+            studentNumber, campus, program,
+            lastName, firstName, middleName || null, sex, dob, pob, nationality,
+            mobile, email, homeAddress,
+            previousSchool || null, primarySchool, secondarySchool,
+            hashedPassword, fullname, mobile, false // profile_complete set to false initially
           ],
           (err, result) => {
             if (err) {
-              console.error("Database error during registration:", err);
-              return res
-                .status(500)
-                .json({ success: false, message: "Database error" });
+              console.error("Database insertion error:", err);
+              return res.status(500).json({
+                success: false,
+                message: "Error creating user account"
+              });
             }
+
+            console.log(`✅ New user registered: ${fullname} (${studentNumber})`);
 
             return res.json({
               success: true,
-              message: "User registered successfully",
+              message: "Registration successful! You can now login.",
+              userId: result.insertId
             });
           }
         );
-      } catch (hashErr) {
-        return res
-          .status(500)
-          .json({ success: false, message: "Error securing password" });
       }
-    }
-  );
+    );
+  } catch (error) {
+    console.error("Registration error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error during registration"
+    });
+  }
 });
 
 app.get("/api/user/profile", (req, res) => {
   const userId = req.query.userId;
 
   if (!userId) {
-    return res
-      .status(400)
-      .json({ success: false, message: "User ID is required" });
+    return res.status(400).json({
+      success: false,
+      message: "User ID is required"
+    });
+  }
+
+  db.query("SELECT * FROM users WHERE id = ?", [userId], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Database error"
+      });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const user = results[0];
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        // Academic Information
+        student_number: user.student_number,
+        campus: user.campus,
+        program: user.program,
+
+        // Personal Information
+        last_name: user.last_name,
+        first_name: user.first_name,
+        middle_name: user.middle_name,
+        sex: user.sex,
+        date_of_birth: user.date_of_birth,
+        place_of_birth: user.place_of_birth,
+        nationality: user.nationality,
+
+        // Contact Information
+        mobile: user.mobile,
+        email: user.email,
+        home_address: user.home_address,
+
+        // Education Details
+        previous_school: user.previous_school,
+        primary_school: user.primary_school,
+        secondary_school: user.secondary_school,
+
+        // Additional fields
+        fullname: user.fullname,
+        student_id: user.student_id,
+        course: user.course,
+        major: user.major,
+        year_level: user.year_level,
+        school_year: user.school_year,
+        year_graduated: user.year_graduated,
+        profile_complete: user.profile_complete,
+
+        created_at: user.created_at
+      },
+    });
+  });
+});
+
+app.post("/api/user/update-profile", (req, res) => {
+  const {
+    userId,
+    studentId,
+    course,
+    major,
+    yearLevel,
+    schoolYear,
+    yearGraduated,
+  } = req.body;
+
+  if (!userId || !studentId || !course || !yearLevel || !schoolYear) {
+    return res.status(400).json({
+      success: false,
+      message: "All required fields must be filled",
+    });
   }
 
   db.query(
-    // --- UPDATED SQL QUERY ---
-    `SELECT *, last_name, first_name, middle_name, gender, school_id_picture,
-        campus, dob, pob, nationality, home_address, previous_school,
-        primary_school, secondary_school 
-        FROM users WHERE id = ?`,
-    // --- END UPDATE ---
-    [userId],
-    (err, results) => {
+    `UPDATE users 
+     SET student_id = ?, course = ?, major = ?, year_level = ?, 
+         school_year = ?, year_graduated = ?, profile_complete = 1 
+     WHERE id = ?`,
+    [studentId, course, major, yearLevel, schoolYear, yearGraduated, userId],
+    (err, result) => {
       if (err) {
         console.error("Database error:", err);
         return res
@@ -1029,199 +1201,20 @@ app.get("/api/user/profile", (req, res) => {
           .json({ success: false, message: "Database error" });
       }
 
-      if (results.length === 0) {
+      if (result.affectedRows === 0) {
         return res
           .status(404)
           .json({ success: false, message: "User not found" });
       }
 
-      const user = results[0];
       res.json({
         success: true,
-        user: {
-          id: user.id,
-          fullname: user.fullname,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          middle_name: user.middle_name,
-          gender: user.gender,
-          email: user.email,
-          phone: user.phone,
-          student_id: user.student_id,
-          course: user.course, // This field holds the "program"
-          major: user.major,
-          year_level: user.year_level,
-          school_year: user.school_year,
-          year_graduated: user.year_graduated,
-          profile_complete: user.profile_complete,
-          school_id_picture: user.school_id_picture,
-          // --- ADDED NEW FIELDS ---
-          campus: user.campus,
-          dob: user.dob,
-          pob: user.pob,
-          nationality: user.nationality,
-          home_address: user.home_address,
-          previous_school: user.previous_school,
-          primary_school: user.primary_school,
-          secondary_school: user.secondary_school,
-          // --- END ADDED FIELDS ---
-        },
+        message: "Profile updated successfully",
       });
     }
   );
 });
 
-// This REPLACES your old /api/user/update-profile route
-app.post(
-  "/api/user/update-profile",
-  upload.single("school_id_picture"),
-  async (req, res) => {
-    // req.body contains the text fields
-    // req.file contains the 'school_id_picture' file
-    const {
-      userId,
-      lastName,
-      firstName,
-      middleName,
-      gender,
-      phone,
-      studentId,
-      course, // This will be the "program" value from the form
-      major,
-      yearLevel,
-      schoolYear,
-      yearGraduated,
-      email,
-      // --- ADDED NEW FIELDS ---
-      campus,
-      dob,
-      pob,
-      nationality,
-      home_address,
-      previous_school,
-      primary_school,
-      secondary_school,
-      // --- END ADDED FIELDS ---
-    } = req.body;
-
-    // --- Validation ---
-    if (
-      !userId ||
-      !lastName ||
-      !firstName ||
-      !gender ||
-      !studentId ||
-      !course ||
-      !yearLevel ||
-      !schoolYear ||
-      !email ||
-      // --- ADDED VALIDATION ---
-      !campus ||
-      !dob ||
-      !pob ||
-      !nationality ||
-      !home_address ||
-      !primary_school ||
-      !secondary_school
-      // 'previous_school' is optional
-      // --- END ADDED VALIDATION ---
-    ) {
-      return res.status(400).json({
-        success: false,
-        message: "All required fields must be filled",
-      });
-    }
-
-    const fullName = `${lastName}, ${firstName}${
-      middleName ? " " + middleName : ""
-    }`;
-
-    try {
-      let schoolIdPictureFilename = null;
-
-      // 1. Check if a new file was uploaded
-      if (req.file) {
-        schoolIdPictureFilename = req.file.filename;
-      } else {
-        // 2. If NO new file, keep the old one
-        const [user] = await db
-          .promise()
-          .query("SELECT school_id_picture FROM users WHERE id = ?", [userId]);
-        if (user.length > 0) {
-          schoolIdPictureFilename = user[0].school_id_picture;
-        }
-      }
-
-      // --- UPDATED SQL QUERY ---
-      await db.promise().query(
-        `UPDATE users 
-              SET 
-                  last_name = ?, 
-                  first_name = ?, 
-                  middle_name = ?, 
-                  gender = ?,
-                  phone = ?,
-                  fullname = ?,
-                  student_id = ?, 
-                  course = ?, 
-                  major = ?, 
-                  year_level = ?, 
-                  school_year = ?, 
-                  year_graduated = ?, 
-                  email = ?,
-                  school_id_picture = ?,
-                  campus = ?,
-                  dob = ?,
-                  pob = ?,
-                  nationality = ?,
-                  home_address = ?,
-                  previous_school = ?,
-                  primary_school = ?,
-                  secondary_school = ?,
-                  profile_complete = 1 
-              WHERE id = ?`,
-        [
-          lastName,
-          firstName,
-          middleName || null,
-          gender,
-          phone,
-          fullName,
-          studentId,
-          course, // This is the "program" value
-          major,
-          yearLevel,
-          schoolYear,
-          yearGraduated || null,
-          email,
-          schoolIdPictureFilename, // Save the filename
-          // --- ADDED PARAMETERS ---
-          campus,
-          dob,
-          pob,
-          nationality,
-          home_address,
-          previous_school || null, // Optional field
-          primary_school,
-          secondary_school,
-          // --- END ADDED PARAMETERS ---
-          userId,
-        ]
-      );
-      // --- END UPDATE ---
-
-      res.json({
-        success: true,
-        message: "Profile updated successfully",
-      });
-    } catch (error) {
-      console.error("Database error:", error);
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
-    }
-  }
-);
 app.get("/api/user/can-join-queue", (req, res) => {
   const userId = req.query.userId;
 
@@ -1256,135 +1249,75 @@ app.get("/api/user/can-join-queue", (req, res) => {
   );
 });
 
-// --- REPLACED API ROUTE to handle file uploads ---
-app.post(
-  "/api/queue/submit-request",
-  requirementsUpload.array("requirements_files", 10), // "requirements_files" is the key from FormData, 10 files max
-  (req, res) => {
-    // Text fields are in req.body, files are in req.files
-    const { userId, services } = req.body;
-    const files = req.files;
+app.post("/api/queue/submit-request", (req, res) => {
+  const { userId, services, totalAmount, requirements } = req.body;
 
-    if (!userId || !services || !Array.isArray(services)) {
-      // If validation fails, delete any files that were uploaded
-      if (files) {
-        files.forEach((file) =>
-          fs.unlink(
-            file.path,
-            (err) => err && console.error("Error cleaning up file:", err)
-          )
-        );
-      }
-      return res.status(400).json({
-        success: false,
-        message: "User ID and services are required",
-      });
-    }
-
-    // Create an array of file paths (just the filename)
-    // Get the requirement names sent from the form
-    const { requirement_names } = req.body;
-
-    // Create a structured array: [ {name: "Clearance", file: "file-123.jpg"}, ... ]
-    const structuredRequirements = files
-      ? files.map((file, index) => {
-          return {
-            name: requirement_names[index], // The name from the form
-            file: file.filename, // The saved filename
-          };
-        })
-      : [];
-
-    // Save this new structure in requirements_paths
-    const requirementsPaths = JSON.stringify(structuredRequirements);
-
-    // Save just the names in the old 'requirements' column for compatibility
-
-    const requestId =
-      "REQ-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
-
-    db.query(
-      `SELECT fullname, student_id, course, year_level, email, phone,
-        campus, dob, pob, nationality, home_address, previous_school,
-        primary_school, secondary_school, school_id_picture 
-  FROM users WHERE id = ?`,
-      [userId],
-      (err, userResults) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res
-            .status(500)
-            .json({ success: false, message: "Database error" });
-        }
-
-        if (userResults.length === 0) {
-          return res
-            .status(404)
-            .json({ success: false, message: "User not found" });
-        }
-
-        const user = userResults[0];
-
-        // Note: The 'requirements' column now stores the *names* of the requirements
-        // The new 'requirements_paths' column stores the *filenames*
-        const requirementsText = files
-          ? files.map((file) => file.originalname)
-          : [];
-
-        db.query(
-          `INSERT INTO service_requests 
-  (request_id, user_id, user_name, student_id, course, year_level, 
-  services, total_amount, requirements, requirements_paths, status, submitted_at, contact_email, contact_phone,
-  campus, dob, pob, nationality, home_address, previous_school, 
-  primary_school, secondary_school, school_id_picture) 
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            requestId,
-            userId,
-            user.fullname,
-            user.student_id,
-            user.course,
-            user.year_level,
-            JSON.stringify(services), // ["Transcript of Records"]
-            0, // Total amount is 0 for now as per your original code
-
-            // --- THIS IS THE FIX ---
-            requirementsText, // This is now the string from line 1129
-            requirementsPaths, // This is now the string from line 1126
-            // --- END OF FIX ---
-
-            user.email,
-            user.phone,
-            user.campus,
-            user.dob,
-            user.pob,
-            user.nationality,
-            user.home_address,
-            user.previous_school,
-            user.primary_school,
-            user.secondary_school,
-            user.school_id_picture,
-          ],
-          (err, result) => {
-            if (err) {
-              console.error("Database error:", err);
-              return res
-                .status(500)
-                .json({ success: false, message: "Database error" });
-            }
-
-            res.json({
-              success: true,
-              requestId: requestId,
-              message: "Service request submitted for admin approval",
-            });
-          }
-        );
-      }
-    );
+  if (!userId || !services || !Array.isArray(services)) {
+    return res.status(400).json({
+      success: false,
+      message: "User ID and services are required",
+    });
   }
-);
-// --- END OF REPLACED ROUTE ---
+
+  const requestId =
+    "REQ-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+
+  db.query(
+    "SELECT fullname, student_id, course, year_level, email, phone FROM users WHERE id = ?",
+    [userId],
+    (err, userResults) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error" });
+      }
+
+      if (userResults.length === 0) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      const user = userResults[0];
+
+      db.query(
+        `INSERT INTO service_requests 
+         (request_id, user_id, user_name, student_id, course, year_level, 
+          services, total_amount, requirements, status, submitted_at, contact_email, contact_phone) 
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), ?, ?)`,
+        [
+          requestId,
+          userId,
+          user.fullname,
+          user.student_id,
+          user.course,
+          user.year_level,
+          JSON.stringify(services),
+          totalAmount,
+          JSON.stringify(requirements),
+          user.email,
+          user.phone,
+        ],
+        (err, result) => {
+          if (err) {
+            console.error("Database error:", err);
+            return res
+              .status(500)
+              .json({ success: false, message: "Database error" });
+          }
+
+          res.json({
+            success: true,
+            requestId: requestId,
+            message: "Service request submitted for admin approval",
+          });
+        }
+      );
+    }
+  );
+});
+
 app.get("/api/admin/service-requests", authenticateAdmin, (req, res) => {
   db.query(
     `SELECT * FROM service_requests ORDER BY 
@@ -1401,35 +1334,11 @@ app.get("/api/admin/service-requests", authenticateAdmin, (req, res) => {
           .json({ success: false, message: "Database error" });
       }
 
-      const requests = results.map((request) => {
-        try {
-          let reqs = JSON.parse(request.requirements || "[]");
-          let paths = JSON.parse(request.requirements_paths || "[]");
-
-          // Fix for old, double-stringified data
-          if (typeof reqs === "string") reqs = JSON.parse(reqs);
-          if (typeof paths === "string") paths = JSON.parse(paths);
-
-          return {
-            ...request,
-            services: JSON.parse(request.services || "[]"),
-            requirements: reqs,
-            requirements_paths: paths,
-          };
-        } catch (e) {
-          console.error(
-            "Failed to parse JSON for request:",
-            request.request_id,
-            e
-          );
-          return {
-            ...request, // Return partial data
-            services: [],
-            requirements: [],
-            requirements_paths: [],
-          };
-        }
-      });
+      const requests = results.map((request) => ({
+        ...request,
+        services: JSON.parse(request.services),
+        requirements: JSON.parse(request.requirements),
+      }));
 
       res.json({
         success: true,
@@ -1885,18 +1794,10 @@ app.get("/api/user/service-requests", (req, res) => {
 
       const requests = results.map((request) => {
         try {
-          let reqs = JSON.parse(request.requirements || "[]");
-          let paths = JSON.parse(request.requirements_paths || "[]");
-
-          // Fix for old, double-stringified data
-          if (typeof reqs === "string") reqs = JSON.parse(reqs);
-          if (typeof paths === "string") paths = JSON.parse(paths);
-
           return {
             ...request,
-            services: JSON.parse(request.services || "[]"),
-            requirements: reqs,
-            requirements_paths: paths,
+            services: JSON.parse(request.services),
+            requirements: JSON.parse(request.requirements),
           };
         } catch (parseErr) {
           console.error("Error parsing JSON for request:", request.request_id);
@@ -1914,65 +1815,6 @@ app.get("/api/user/service-requests", (req, res) => {
       });
     }
   );
-});
-
-// --- NEW: API to check for unread notifications ---
-app.get("/api/user/notifications-status", (req, res) => {
-  const userId = req.query.userId;
-  if (!userId) {
-    return res
-      .status(400)
-      .json({ success: false, message: "User ID is required" });
-  }
-
-  const query = `
-    SELECT 1 
-    FROM service_requests 
-    WHERE user_id = ? 
-      AND is_viewed_by_user = 0
-      AND (status IN ('approved', 'declined') OR queue_status = 'completed')
-    LIMIT 1
-  `;
-
-  db.query(query, [userId], (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
-    }
-
-    res.json({
-      success: true,
-      hasUnread: results.length > 0,
-    });
-  });
-});
-
-// --- NEW: API to mark notifications as read ---
-app.post("/api/user/mark-notifications-read", (req, res) => {
-  const { userId } = req.body;
-  if (!userId) {
-    return res
-      .status(400)
-      .json({ success: false, message: "User ID is required" });
-  }
-
-  const query = `
-    UPDATE service_requests 
-    SET is_viewed_by_user = 1 
-    WHERE user_id = ? AND is_viewed_by_user = 0
-  `;
-
-  db.query(query, [userId], (err, result) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
-    }
-    res.json({ success: true, message: "Notifications marked as read" });
-  });
 });
 // === MANUAL QUEUE ENTRY ===
 app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
