@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Forgot Password - RSU REQS</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link href="/assets/css/style.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div
+      class="d-flex flex-grow-1 justify-content-center align-items-center margin-auto"
+    >
+      <div class="login-card-custom">
+        <div class="logo text-center mb-3">
+          <a href="/">
+            <div class="d-flex flex-column lh-sm">
+              <p class="fw-bold">Registrar's Office</p>
+              <p class="fw-bold">Romblon State University - Odiongan</p>
+            </div>
+          </a>
+        </div>
+        <div class="content">
+          <h4 class="mt-3 mb-2 fw-bold">Forgot Your Password?</h4>
+          <p class="text-muted">
+            No problem. Enter your email below and we'll send you a link to
+            reset it.
+          </p>
+          <form id="forgotForm">
+            <div class="mb-3">
+              <label for="email" class="form-label mb-2">Email</label>
+              <input
+                type="email"
+                id="email"
+                class="form-control"
+                placeholder="Enter your registered email"
+                required
+              />
+            </div>
+            <div id="formAlert" class="alert d-none" role="alert"></div>
+            <div class="hero-buttons">
+              <button
+                type="submit"
+                id="submitBtn"
+                class="btn btn-primary w-100 mt-2"
+              >
+                Send Reset Link
+              </button>
+            </div>
+            <p class="mt-3 text-center">
+              Remembered your password? <a href="/login">Back to Login</a>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+    <script>
+      document
+        .getElementById("forgotForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const email = document.getElementById("email").value;
+          const formAlert = document.getElementById("formAlert");
+          const submitBtn = document.getElementById("submitBtn");
+
+          submitBtn.disabled = true;
+          submitBtn.innerHTML =
+            '<span class="spinner-border spinner-border-sm"></span> Sending...';
+
+          try {
+            const response = await fetch("/api/forgot-password", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ email }),
+            });
+
+            const result = await response.json();
+
+            // We ALWAYS show a generic success message, even if the email
+            // isn't found, to prevent email enumeration attacks.
+            formAlert.classList.remove("d-none", "alert-danger");
+            formAlert.classList.add("alert-success");
+            formAlert.textContent = result.message;
+          } catch (error) {
+            formAlert.classList.remove("d-none", "alert-success");
+            formAlert.classList.add("alert-danger");
+            formAlert.textContent =
+              "An error occurred. Please try again later.";
+          } finally {
+            // Re-enable button but leave it showing success
+            if (formAlert.classList.contains("alert-success")) {
+              submitBtn.innerHTML = "Link Sent!";
+            } else {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = "Send Reset Link";
+            }
+          }
+        });
+    </script>
+  </body>
+</html>

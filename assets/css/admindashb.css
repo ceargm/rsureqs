@@ -1763,3 +1763,96 @@ body.dark-theme .form-check-input:checked {
 .school-id-preview:hover {
   transform: scale(1.05);
 }
+/* --- Animated Day/Night Toggle Switch --- */
+.theme-switch-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.theme-switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+}
+
+.theme-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+/* The Track */
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #87ceeb; /* Sky Blue (Day) */
+  transition: 0.4s;
+  border-radius: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 5px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+/* The Thumb (Circle) */
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 24px;
+  width: 24px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+  z-index: 2;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Icons inside the track */
+.icon-sun,
+.icon-moon {
+  color: white;
+  font-size: 14px;
+  z-index: 1;
+  transition: 0.4s;
+}
+
+.icon-sun {
+  margin-left: 5px;
+  color: #ffeb3b; /* Yellow Sun */
+}
+
+.icon-moon {
+  margin-right: 5px;
+  color: #f1c40f; /* Yellow Moon */
+  opacity: 0.5; /* Dimmed when in light mode */
+}
+
+/* --- Dark Mode State (Checked) --- */
+input:checked + .slider {
+  background-color: #2c3e50; /* Midnight Blue (Night) */
+}
+
+input:checked + .slider:before {
+  transform: translateX(30px); /* Move the circle */
+}
+
+input:checked + .slider .icon-sun {
+  opacity: 0.5; /* Dim Sun */
+}
+
+input:checked + .slider .icon-moon {
+  opacity: 1; /* Bright Moon */
+}
+
+/* Add a nice focus glow for accessibility */
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196f3;
+}

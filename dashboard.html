@@ -140,6 +140,44 @@
     border: 2px solid #fff; /* Makes it look clean on the green bg */
     box-shadow: 0 0 5px rgba(0,0,0,0.3);
   }
+  /* --- Notification Toast Styles --- */
+      .notification-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        animation: slideInRight 0.3s ease-out forwards;
+        border-left: 5px solid;
+        font-family: "Poppins", sans-serif;
+      }
+
+      .toast-info {
+        border-left-color: #0d6efd; /* Blue for info */
+      }
+
+      .toast-success {
+        border-left-color: #198754; /* Green for success */
+      }
+
+      .toast-error {
+        border-left-color: #dc3545; /* Red for error */
+      }
+
+      .toast-icon {
+        margin-right: 15px;
+        font-size: 1.2rem;
+      }
+
+      .toast-info .toast-icon { color: #0d6efd; }
+      .toast-success .toast-icon { color: #198754; }
+      .toast-error .toast-icon { color: #dc3545; }
     </style>
   </head>
 
@@ -579,7 +617,6 @@
               />
             </div>
           </div>
-          ```
 
               <h6 class="fw-bold mb-3 mt-4">Contact Information</h6>
               <div class="row mb-3">
@@ -2161,26 +2198,23 @@ function refreshModal() {
   }
 }
 
-      // Enhanced join queue function
+// Enhanced Join Queue Function with Loading & Toast
 document
   .getElementById("joinQueueBtn")
   .addEventListener("click", async function () {
     if (!checkAuthentication() || !checkSession()) return;
 
     if (selectedServicesList.length === 0) {
-      showAlert("Please select at least one service.", "warning");
+      showToast("Please select at least one service.", "error");
       return;
     }
 
     if (!userProfileComplete) {
-      showAlert(
-        "Please complete your profile before submitting requests.",
-        "warning"
-      );
+      showToast("Please complete your profile first.", "error");
       return;
     }
 
-    // --- NEW VALIDATION LOGIC ---
+    // --- Validation Logic ---
     const fileInputs = document.querySelectorAll(
       ".requirement-upload[required]"
     );
@@ -2189,97 +2223,83 @@ document
     fileInputs.forEach((input) => {
       if (input.files.length === 0) {
         allFilesUploaded = false;
-        input.classList.add("is-invalid"); // Add red border
+        input.classList.add("is-invalid");
       } else {
         input.classList.remove("is-invalid");
       }
     });
 
     if (!allFilesUploaded) {
-      showAlert("Please upload all required files.", "error");
-      return; // Stop submission
+      showToast("Please upload all required files.", "error");
+      return;
     }
-    // --- END NEW VALIDATION LOGIC ---
 
-    // --- NEW SUBMISSION LOGIC (using FormData) ---
+    // --- 1. SHOW LOADING TOAST ---
+    showToast("Submitting your request...", "info");
+
+    // --- 2. BUTTON LOADING STATE ---
+    const joinBtn = document.getElementById("joinQueueBtn");
+    const originalText = joinBtn.innerHTML;
+    joinBtn.innerHTML =
+      '<span class="spinner-border spinner-border-sm me-2"></span> Submitting...';
+    joinBtn.disabled = true;
+
+    // Prepare Data
     const userId = localStorage.getItem("userId");
     const formData = new FormData();
-
-    // Add user ID
     formData.append("userId", userId);
-
-    // Add selected services (as an array)
     selectedServicesList.forEach((service) => {
-      formData.append("services[]", service.trim()); // Use trim() for safety
+      formData.append("services[]", service.trim());
     });
-
-    // Add all uploaded files
-    let totalFiles = 0;
     fileInputs.forEach((input) => {
       if (input.files.length > 0) {
-        // "requirements_files" MUST match the name in your index.js multer middleware
         formData.append("requirements_files", input.files[0]);
-
-        // --- THIS IS THE NEW LINE ---
-        // Send the name of the requirement for this file
         formData.append("requirement_names[]", input.dataset.requirementName);
-        // --- END NEW LINE ---
-
-        totalFiles++;
       }
     });
 
-    console.log(
-      `Submitting request for user ${userId} with ${selectedServicesList.length} services and ${totalFiles} files.`
-    );
-
     try {
-      // Show loading state
-      const joinBtn = document.getElementById("joinQueueBtn");
-      const originalText = joinBtn.innerHTML;
-      joinBtn.innerHTML =
-        '<i class="bi bi-hourglass-split me-1"></i> Submitting...';
-      joinBtn.disabled = true;
-
       // Submit to backend
       const response = await fetch("/api/queue/submit-request", {
         method: "POST",
-        body: formData, // Send FormData (no 'Content-Type' header needed)
+        body: formData,
       });
 
       const result = await response.json();
 
       if (result.success) {
-        // Close the modal
+        // Close modal
         const selectedModal = bootstrap.Modal.getInstance(
           document.getElementById("selectedModal")
         );
         if (selectedModal) selectedModal.hide();
 
-        // Show success message with request ID
+        // --- 3. SHOW SUCCESS TOAST ---
+        showToast("Request submitted successfully!", "success");
+
+        // Show detailed success modal (your existing one)
         showSubmissionSuccessModal(result.requestId);
 
-        // Clear selected services and reset UI
+        // Reset UI
         selectedServicesList = [];
         resetServiceSelectionUI();
         updateSelectedCount();
-
-        // Reload user requests
         await loadUserRequests();
       } else {
-        showAlert("Error submitting request: " + result.message, "error");
+        showToast("Error: " + result.message, "error");
       }
     } catch (error) {
       console.error("Error submitting service request:", error);
-      showAlert("Error submitting request. Please try again.", "error");
+      showToast("Network error. Please try again.", "error");
     } finally {
-      // Reset button state
-      const joinBtn = document.getElementById("joinQueueBtn");
-      joinBtn.innerHTML = "Join Queue Now";
-      joinBtn.disabled = false;
+      // --- 4. RESET BUTTON STATE ---
+      // Slight delay to prevent flickering if the response is instant
+      setTimeout(() => {
+        joinBtn.innerHTML = "Join Queue Now";
+        joinBtn.disabled = false;
+      }, 500);
     }
   });
-
       // Enhanced service request submission
       async function submitServiceRequest() {
         const userId = localStorage.getItem("userId");
@@ -2385,6 +2405,71 @@ document
         }
       }
 
+      // Add this new function alongside your other functions like loadUserRequests()
+
+      /**
+       * Begins the resubmission process for a declined request.
+       * @param {string} requestId The ID of the declined request.
+       */
+      async function resubmitRequest(requestId) {
+        if (!userProfileComplete) {
+          showAlert("Please ensure your profile is complete before resubmitting.", "warning");
+          showProfileUpdateModal();
+          return;
+        }
+
+        // Show a simple loading alert
+        showAlert("Loading original request details...", "info");
+        const userId = localStorage.getItem("userId");
+
+        try {
+          // Call the new API endpoint you created in Step 1
+          const response = await fetch(`/api/user/request-details?requestId=${requestId}&userId=${userId}`);
+          const data = await response.json();
+
+          if (data.success && data.services.length > 0) {
+            // 1. Clear any services the user might have been selecting
+            selectedServicesList = [];
+
+            // 2. Add services from the old, declined request
+            // We must ensure we add the *exact* service names from servicesData
+            for (const serviceName of data.services) {
+              if (servicesData[serviceName]) {
+                selectedServicesList.push(serviceName);
+              } else {
+                console.warn(`Service "${serviceName}" from old request is no longer valid.`);
+              }
+            }
+
+            if (selectedServicesList.length === 0) {
+                showAlert("Could not resubmit. The services from this request are no longer available.", "error");
+                return;
+            }
+
+            // 3. Update the UI and show the "Selected Services" modal
+            updateSelectedCount();
+            
+            // This existing function will open the modal and pre-fill it
+            // because we just populated selectedServicesList.
+            viewSelectedServices(); 
+            
+            // Add a helpful alert in the modal
+            setTimeout(() => {
+                document.getElementById("requirementsList").insertAdjacentHTML(
+                    'afterbegin',
+                    '<div class="alert alert-warning small"><i class="bi bi-exclamation-triangle me-1"></i> <strong>Resubmitting:</strong> Please upload your corrected requirements files below.</div>'
+                );
+            }, 500); // Delay to ensure modal is visible
+
+          } else {
+            showAlert(`Error: ${data.message || "Could not find details for this request."}`, "error");
+          }
+        } catch (error) {
+          console.error("Error resubmitting request:", error);
+          showAlert("An error occurred. Please try again.", "error");
+        }
+      }
+
       // Enhanced request display
       function displayUserRequests(requests) {
         const container = document.getElementById("requestsContainer");
@@ -2454,7 +2539,15 @@ document
                         } on ${new Date(request.declined_at).toLocaleString()}
                         <br><strong>Reason:</strong> ${request.decline_reason}
                     </div>
-                `
+
+                    <div class="mt-2 text-end">
+                        <button class="btn btn-warning btn-sm" onclick="resubmitRequest('${
+                          request.request_id
+                        }')">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Resubmit This Request
+                        </button>
+                    </div>
+                    `
                     : ""
                 }
                 <p><strong>Total Amount:</strong> ₱${parseFloat(
@@ -2476,6 +2569,19 @@ document
                     <div class="alert alert-success mt-2">
                         <i class="bi bi-check-circle me-1"></i>
                         <strong>Completed:</strong> Your request has been completed and is ready.
+                        
+                        ${
+                          request.claim_details
+                            ? `
+                            <hr>
+                            <p class="mb-0" style="font-size: 0.95rem;">
+                                <strong><i class="bi bi-building me-1"></i> Please claim at:</strong>
+                                <br>
+                                <span class="fw-bold" style="font-size: 1.1rem;">${request.claim_details}</span>
+                            </p>
+                            `
+                            : ""
+                        }
                     </div>
                 `
                     : ""
@@ -2645,6 +2751,38 @@ function filterRequests() {
             alert.remove();
           }
         }, 5000);
+      }
+// --- NEW: Toast Notification Helper ---
+      function showToast(message, type = "info") {
+        // Remove existing toast if any
+        const existingToast = document.querySelector(".notification-toast");
+        if (existingToast) existingToast.remove();
+
+        // Create element
+        const toast = document.createElement("div");
+        toast.className = `notification-toast toast-${type}`;
+
+        // Icon based on type
+        let iconClass = "bi-info-circle-fill";
+        if (type === "success") iconClass = "bi-check-circle-fill";
+        if (type === "error") iconClass = "bi-exclamation-triangle-fill";
+
+        toast.innerHTML = `
+            <i class="bi ${iconClass} toast-icon"></i>
+            <span style="font-weight: 500; color: #333;">${message}</span>
+        `;
+
+        document.body.appendChild(toast);
+
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.style.animation = "slideOutRight 0.3s ease-in forwards";
+            setTimeout(() => {
+              if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 300);
+          }
+        }, 3000);
       }
 
       // Function to show success modal after submission

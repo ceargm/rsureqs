@@ -10,3 +10,4 @@ node_modules/
 # Ignore system files created by macOS and Windows
 .DS_Store
 Thumbs.db
+.vercel
