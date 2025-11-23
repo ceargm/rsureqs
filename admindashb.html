@@ -87,6 +87,10 @@
               <div class="stat-number orange" id="processingCount">0</div>
               <div class="stat-label">Processing</div>
             </div>
+            <!-- <div class="stat-card">
+              <div class="stat-number green" id="readyCount">0</div>
+              <div class="stat-label">Ready</div>
+            </div> -->
             <div class="stat-card">
               <div class="stat-number purple" id="completedCount">0</div>
               <div class="stat-label">Completed</div>
@@ -94,6 +98,167 @@
             <div class="stat-card priority">
               <div class="stat-number red" id="priorityCount">0</div>
               <div class="stat-label">Priority Queue</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="content-grid">
+          <div class="content-item">
+            <!-- Manual Queue Entry -->
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Manual Queue Entry</span>
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#manualEntryCollapse"
+                >
+                  <i class="bi bi-chevron-down"></i>
+                </button>
+              </div>
+
+              <div class="collapse show" id="manualEntryCollapse">
+                <div class="card-body">
+                  <form
+                    id="manualQueueForm"
+                    class="row g-3 needs-validation"
+                    novalidate
+                  >
+                    <div class="col-md-6">
+                      <label class="form-label">Full Name</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="manualName"
+                        placeholder="Enter full name"
+                        required
+                      />
+                    </div>
+
+                    <div class="col-md-6">
+                      <label class="form-label">Student ID</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="manualStudentId"
+                        placeholder="e.g. 2022-0001-001"
+                        required
+                      />
+                    </div>
+
+                    <div class="col-md-4">
+                      <label class="form-label">Course</label>
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="manualCourse"
+                        placeholder="e.g. BSIT"
+                        required
+                      />
+                    </div>
+
+                    <div class="col-md-4">
+                      <label class="form-label">Year Level</label>
+                      <select class="form-select" id="manualYearLevel" required>
+                        <option value="" disabled selected>Select</option>
+                        <option>1st Year</option>
+                        <option>2nd Year</option>
+                        <option>3rd Year</option>
+                        <option>4th Year</option>
+                      </select>
+                    </div>
+
+                    <div class="col-md-4">
+                      <label class="form-label">Service</label>
+                      <select class="form-select" id="manualService" required>
+                        <option value="" disabled selected>
+                          Select Service
+                        </option>
+                        <option value='["Transcript of Records"]'>
+                          Transcript of Records
+                        </option>
+                        <option value='["Certificate of Enrollment"]'>
+                          Certificate of Enrollment
+                        </option>
+                        <option value='["Good Moral Character"]'>
+                          Good Moral Character
+                        </option>
+                        <option value='["Diploma"]'>Diploma</option>
+                      </select>
+                    </div>
+
+                    <div class="col-12 mt-2">
+                      <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-plus-circle"></i> Add to Queue
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" id="currentRequestCard">
+              <!-- Current request will be loaded dynamically -->
+            </div>
+
+            <div class="quick-actions">
+              <h3>Quick Actions</h3>
+              <button
+                class="action-btn"
+                onclick="queueManager.processNextInQueue()"
+              >
+                <i class="bi bi-arrow-right"></i> Process Next
+              </button>
+              <button
+                class="action-btn"
+                onclick="serviceRequestManager.loadServiceRequests()"
+              >
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+              </button>
+              <button
+                class="action-btn"
+                id="pauseQueueBtn"
+                onclick="toggleQueuePause()"
+              >
+                <i class="bi bi-pause-circle"></i> Pause Queue
+              </button>
+            </div>
+          </div>
+
+          <div class="content-item">
+            <div class="card priority-card" id="priorityQueueContainer">
+              <!-- Priority queue will be loaded dynamically -->
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title">Regular Queue</span>
+                <span class="badge waiting" id="regularQueueCount"
+                  >0 waiting</span
+                >
+              </div>
+              <div class="card-body p-0">
+                <div class="scrollable-area" id="regularQueueContainer">
+                  <!-- Items loaded here -->
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title"
+                  ><i class="bi bi-arrow-repeat"></i> Currently Processing</span
+                >
+                <span class="badge processing" id="processingBadge"
+                  >0 processing</span
+                >
+              </div>
+              <div class="card-body p-0">
+                <div class="scrollable-area" id="processingQueueContainer">
+                  <!-- Currently processing queues will be loaded here -->
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -788,61 +953,6 @@
         </div>
       </div>
     </div>
-    <div
-      id="windowSelectionModal"
-      class="modal fade"
-      data-bs-backdrop="static"
-      data-bs-keyboard="false"
-      tabindex="-1"
-      aria-hidden="true"
-    >
-      <div class="modal-dialog modal-dialog-centered">
-        <div
-          class="modal-content shadow-lg"
-          style="border-radius: 15px; border: none"
-        >
-          <div class="modal-header justify-content-center border-0 pt-4">
-            <h4 class="m-0 fw-bold text-primary">Select Your Window</h4>
-          </div>
-          <div class="modal-body px-4 pb-4">
-            <p class="text-muted text-center mb-4">
-              Please select which window you are assigned to for this session.
-            </p>
-
-            <div class="d-grid gap-3">
-              <button
-                class="btn btn-outline-primary p-3 text-start fw-semibold position-relative"
-                onclick="selectWindow('Window 1')"
-              >
-                <i class="bi bi-display me-3 fs-5"></i> Window 1
-                <i class="bi bi-chevron-right position-absolute end-0 me-3"></i>
-              </button>
-              <button
-                class="btn btn-outline-primary p-3 text-start fw-semibold position-relative"
-                onclick="selectWindow('Window 2')"
-              >
-                <i class="bi bi-display me-3 fs-5"></i> Window 2
-                <i class="bi bi-chevron-right position-absolute end-0 me-3"></i>
-              </button>
-              <button
-                class="btn btn-outline-primary p-3 text-start fw-semibold position-relative"
-                onclick="selectWindow('Window 3')"
-              >
-                <i class="bi bi-display me-3 fs-5"></i> Window 3
-                <i class="bi bi-chevron-right position-absolute end-0 me-3"></i>
-              </button>
-              <button
-                class="btn btn-outline-primary p-3 text-start fw-semibold position-relative"
-                onclick="selectWindow('Window 4')"
-              >
-                <i class="bi bi-display me-3 fs-5"></i> Window 4
-                <i class="bi bi-chevron-right position-absolute end-0 me-3"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
     <!-- --------------------------------------------- END OF MANUAL TRANSACTION MODAL ------------------------------------------------->
 
     <!-- Add Bootstrap JS Bundle -->
@@ -954,7 +1064,6 @@
       let queueManager;
       let isQueuePaused = false;
       let fcrChartInstance = null;
-      let currentWindow = null;
 
       // Admin Dashboard Authentication Helper
       const adminToken = localStorage.getItem("adminToken");
@@ -2942,32 +3051,20 @@
         }
 
         async startProcessing(queueId) {
-          if (!currentWindow) {
-            alert(
-              "Error: No window assigned. Please refresh and select a window."
-            );
-            return;
-          }
-
-          if (!confirm(`Start processing this request at ${currentWindow}?`))
-            return;
+          if (!confirm("Start processing this request?")) return;
 
           try {
             const response = await makeAuthenticatedRequest(
               "/api/admin/start-processing",
               {
                 method: "POST",
-                // SEND WINDOW NUMBER HERE
-                body: JSON.stringify({
-                  queueId: queueId,
-                  windowNumber: currentWindow,
-                }),
+                body: JSON.stringify({ queueId }),
               }
             );
 
             const result = await response.json();
             if (result.success) {
-              showNotification(`Processing started at ${currentWindow}!`);
+              showNotification("Processing started!");
               await this.loadQueues();
             } else {
               alert("Error: " + result.message);
@@ -3478,84 +3575,6 @@
           const sw = document.getElementById("darkModeSwitch");
           if (sw) sw.checked = true;
         }
-      });
-
-      // ==========================================
-      // WINDOW ASSIGNMENT LOGIC (BOOTSTRAP FIXED)
-      // ==========================================
-
-      // Ensure currentWindow is globally available
-      // (It was declared inside checkWindowAssignment in your previous code, causing scope issues)
-      // Note: currentWindow is already declared near the top of your script in previous steps,
-      // but if not, uncomment the line below:
-      // let currentWindow = null;
-
-      function checkWindowAssignment() {
-        // 1. Check if window is already saved in Local Storage
-        const savedWindow = localStorage.getItem("assignedWindow");
-
-        if (!savedWindow) {
-          // 2. If not set, show the modal using Bootstrap API
-          const modalElement = document.getElementById("windowSelectionModal");
-          if (modalElement) {
-            const windowModal = new bootstrap.Modal(modalElement, {
-              backdrop: "static", // Prevent closing by clicking outside
-              keyboard: false, // Prevent closing with ESC key
-            });
-            windowModal.show();
-          }
-        } else {
-          // 3. If set, apply it
-          currentWindow = savedWindow;
-          updateUIWithWindow(currentWindow);
-        }
-      }
-
-      function selectWindow(windowName) {
-        // 1. Save to storage
-        localStorage.setItem("assignedWindow", windowName);
-        currentWindow = windowName;
-
-        // 2. Hide Modal using Bootstrap API
-        const modalElement = document.getElementById("windowSelectionModal");
-        const modalInstance = bootstrap.Modal.getInstance(modalElement);
-        if (modalInstance) {
-          modalInstance.hide();
-        }
-
-        // 3. Update UI
-        updateUIWithWindow(windowName);
-        showNotification(`You are now working at ${windowName}`);
-      }
-
-      function updateUIWithWindow(windowName) {
-        // Update the sidebar title or add a badge to show current window
-        const sidebarTitle = document.querySelector(".sidebar-title");
-        if (sidebarTitle) {
-          // Prevent duplicate appending
-          if (!sidebarTitle.innerHTML.includes("<small>")) {
-            sidebarTitle.innerHTML += `<br><small style="font-size: 12px; color: #aab0bc;">${windowName}</small>`;
-          }
-        }
-      }
-
-      // Update Logout to clear the window selection
-      // We hook into your existing handleLogout function
-      const originalHandleLogout = window.handleLogout;
-      window.handleLogout = function () {
-        if (confirm("Are you sure you want to log out?")) {
-          showNotification("Logging out...");
-          setTimeout(() => {
-            // CLEAR THE WINDOW ASSIGNMENT ON LOGOUT
-            localStorage.removeItem("assignedWindow");
-            adminLogout();
-          }, 1000);
-        }
-      };
-
-      // Call this specifically when the DOM is ready
-      document.addEventListener("DOMContentLoaded", function () {
-        checkWindowAssignment();
       });
     </script>
   </body>

@@ -41,6 +41,66 @@
         display: inline-block;
         margin-bottom: 10px;
       }
+
+      /* --- Notification Toast Styles (Same as User Login) --- */
+      .notification-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+        background: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        display: flex;
+        align-items: center;
+        animation: slideInRight 0.3s ease-out forwards;
+        border-left: 5px solid;
+        font-family: "Poppins", sans-serif;
+      }
+
+      .toast-error {
+        border-left-color: #dc3545; /* Red for error */
+      }
+
+      .toast-success {
+        border-left-color: #198754; /* Green for success */
+      }
+
+      .toast-icon {
+        margin-right: 15px;
+        font-size: 1.2rem;
+      }
+
+      .toast-error .toast-icon {
+        color: #dc3545;
+      }
+      .toast-success .toast-icon {
+        color: #198754;
+      }
+
+      @keyframes slideInRight {
+        from {
+          transform: translateX(120%);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+
+      @keyframes slideOutRight {
+        from {
+          transform: translateX(0);
+          opacity: 1;
+        }
+        to {
+          transform: translateX(120%);
+          opacity: 0;
+        }
+      }
     </style>
   </head>
 
@@ -70,12 +130,6 @@
               class="me-2"
             />
           </div>
-          <!-- <a href="/">
-          <div class="d-flex flex-column lh-sm text-center">
-            <p class="fw-bold">Registrar's Office</p>
-            <p class="fw-bold">Romblon State University - Odiongan</p>
-          </div>
-        </a> -->
         </div>
 
         <div class="content">
@@ -126,11 +180,10 @@
               required
             />
 
-            <div id="loginAlert" class="alert d-none" role="alert"></div>
-
             <div class="hero-buttons">
               <button
                 type="submit"
+                id="staffLoginBtn"
                 class="btn btn-custom w-100 btn-login-register mt-2"
               >
                 LOGIN
@@ -149,93 +202,132 @@
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const adminLoginForm = document.getElementById("staffLoginForm");
-        const loginAlert = document.getElementById("loginAlert");
+        const staffLoginBtn = document.getElementById("staffLoginBtn");
 
         // Check if admin is already logged in
         checkAdminSession();
 
         // Login form handler
-        adminLoginForm.addEventListener("submit", async function (e) {
-          e.preventDefault();
+        if (adminLoginForm) {
+          adminLoginForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
 
-          const formData = new FormData(this);
-          const loginData = {
-            email: formData.get("email"),
-            password: formData.get("password"),
-          };
+            const formData = new FormData(this);
+            const email = formData.get("email");
+            const password = formData.get("password");
 
-          // Validate email format
-          if (!isValidEmail(loginData.email)) {
-            showAlert("Please enter a valid email address", "danger");
-            return;
-          }
-
-          // Show loading state
-          const submitBtn = adminLoginForm.querySelector(
-            'button[type="submit"]'
-          );
-          const originalText = submitBtn.textContent;
-          submitBtn.textContent = "Authenticating...";
-          submitBtn.disabled = true;
-
-          try {
-            const response = await fetch("/api/admin/login", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(loginData),
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-              showAlert(
-                "Login successful! Redirecting to dashboard...",
-                "success"
-              );
-
-              // Store admin data in localStorage
-              localStorage.setItem("admin", JSON.stringify(result.admin));
-              localStorage.setItem("adminToken", result.token);
-
-              // Redirect to admin dashboard
-              setTimeout(() => {
-                window.location.href = "/admin";
-              }, 1500);
-            } else {
-              showAlert(
-                result.message || "Login failed. Please try again.",
-                "danger"
-              );
+            // Simple Validation
+            if (!email || !password) {
+              showNotification("Please fill in all fields", "error");
+              return;
             }
-          } catch (error) {
-            console.error("Admin login error:", error);
-            showAlert("Network error. Please try again.", "danger");
-          } finally {
-            // Reset button state
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
-          }
-        });
 
-        function showAlert(message, type) {
-          loginAlert.textContent = message;
-          loginAlert.className = `alert alert-${type}`;
-          loginAlert.classList.remove("d-none");
+            // Validate email format
+            if (!isValidEmail(email)) {
+              showNotification("Please enter a valid email address", "error");
+              return;
+            }
 
-          // Auto hide after 5 seconds
-          setTimeout(() => {
-            loginAlert.classList.add("d-none");
-          }, 5000);
+            // Show loading state
+            setLoading(true);
+
+            try {
+              const response = await fetch("/api/admin/login", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email, password }),
+              });
+
+              const result = await response.json();
+
+              if (result.success) {
+                showNotification("Login successful! Redirecting...", "success");
+
+                // Store admin data in localStorage
+                localStorage.setItem("admin", JSON.stringify(result.admin));
+                localStorage.setItem("adminToken", result.token);
+
+                // Redirect to admin dashboard after a short delay
+                setTimeout(() => {
+                  window.location.href = "/admin";
+                }, 1000);
+              } else {
+                showNotification(
+                  result.message || "Login failed. Check credentials.",
+                  "error"
+                );
+                setLoading(false);
+              }
+            } catch (error) {
+              console.error("Admin login error:", error);
+              showNotification("Network error. Please try again.", "error");
+              setLoading(false);
+            }
+          });
         }
+
+        // --- Helper Functions ---
 
         function isValidEmail(email) {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           return emailRegex.test(email);
         }
+
+        // Helper: Show Notification Pop-up (The Toast)
+        function showNotification(message, type) {
+          // Remove existing toast if any
+          const existingToast = document.querySelector(".notification-toast");
+          if (existingToast) existingToast.remove();
+
+          // Create element
+          const toast = document.createElement("div");
+          // type can be 'success' or 'error'
+          const toastTypeClass =
+            type === "error" ? "toast-error" : "toast-success";
+          toast.className = `notification-toast ${toastTypeClass}`;
+
+          // Icon based on type
+          const iconClass =
+            type === "success"
+              ? "bi-check-circle-fill"
+              : "bi-exclamation-triangle-fill";
+
+          toast.innerHTML = `
+              <i class="bi ${iconClass} toast-icon"></i>
+              <span style="font-weight: 500; color: #333;">${message}</span>
+          `;
+
+          document.body.appendChild(toast);
+
+          // Auto remove after 3 seconds
+          setTimeout(() => {
+            // Add slide out animation
+            toast.style.animation = "slideOutRight 0.3s ease-in forwards";
+            // Wait for animation to finish then remove from DOM
+            setTimeout(() => {
+              if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 300);
+          }, 3000);
+        }
+
+        // Helper: Toggle Loading Button State
+        function setLoading(isLoading) {
+          if (!staffLoginBtn) return;
+
+          if (isLoading) {
+            staffLoginBtn.disabled = true;
+            staffLoginBtn.innerHTML =
+              '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Authenticating...';
+          } else {
+            staffLoginBtn.disabled = false;
+            staffLoginBtn.innerHTML = "LOGIN";
+          }
+        }
       });
 
+      // Session Check
       function checkAdminSession() {
         const adminToken = localStorage.getItem("adminToken");
 
@@ -261,11 +353,10 @@
         }
       }
 
-      // Admin logout function (to be used in admin dashboard)
       function adminLogout() {
         localStorage.removeItem("admin");
         localStorage.removeItem("adminToken");
-        window.location.href = "/adminLogin";
+        // We are already on the login page, so no redirect needed inside the check function
       }
     </script>
   </body>
