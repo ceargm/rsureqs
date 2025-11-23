@@ -1,26 +1,130 @@
+import "dotenv/config";
 import express from "express";
 import mysql from "mysql2";
 import path from "path";
 import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import multer from "multer"; // <--- KEEP THIS LINE
+import nodemailer from "nodemailer";
+import fs from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 
-// JWT Secret Key
+// --- ⬇️ PASTE THE NEW CODE BLOCK HERE ⬇️ ---
+// Configure Multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/"); // Files will be saved in the 'uploads/' directory
+  },
+  filename: function (req, file, cb) {
+    // Create a unique filename to prevent conflicts
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const extension = path.extname(file.originalname);
+    cb(null, file.fieldname + "-" + uniqueSuffix + extension);
+  },
+});
+
+// ------------------- THIS IS THE FIX -------------------
+// Secure file filter to only allow images
+const imageFileFilter = (req, file, cb) => {
+  if (file.mimetype === "image/jpeg" || file.mimetype === "image/png") {
+    cb(null, true);
+  } else {
+    // Reject file
+    cb(
+      new Error("Invalid file type. Only JPEG, PNG, or GIF are allowed."),
+      false
+    );
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB file size limit
+  },
+  fileFilter: imageFileFilter,
+});
+// ----------------- END OF FIX ------------------
+
+// Serve static files from the 'uploads' directory
+// This allows dashboard.html to show the image using a URL like /uploads/filename.jpg
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// --- NEW: Multer config for service requirements (allows docs, pdf, images) ---
+const documentFileFilter = (req, file, cb) => {
+  const allowedMimes = [
+    "image/jpeg",
+    "image/png",
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", // .xlsx
+  ];
+  if (allowedMimes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        "Invalid file type. Only images, PDF, Word, or Excel files are allowed."
+      ),
+      false
+    );
+  }
+};
+
+const requirementsUpload = multer({
+  storage: storage, // We re-use the same storage destination
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit for documents
+  },
+  fileFilter: documentFileFilter,
+});
+// --- END OF NEW BLOCK ---
+
+// JWT Secret for Admin/User Login
 const JWT_SECRET = process.env.JWT_SECRET || "rsu-reqs-admin-secret-key-2024";
+
+// NEW: JWT Secret for Password Resets (use a different secret!)
+const JWT_RESET_SECRET =
+  process.env.JWT_RESET_SECRET || "rsu-reqs-reset-secret-key-9a8b7c6d";
+
+// NEW: Nodemailer "Transporter"
+// This configures how you send emails.
+// We use environment variables for security (see final step)
+const transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || "smtp.gmail.com", // Example: smtp.gmail.com
+  port: parseInt(process.env.EMAIL_PORT || "587"), // 587 for TLS, 465 for SSL
+  secure: process.env.EMAIL_PORT === "465", // true for 465, false for other ports
+  auth: {
+    user: process.env.EMAIL_USER, // Your email address
+    pass: process.env.EMAIL_PASS, // Your email password or App Password
+  },
+});
 
 // MySQL connection
 const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "rsu_reqs_db",
-  port: 3306,
+  host: process.env.DB_HOST || "localhost",
+  user: process.env.DB_USER || "root",
+  password: process.env.DB_PASSWORD || "",
+  database: process.env.DB_NAME || "rsu_reqs_db",
+  port: process.env.DB_PORT || 3306,
 });
+// --- 🟢 PASTE THIS AT THE TOP (Line 100) 🟢 ---
+// const db = mysql.createConnection({
+//   host: process.env.DB_HOST,
+//   user: process.env.DB_USER,
+//   password: process.env.DB_PASSWORD,
+//   database: process.env.DB_NAME,
+//   port: process.env.DB_PORT,
+//   ssl: {
+//     rejectUnauthorized: false,
+//   },
+// });
 
 db.connect((err) => {
   if (err) {
@@ -32,7 +136,54 @@ db.connect((err) => {
   createQueueTable();
   createAdminStaffTable();
   createServiceRequestsTable(); // Add this line
+  addColumnIfNotExists("service_requests", "claim_details", "TEXT");
+  addColumnIfNotExists("queue", "claim_details", "TEXT");
 });
+
+// Paste this function near the top of index.js, after the imports
+function addColumnIfNotExists(tableName, columnName, columnDefinition) {
+  const dbName = process.env.DB_NAME || "rsu_reqs_db";
+  const checkColumnSql = `
+    SELECT * FROM INFORMATION_SCHEMA.COLUMNS 
+    WHERE TABLE_SCHEMA = ? 
+    AND TABLE_NAME = ? 
+    AND COLUMN_NAME = ?
+  `;
+
+  db.query(checkColumnSql, [dbName, tableName, columnName], (err, results) => {
+    if (err) {
+      console.error(
+        `❌ Error checking column ${tableName}.${columnName}:`,
+        err
+      );
+      return;
+    }
+
+    if (results.length === 0) {
+      // Column does not exist, so add it
+      const addColumnSql = `
+        ALTER TABLE ${tableName} 
+        ADD COLUMN ${columnName} ${columnDefinition}
+      `;
+      db.query(addColumnSql, (addErr) => {
+        if (addErr) {
+          console.error(
+            `❌ Error adding column ${tableName}.${columnName}:`,
+            addErr
+          );
+        } else {
+          console.log(
+            `✅ Column ${tableName}.${columnName} added successfully.`
+          );
+        }
+      });
+    } else {
+      // Column already exists
+      console.log(`✅ Column ${tableName}.${columnName} already exists.`);
+    }
+  });
+}
+// --- END OF NEW FUNCTION ---
 
 // Create or update service_requests table
 function createServiceRequestsTable() {
@@ -59,8 +210,10 @@ function createServiceRequestsTable() {
       declined_by_id INT,
       declined_at DATETIME,
       decline_reason TEXT,
+      is_viewed_by_user TINYINT(1) DEFAULT 0,
       contact_email VARCHAR(255),
       contact_phone VARCHAR(20),
+      claim_details TEXT,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (approved_by_id) REFERENCES admin_staff(id),
       FOREIGN KEY (declined_by_id) REFERENCES admin_staff(id)
@@ -190,6 +343,7 @@ function createQueueTable() {
       completed_by_id INT,
       added_by VARCHAR(255),
       added_by_id INT,
+      claim_details TEXT,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
       FOREIGN KEY (request_id) REFERENCES service_requests(request_id) ON DELETE CASCADE,
       FOREIGN KEY (processed_by_id) REFERENCES admin_staff(id),
@@ -238,7 +392,7 @@ function checkServiceHoursHTML(req, res, next) {
   const openHour = 0;
   const closeHour = 24;
 
-  if (req.path === "/admin" || req.path === "/adminLogin") {
+  if (req.path === "/admin" || req.path === "/adminlogin") {
     return next();
   }
 
@@ -282,8 +436,24 @@ app.get("/admin", (req, res) => {
 });
 
 app.get("/adminLogin", (req, res) => {
-  res.sendFile(path.join(__dirname, "adminLogin.html"));
+  res.sendFile(path.join(__dirname, "adminlogin.html"));
 });
+// --- 🟢 PASTE these with your other app.get() routes 🟢 ---
+
+app.get("/forgot", (req, res) => {
+  res.sendFile(path.join(__dirname, "forgot.html"));
+});
+
+app.get("/reset-password", (req, res) => {
+  // This page is only useful if there's a token
+  const token = req.query.token;
+  if (!token) {
+    return res.redirect("/forgot");
+  }
+  res.sendFile(path.join(__dirname, "reset-password.html"));
+});
+
+// --- 🟢 END OF NEW BLOCK 🟢 ---
 
 // ADMIN AUTHENTICATION API ROUTES
 app.post("/api/admin/login", async (req, res) => {
@@ -388,6 +558,69 @@ app.get("/api/admin/me", authenticateAdmin, (req, res) => {
   );
 });
 
+// Add this route for admin profile updates
+app.post("/api/admin/update-me", authenticateAdmin, async (req, res) => {
+  // Get the admin's ID from the token, not the body
+  const adminId = req.admin.adminId;
+  const { email, full_name, phone, newPassword } = req.body;
+
+  if (!email || !full_name) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email and Full Name are required." });
+  }
+
+  try {
+    // 1. Check if the new email is already taken by ANOTHER admin
+    const [existingAdmin] = await db
+      .promise()
+      .query("SELECT id FROM admin_staff WHERE email = ? AND id != ?", [
+        email,
+        adminId,
+      ]);
+
+    if (existingAdmin.length > 0) {
+      return res.json({
+        success: false,
+        message: "This email is already in use by another account.",
+      });
+    }
+
+    let hashedPassword = null;
+    if (newPassword && newPassword.trim() !== "") {
+      // 2. If a new password is provided, hash it
+      hashedPassword = await bcrypt.hash(newPassword, 10);
+    }
+
+    // 3. Build the update query
+    let updateQuery = `
+      UPDATE admin_staff 
+      SET email = ?, full_name = ?, phone = ? 
+    `;
+    const queryParams = [email, full_name, phone || null];
+
+    if (hashedPassword) {
+      // Add password to the query if it was changed
+      updateQuery += ", password = ? ";
+      queryParams.push(hashedPassword);
+    }
+
+    updateQuery += " WHERE id = ? ";
+    queryParams.push(adminId);
+
+    // 4. Execute the update
+    await db.promise().query(updateQuery, queryParams);
+
+    res.json({
+      success: true,
+      message: "Profile updated successfully.",
+    });
+  } catch (error) {
+    console.error("Admin profile update error:", error);
+    res.status(500).json({ success: false, message: "Database error" });
+  }
+});
+
 // PROTECTED ADMIN ROUTES
 const adminApiRoutes = [
   "/api/admin/service-requests",
@@ -404,9 +637,10 @@ const adminApiRoutes = [
   "/api/admin/start-processing",
   "/api/admin/mark-done",
   "/api/admin/notify-student",
+  "/api/admin/manual-queue-entry",
 ];
 
-// app.use(adminApiRoutes, authenticateAdmin);
+app.use(adminApiRoutes, authenticateAdmin);
 
 // Admin Routes with Staff Tracking
 app.post("/api/admin/approve-request", authenticateAdmin, (req, res) => {
@@ -423,8 +657,8 @@ app.post("/api/admin/approve-request", authenticateAdmin, (req, res) => {
 
   db.query(
     `UPDATE service_requests 
-     SET status = 'approved', approved_by = ?, approved_by_id = ?, approved_at = NOW(), approve_notes = ?
-     WHERE request_id = ?`,
+ SET status = 'approved', approved_by = ?, approved_by_id = ?, approved_at = NOW(), approve_notes = ?, is_viewed_by_user = 0
+ WHERE request_id = ?`,
     [approvedBy, adminId, approveNotes || "", requestId],
     (err, result) => {
       if (err) {
@@ -467,8 +701,8 @@ app.post("/api/admin/decline-request", authenticateAdmin, (req, res) => {
 
   db.query(
     `UPDATE service_requests 
-     SET status = 'declined', declined_by = ?, declined_by_id = ?, declined_at = NOW(), decline_reason = ?
-     WHERE request_id = ?`,
+ SET status = 'declined', declined_by = ?, declined_by_id = ?, declined_at = NOW(), decline_reason = ?, is_viewed_by_user = 0
+ WHERE request_id = ?`,
     [declinedBy, adminId, declineReason, requestId],
     (err, result) => {
       if (err) {
@@ -648,14 +882,14 @@ app.post("/api/admin/start-processing", authenticateAdmin, (req, res) => {
 });
 
 app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
-  const { queueId } = req.body;
+  const { queueId, claimDetails } = req.body;
   const adminId = req.admin.adminId;
   const adminName = req.admin.full_name;
 
-  if (!queueId) {
+  if (!queueId || !claimDetails) {
     return res.status(400).json({
       success: false,
-      message: "Queue ID is required",
+      message: "Queue ID and claim details are required",
     });
   }
 
@@ -687,54 +921,67 @@ app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
       SET status = 'completed', 
           completed_at = NOW(),
           completed_by = ?,
-          completed_by_id = ?
+          completed_by_id = ?,
+          claim_details = ? 
       WHERE queue_id = ?
     `;
 
-    db.query(updateQueueQuery, [adminName, adminId, queueId], (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Database error",
+    db.query(
+      updateQueueQuery,
+      [adminName, adminId, claimDetails, queueId],
+      (err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res.status(500).json({
+            success: false,
+            message: "Database error",
+          });
+        }
+
+        if (result.affectedRows === 0) {
+          return res.status(404).json({
+            success: false,
+            message: "Queue not found",
+          });
+        }
+
+        // ✅ CRITICAL FIX: Also update the service_requests table
+        if (requestId) {
+          const updateServiceRequestQuery = `
+            UPDATE service_requests 
+            SET queue_status = 'completed', 
+                is_viewed_by_user = 0,
+                claim_details = ? 
+            WHERE request_id = ?
+          `;
+
+          db.query(
+            updateServiceRequestQuery,
+            [claimDetails, requestId],
+            (err) => {
+              if (err) {
+                console.error("Error updating service request:", err);
+                // Don't fail the main request if this fails, but log it
+              } else {
+                console.log(
+                  `Service request ${requestId} marked as completed with claim details`
+                );
+              }
+            }
+          );
+        }
+
+        // ✅ FIXED: Remove automatic processing of next queue
+        // Let the admin manually start the next queue when ready
+
+        res.json({
+          success: true,
+          message: "Queue completed successfully",
+          completedBy: adminName,
+          nextQueueStarted: false, // Always false now
         });
       }
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Queue not found",
-        });
-      }
-
-      // ✅ CRITICAL FIX: Also update the service_requests table
-      if (requestId) {
-        const updateServiceRequestQuery = `
-          UPDATE service_requests 
-          SET queue_status = 'completed'
-          WHERE request_id = ?
-        `;
-
-        db.query(updateServiceRequestQuery, [requestId], (err) => {
-          if (err) {
-            console.error("Error updating service request:", err);
-            // Don't fail the main request if this fails, but log it
-          } else {
-            console.log(`Service request ${requestId} marked as completed`);
-          }
-        });
-      }
-
-      // ✅ FIXED: Remove automatic processing of next queue
-      // Let the admin manually start the next queue when ready
-
-      res.json({
-        success: true,
-        message: "Queue completed successfully",
-        completedBy: adminName,
-        nextQueueStarted: false, // Always false now
-      });
-    });
+    );
   });
 });
 
@@ -861,9 +1108,10 @@ app.post("/api/login", (req, res) => {
 });
 
 app.post("/api/register", async (req, res) => {
-  const { fullName, email, phone, password } = req.body;
+  const { lastName, firstName, middleName, gender, email, phone, password } =
+    req.body;
 
-  if (!fullName || !email || !phone || !password) {
+  if (!lastName || !firstName || !gender || !email || !phone || !password) {
     return res
       .status(400)
       .json({ success: false, message: "All fields are required" });
@@ -887,15 +1135,31 @@ app.post("/api/register", async (req, res) => {
 
       try {
         const hashedPassword = await bcrypt.hash(password, 10);
+        const fullName = `${lastName}, ${firstName}${
+          middleName ? " " + middleName : ""
+        }`; // Construct full name
 
+        // --- UPDATED INSERT QUERY ---
         db.query(
-          "INSERT INTO users (fullname, email, phone, password) VALUES (?, ?, ?, ?)",
-          [fullName, email, phone, hashedPassword],
+          `INSERT INTO users (last_name, first_name, middle_name, gender, fullname, email, phone, password) 
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            lastName,
+            firstName,
+            middleName || null,
+            gender,
+            fullName,
+            email,
+            phone,
+            hashedPassword,
+          ],
           (err, result) => {
-            if (err)
+            if (err) {
+              console.error("Database error during registration:", err);
               return res
                 .status(500)
                 .json({ success: false, message: "Database error" });
+            }
 
             return res.json({
               success: true,
@@ -921,65 +1185,15 @@ app.get("/api/user/profile", (req, res) => {
       .json({ success: false, message: "User ID is required" });
   }
 
-  db.query("SELECT * FROM users WHERE id = ?", [userId], (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
-    }
-
-    if (results.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "User not found" });
-    }
-
-    const user = results[0];
-    res.json({
-      success: true,
-      user: {
-        id: user.id,
-        fullname: user.fullname,
-        email: user.email,
-        phone: user.phone,
-        student_id: user.student_id,
-        course: user.course,
-        major: user.major,
-        year_level: user.year_level,
-        school_year: user.school_year,
-        year_graduated: user.year_graduated,
-        profile_complete: user.profile_complete,
-      },
-    });
-  });
-});
-
-app.post("/api/user/update-profile", (req, res) => {
-  const {
-    userId,
-    studentId,
-    course,
-    major,
-    yearLevel,
-    schoolYear,
-    yearGraduated,
-  } = req.body;
-
-  if (!userId || !studentId || !course || !yearLevel || !schoolYear) {
-    return res.status(400).json({
-      success: false,
-      message: "All required fields must be filled",
-    });
-  }
-
   db.query(
-    `UPDATE users 
-     SET student_id = ?, course = ?, major = ?, year_level = ?, 
-         school_year = ?, year_graduated = ?, profile_complete = 1 
-     WHERE id = ?`,
-    [studentId, course, major, yearLevel, schoolYear, yearGraduated, userId],
-    (err, result) => {
+    // --- UPDATED SQL QUERY ---
+    `SELECT *, last_name, first_name, middle_name, gender, school_id_picture,
+        campus, dob, pob, nationality, home_address, previous_school,
+        primary_school, secondary_school 
+        FROM users WHERE id = ?`,
+    // --- END UPDATE ---
+    [userId],
+    (err, results) => {
       if (err) {
         console.error("Database error:", err);
         return res
@@ -987,20 +1201,221 @@ app.post("/api/user/update-profile", (req, res) => {
           .json({ success: false, message: "Database error" });
       }
 
-      if (result.affectedRows === 0) {
+      if (results.length === 0) {
         return res
           .status(404)
           .json({ success: false, message: "User not found" });
       }
 
+      const user = results[0];
       res.json({
         success: true,
-        message: "Profile updated successfully",
+        user: {
+          id: user.id,
+          fullname: user.fullname,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          middle_name: user.middle_name,
+          gender: user.gender,
+          email: user.email,
+          phone: user.phone,
+          student_id: user.student_id,
+          course: user.course, // This field holds the "program"
+          major: user.major,
+          year_level: user.year_level,
+          school_year: user.school_year,
+          year_graduated: user.year_graduated,
+          profile_complete: user.profile_complete,
+          school_id_picture: user.school_id_picture,
+          // --- ADDED NEW FIELDS ---
+          campus: user.campus,
+          dob: user.dob,
+          pob: user.pob,
+          nationality: user.nationality,
+          home_address: user.home_address,
+          previous_school: user.previous_school,
+          primary_school: user.primary_school,
+          secondary_school: user.secondary_school,
+          // --- END ADDED FIELDS ---
+        },
       });
     }
   );
 });
 
+// This REPLACES your old /api/user/update-profile route
+app.post(
+  "/api/user/update-profile",
+  upload.single("school_id_picture"),
+  async (req, res) => {
+    // req.body contains the text fields
+    // req.file contains the 'school_id_picture' file
+    const {
+      userId,
+      lastName,
+      firstName,
+      middleName,
+      gender,
+      phone,
+      studentId,
+      course, // This will be the "program" value from the form
+      major,
+      yearLevel,
+      schoolYear,
+      yearGraduated,
+      email,
+      // --- ADDED NEW FIELDS ---
+      campus,
+      dob,
+      pob,
+      nationality,
+      home_address,
+      previous_school,
+      primary_school,
+      secondary_school,
+      // --- END ADDED FIELDS ---
+    } = req.body;
+
+    // --- Validation ---
+    if (
+      !userId ||
+      !lastName ||
+      !firstName ||
+      !gender ||
+      !studentId ||
+      !course ||
+      !yearLevel ||
+      !schoolYear ||
+      !email ||
+      // --- ADDED VALIDATION ---
+      !campus ||
+      !dob ||
+      !pob ||
+      !nationality ||
+      !home_address ||
+      !primary_school ||
+      !secondary_school
+      // 'previous_school' is optional
+      // --- END ADDED VALIDATION ---
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "All required fields must be filled",
+      });
+    }
+
+    const fullName = `${lastName}, ${firstName}${
+      middleName ? " " + middleName : ""
+    }`;
+
+    // --- 🟢 START OF BLOCK TO REPLACE 🟢 ---
+    // REPLACE your existing 'try...catch' block with this one
+    try {
+      // --- 1. Check for duplicate email FIRST ---
+      const [existingUser] = await db
+        .promise()
+        .query("SELECT id FROM users WHERE email = ? AND id != ?", [
+          email,
+          userId,
+        ]);
+
+      if (existingUser.length > 0) {
+        return res.json({
+          success: false,
+          message: "This email is already in use by another account.",
+        });
+      }
+
+      // --- 2. Continue with existing logic if email is OK ---
+      let schoolIdPictureFilename = null;
+
+      // 1. Check if a new file was uploaded
+      if (req.file) {
+        schoolIdPictureFilename = req.file.filename;
+      } else {
+        // 2. If NO new file, keep the old one
+        const [user] = await db
+          .promise()
+          .query("SELECT school_id_picture FROM users WHERE id = ?", [userId]);
+        if (user.length > 0) {
+          schoolIdPictureFilename = user[0].school_id_picture;
+        }
+      }
+
+      // --- UPDATED SQL QUERY (This is your existing query) ---
+      await db.promise().query(
+        `UPDATE users 
+              SET 
+                  last_name = ?, 
+                  first_name = ?, 
+                  middle_name = ?, 
+                  gender = ?,
+                  phone = ?,
+                  fullname = ?,
+                  student_id = ?, 
+                  course = ?, 
+                  major = ?, 
+                  year_level = ?, 
+                  school_year = ?, 
+                  year_graduated = ?, 
+                  email = ?,
+                  school_id_picture = ?,
+                  campus = ?,
+                  dob = ?,
+                  pob = ?,
+                  nationality = ?,
+                  home_address = ?,
+                  previous_school = ?,
+                  primary_school = ?,
+                  secondary_school = ?,
+                  profile_complete = 1 
+              WHERE id = ?`,
+        [
+          lastName,
+          firstName,
+          middleName || null,
+          gender,
+          phone,
+          fullName,
+          studentId,
+          course, // This is the "program" value
+          major,
+          yearLevel,
+          schoolYear,
+          yearGraduated || null,
+          email, // The email we just validated
+          schoolIdPictureFilename,
+          campus,
+          dob,
+          pob,
+          nationality,
+          home_address,
+          previous_school || null,
+          primary_school,
+          secondary_school,
+          userId,
+        ]
+      );
+      // --- END UPDATE ---
+
+      res.json({
+        success: true,
+        message: "Profile updated successfully",
+      });
+    } catch (error) {
+      console.error("Database error:", error);
+      // Add a specific check for duplicate entry errors
+      if (error.code === "ER_DUP_ENTRY") {
+        return res
+          .status(400)
+          .json({ success: false, message: "That email is already in use." });
+      }
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+  }
+);
 app.get("/api/user/can-join-queue", (req, res) => {
   const userId = req.query.userId;
 
@@ -1035,75 +1450,132 @@ app.get("/api/user/can-join-queue", (req, res) => {
   );
 });
 
-app.post("/api/queue/submit-request", (req, res) => {
-  const { userId, services, totalAmount, requirements } = req.body;
+// --- REPLACED API ROUTE to handle file uploads ---
+app.post(
+  "/api/queue/submit-request",
+  requirementsUpload.array("requirements_files", 10), // "requirements_files" is the key from FormData, 10 files max
+  (req, res) => {
+    // Text fields are in req.body, files are in req.files
+    const { userId, services } = req.body;
+    const files = req.files;
 
-  if (!userId || !services || !Array.isArray(services)) {
-    return res.status(400).json({
-      success: false,
-      message: "User ID and services are required",
-    });
-  }
-
-  const requestId =
-    "REQ-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
-
-  db.query(
-    "SELECT fullname, student_id, course, year_level, email, phone FROM users WHERE id = ?",
-    [userId],
-    (err, userResults) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error" });
+    if (!userId || !services || !Array.isArray(services)) {
+      // If validation fails, delete any files that were uploaded
+      if (files) {
+        files.forEach((file) =>
+          fs.unlink(
+            file.path,
+            (err) => err && console.error("Error cleaning up file:", err)
+          )
+        );
       }
-
-      if (userResults.length === 0) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
-      }
-
-      const user = userResults[0];
-
-      db.query(
-        `INSERT INTO service_requests 
-         (request_id, user_id, user_name, student_id, course, year_level, 
-          services, total_amount, requirements, status, submitted_at, contact_email, contact_phone) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), ?, ?)`,
-        [
-          requestId,
-          userId,
-          user.fullname,
-          user.student_id,
-          user.course,
-          user.year_level,
-          JSON.stringify(services),
-          totalAmount,
-          JSON.stringify(requirements),
-          user.email,
-          user.phone,
-        ],
-        (err, result) => {
-          if (err) {
-            console.error("Database error:", err);
-            return res
-              .status(500)
-              .json({ success: false, message: "Database error" });
-          }
-
-          res.json({
-            success: true,
-            requestId: requestId,
-            message: "Service request submitted for admin approval",
-          });
-        }
-      );
+      return res.status(400).json({
+        success: false,
+        message: "User ID and services are required",
+      });
     }
-  );
-});
 
+    // Create an array of file paths (just the filename)
+    // Get the requirement names sent from the form
+    const { requirement_names } = req.body;
+
+    // Create a structured array: [ {name: "Clearance", file: "file-123.jpg"}, ... ]
+    const structuredRequirements = files
+      ? files.map((file, index) => {
+          return {
+            name: requirement_names[index], // The name from the form
+            file: file.filename, // The saved filename
+          };
+        })
+      : [];
+
+    // Save this new structure in requirements_paths
+    const requirementsPaths = JSON.stringify(structuredRequirements);
+
+    // Save just the names in the old 'requirements' column for compatibility
+
+    const requestId =
+      "REQ-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+
+    db.query(
+      `SELECT fullname, student_id, course, year_level, email, phone,
+        campus, dob, pob, nationality, home_address, previous_school,
+        primary_school, secondary_school, school_id_picture 
+  FROM users WHERE id = ?`,
+      [userId],
+      (err, userResults) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Database error" });
+        }
+
+        if (userResults.length === 0) {
+          return res
+            .status(404)
+            .json({ success: false, message: "User not found" });
+        }
+
+        const user = userResults[0];
+
+        // Note: The 'requirements' column now stores the *names* of the requirements
+        // The new 'requirements_paths' column stores the *filenames*
+
+        // --- THIS LINE WAS THE BUG, IT'S NOW FIXED ---
+        const requirementsText = JSON.stringify(requirement_names || []);
+        // --- END OF FIX ---
+
+        db.query(
+          `INSERT INTO service_requests 
+  (request_id, user_id, user_name, student_id, course, year_level, 
+  services, total_amount, requirements, requirements_paths, status, submitted_at, contact_email, contact_phone,
+  campus, dob, pob, nationality, home_address, previous_school, 
+  primary_school, secondary_school, school_id_picture) 
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            requestId,
+            userId,
+            user.fullname,
+            user.student_id,
+            user.course,
+            user.year_level,
+            JSON.stringify(services), // ["Transcript of Records"]
+            0, // Total amount is 0 for now as per your original code
+            requirementsText,
+            requirementsPaths,
+            user.email,
+            user.phone,
+            user.campus,
+            user.dob,
+            user.pob,
+            user.nationality,
+            user.home_address,
+            user.previous_school,
+            user.primary_school,
+            user.secondary_school,
+            user.school_id_picture,
+          ],
+          (err, result) => {
+            if (err) {
+              console.error("Database error:", err);
+              return res
+                .status(500)
+                .json({ success: false, message: "Database error" });
+            }
+
+            res.json({
+              success: true,
+              requestId: requestId,
+              message: "Service request submitted for admin approval",
+            });
+          }
+        );
+      }
+    );
+  }
+);
+// --- END OF REPLACED ROUTE ---
 app.get("/api/admin/service-requests", authenticateAdmin, (req, res) => {
   db.query(
     `SELECT * FROM service_requests ORDER BY 
@@ -1120,11 +1592,35 @@ app.get("/api/admin/service-requests", authenticateAdmin, (req, res) => {
           .json({ success: false, message: "Database error" });
       }
 
-      const requests = results.map((request) => ({
-        ...request,
-        services: JSON.parse(request.services),
-        requirements: JSON.parse(request.requirements),
-      }));
+      const requests = results.map((request) => {
+        try {
+          let reqs = JSON.parse(request.requirements || "[]");
+          let paths = JSON.parse(request.requirements_paths || "[]");
+
+          // Fix for old, double-stringified data
+          if (typeof reqs === "string") reqs = JSON.parse(reqs);
+          if (typeof paths === "string") paths = JSON.parse(paths);
+
+          return {
+            ...request,
+            services: JSON.parse(request.services || "[]"),
+            requirements: reqs,
+            requirements_paths: paths,
+          };
+        } catch (e) {
+          console.error(
+            "Failed to parse JSON for request:",
+            request.request_id,
+            e
+          );
+          return {
+            ...request, // Return partial data
+            services: [],
+            requirements: [],
+            requirements_paths: [],
+          };
+        }
+      });
 
       res.json({
         success: true,
@@ -1447,9 +1943,12 @@ app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
       year_level, request_id, services, total_amount, status,
       is_priority, priority_type, submitted_at, started_at, completed_at
     FROM queue
-    WHERE DATE(submitted_at) = CURDATE()
+    WHERE 
+      -- 🟢 FIX: Show TODAY'S requests OR any unfinished requests from the past
+      (DATE(submitted_at) = CURDATE()) 
+      OR 
+      (status IN ('waiting', 'processing', 'ready'))
     ORDER BY 
-      -- 🟢 START OF FIX 🟢
       -- Sort processing items first
       CASE 
         WHEN status = 'processing' THEN 1
@@ -1460,9 +1959,7 @@ app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
       is_priority DESC,
       -- Then, sort by started_at (oldest first)
       started_at ASC,
-      -- 🟢 END OF FIX 🟢
-
-      -- Fallback sorting for other statuses
+      -- Fallback sorting
       CASE 
         WHEN status = 'completed' THEN completed_at 
         ELSE NULL 
@@ -1580,10 +2077,18 @@ app.get("/api/user/service-requests", (req, res) => {
 
       const requests = results.map((request) => {
         try {
+          let reqs = JSON.parse(request.requirements || "[]");
+          let paths = JSON.parse(request.requirements_paths || "[]");
+
+          // Fix for old, double-stringified data
+          if (typeof reqs === "string") reqs = JSON.parse(reqs);
+          if (typeof paths === "string") paths = JSON.parse(paths);
+
           return {
             ...request,
-            services: JSON.parse(request.services),
-            requirements: JSON.parse(request.requirements),
+            services: JSON.parse(request.services || "[]"),
+            requirements: reqs,
+            requirements_paths: paths,
           };
         } catch (parseErr) {
           console.error("Error parsing JSON for request:", request.request_id);
@@ -1601,6 +2106,111 @@ app.get("/api/user/service-requests", (req, res) => {
       });
     }
   );
+});
+
+// Add this with your other user API routes (e.g., after /api/user/service-requests)
+
+app.get("/api/user/request-details", (req, res) => {
+  const { requestId } = req.query;
+  const userId = req.query.userId; // Added userId for security
+
+  if (!requestId || !userId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Request ID and User ID are required" });
+  }
+
+  db.query(
+    // We also check user_id to make sure a user can only see their own request
+    "SELECT services FROM service_requests WHERE request_id = ? AND user_id = ?",
+    [requestId, userId],
+    (err, results) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error" });
+      }
+
+      if (results.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Request not found or access denied",
+        });
+      }
+
+      try {
+        res.json({
+          success: true,
+          services: JSON.parse(results[0].services || "[]"),
+        });
+      } catch (parseErr) {
+        res.json({
+          success: true,
+          services: [], // Send empty on parse error
+        });
+      }
+    }
+  );
+});
+
+// --- NEW: API to check for unread notifications ---
+app.get("/api/user/notifications-status", (req, res) => {
+  const userId = req.query.userId;
+  if (!userId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "User ID is required" });
+  }
+
+  const query = `
+    SELECT 1 
+    FROM service_requests 
+    WHERE user_id = ? 
+      AND is_viewed_by_user = 0
+      AND (status IN ('approved', 'declined') OR queue_status = 'completed')
+    LIMIT 1
+  `;
+
+  db.query(query, [userId], (err, results) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    res.json({
+      success: true,
+      hasUnread: results.length > 0,
+    });
+  });
+});
+
+// --- NEW: API to mark notifications as read ---
+app.post("/api/user/mark-notifications-read", (req, res) => {
+  const { userId } = req.body;
+  if (!userId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "User ID is required" });
+  }
+
+  const query = `
+    UPDATE service_requests 
+    SET is_viewed_by_user = 1 
+    WHERE user_id = ? AND is_viewed_by_user = 0
+  `;
+
+  db.query(query, [userId], (err, result) => {
+    if (err) {
+      console.error("Database error:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, message: "Notifications marked as read" });
+  });
 });
 // === MANUAL QUEUE ENTRY ===
 app.post("/api/admin/manual-queue-entry", authenticateAdmin, (req, res) => {
@@ -1782,6 +2392,120 @@ app.get("/api/queue/status", (req, res) => {
 //     }
 //   );
 // });
+// --- 🟢 PASTE this entire block before your app.listen() call 🟢 ---
+
+// === API: FORGOT PASSWORD ===
+app.post("/api/forgot-password", (req, res) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return res.status(400).json({ success: false, message: "Email required" });
+  }
+
+  // 1. Find the user by their email
+  db.query(
+    "SELECT * FROM users WHERE email = ?",
+    [email],
+    async (err, results) => {
+      if (err) {
+        console.error("Database error:", err);
+        return res.status(500).json({ message: "Database error" });
+      }
+
+      // 2. IMPORTANT: Always send a success message.
+      // This prevents "email enumeration" attacks, where hackers
+      // can guess which emails are registered in your system.
+      if (results.length === 0) {
+        console.log(`Password reset attempt for non-existent email: ${email}`);
+        return res.json({
+          success: true,
+          message: "If an account exists, a reset link has been sent.",
+        });
+      }
+
+      const user = results[0];
+
+      // 3. Create a short-lived (15 min) JWT for password reset
+      const resetToken = jwt.sign(
+        { userId: user.id, email: user.email },
+        JWT_RESET_SECRET, // Use the *reset* secret
+        { expiresIn: "15m" } // Token is only valid for 15 minutes
+      );
+
+      // 4. Create the reset link
+      const resetLink = `${process.env.SITE_URL}/reset-password?token=${resetToken}`;
+
+      // 5. Send the email
+      try {
+        await transporter.sendMail({
+          from: `"RSU REQS" <${process.env.EMAIL_USER}>`, // Sender address
+          to: user.email, // List of receivers
+          subject: "Password Reset Request for RSU REQS", // Subject line
+          html: `
+            <p>Hello ${user.first_name},</p>
+            <p>You requested a password reset for your RSU REQS account.</p>
+            <p>Please click the link below to set a new password. This link is valid for 15 minutes.</p>
+            <a href="${resetLink}" style="background-color: #0d6efd; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">Reset Your Password</a>
+            <br>
+            <p>If you did not request this, please ignore this email.</p>
+          `,
+        });
+
+        res.json({
+          success: true,
+          message: "If an account exists, a reset link has been sent.",
+        });
+      } catch (emailErr) {
+        console.error("Error sending password reset email:", emailErr);
+        res
+          .status(500)
+          .json({ success: false, message: "Error sending email." });
+      }
+    }
+  );
+});
+
+// === API: RESET PASSWORD ===
+app.post("/api/reset-password", async (req, res) => {
+  const { token, password } = req.body;
+
+  if (!token || !password) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Token and password are required." });
+  }
+
+  // 1. Verify the reset token
+  try {
+    const decoded = jwt.verify(token, JWT_RESET_SECRET);
+    const userId = decoded.userId;
+
+    // 2. Hash the new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 3. Update the user's password in the database
+    db.query(
+      "UPDATE users SET password = ? WHERE id = ?",
+      [hashedPassword, userId],
+      (err, result) => {
+        if (err) {
+          console.error("Database error:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Database error." });
+        }
+        res.json({ success: true, message: "Password reset successfully." });
+      }
+    );
+  } catch (error) {
+    // This will catch expired or invalid tokens
+    console.error("Invalid or expired token:", error.message);
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid or expired reset link." });
+  }
+});
+// --- 🟢 END OF NEW BLOCK 🟢 ---
 
 // Start server
 const PORT = 3000;
@@ -1792,4 +2516,28 @@ app.listen(PORT, () => {
   console.log(`👤 Default admin: admin@rsu.edu.ph / admin123`);
 });
 
-export default db;
+// export default db;
+// --- 🟢 VERCEL FIX STARTS HERE 🟢 ---
+
+// Only listen to port 3000 if we are running LOCALLY (not on Vercel)
+// if (process.env.NODE_ENV !== "production") {
+//   const PORT = process.env.PORT || 3000;
+//   app.listen(PORT, () => {
+//     console.log(`🚀 Server running on http://localhost:${PORT}`);
+//     console.log(`📊 Admin dashboard: http://localhost:${PORT}/admin`);
+//   });
+// }
+// if (process.env.NODE_ENV !== "production") {
+//   const PORT = process.env.PORT || 3000;
+//   app.listen(PORT, () => {
+//     console.log(`🚀 Server running on http://localhost:${PORT}`);
+//   });
+// }
+
+// REQUIRED: Export the 'app' so Vercel can run it
+export default app;
+
+// Export 'db' as a named export (in case other files need it)
+export { db };
+
+// --- 🟢 VERCEL FIX ENDS HERE 🟢 ---
