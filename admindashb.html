@@ -29,7 +29,7 @@
     <div class="sidebar">
       <div class="sidebar-header">
         <img
-          src="/assets/img/logo.jpg"
+          src="/assets/img/updated_RegistrarLogo.jpg"
           width="50"
           height="50"
           alt="Office of the University Registrar"
@@ -46,7 +46,6 @@
       <div class="menu-item" data-page="documents">
         <i class="bi bi-file-earmark-text menu-icon"></i>
         <span>Service Requests</span>
-        <span class="notification-dot"></span>
       </div>
 
       <div class="menu-item" data-page="reports">
@@ -58,6 +57,15 @@
         <i class="bi bi-gear menu-icon"></i>
         <span>Settings</span>
       </div>
+      <div
+        class="menu-item"
+        data-page="staff-management"
+        id="nav-staff-management"
+        style="display: none"
+      >
+        <i class="bi bi-people-fill menu-icon"></i>
+        <span>Staff Accounts</span>
+      </div>
 
       <div class="request-card">
         <div class="request-number" id="totalRequestsToday">0</div>
@@ -65,198 +73,120 @@
       </div>
 
       <div class="user-card">
-        <div class="user-avatar">JS</div>
+        <div class="user-avatar" id="sidebarAvatar">...</div>
         <div class="user-info">
-          <h4>Jila Santos</h4>
-          <p>Registrar Staff</p>
+          <h4 id="sidebarStaffName">Loading...</h4>
+          <p id="sidebarStaffRole">Registrar Staff</p>
         </div>
       </div>
     </div>
 
     <div class="main-content">
-      <!-- Queue Management Page -->
       <div id="queue-page" class="page active">
-        <div class="header">
-          <h1>Queue Management Dashboard</h1>
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-number blue" id="waitingCount">0</div>
-              <div class="stat-label">Waiting</div>
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="card h-100">
+              <div
+                class="card-body text-center d-flex flex-column justify-content-center"
+              >
+                <h2 id="win1-count" class="text-primary fw-bold mb-0">0</h2>
+                <p class="text-muted small mb-0">Window 1</p>
+              </div>
             </div>
-            <div class="stat-card">
-              <div class="stat-number orange" id="processingCount">0</div>
-              <div class="stat-label">Processing</div>
+          </div>
+          <div class="col-md-3">
+            <div class="card h-100">
+              <div
+                class="card-body text-center d-flex flex-column justify-content-center"
+              >
+                <h2 id="win2-count" class="text-warning fw-bold mb-0">0</h2>
+                <p class="text-muted small mb-0">Window 2</p>
+              </div>
             </div>
-            <!-- <div class="stat-card">
-              <div class="stat-number green" id="readyCount">0</div>
-              <div class="stat-label">Ready</div>
-            </div> -->
-            <div class="stat-card">
-              <div class="stat-number purple" id="completedCount">0</div>
-              <div class="stat-label">Completed</div>
+          </div>
+          <div class="col-md-3">
+            <div class="card h-100">
+              <div
+                class="card-body text-center d-flex flex-column justify-content-center"
+              >
+                <h2 id="win3-count" class="text-info fw-bold mb-0">0</h2>
+                <p class="text-muted small mb-0">Window 3</p>
+              </div>
             </div>
-            <div class="stat-card priority">
-              <div class="stat-number red" id="priorityCount">0</div>
-              <div class="stat-label">Priority Queue</div>
+          </div>
+          <div class="col-md-3">
+            <div class="card h-100">
+              <div
+                class="card-body text-center d-flex flex-column justify-content-center"
+              >
+                <h2 id="win4-count" class="text-danger fw-bold mb-0">0</h2>
+                <p class="text-muted small mb-0">Window 4</p>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="content-grid">
-          <div class="content-item">
-            <!-- Manual Queue Entry -->
-            <div class="card">
-              <div class="card-header">
-                <span class="card-title">Manual Queue Entry</span>
-                <button
-                  class="btn btn-sm btn-outline-secondary"
-                  type="button"
-                  data-bs-toggle="collapse"
-                  data-bs-target="#manualEntryCollapse"
-                >
-                  <i class="bi bi-chevron-down"></i>
-                </button>
-              </div>
-
-              <div class="collapse show" id="manualEntryCollapse">
-                <div class="card-body">
-                  <form
-                    id="manualQueueForm"
-                    class="row g-3 needs-validation"
-                    novalidate
-                  >
-                    <div class="col-md-6">
-                      <label class="form-label">Full Name</label>
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="manualName"
-                        placeholder="Enter full name"
-                        required
-                      />
-                    </div>
-
-                    <div class="col-md-6">
-                      <label class="form-label">Student ID</label>
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="manualStudentId"
-                        placeholder="e.g. 2022-0001-001"
-                        required
-                      />
-                    </div>
-
-                    <div class="col-md-4">
-                      <label class="form-label">Course</label>
-                      <input
-                        type="text"
-                        class="form-control"
-                        id="manualCourse"
-                        placeholder="e.g. BSIT"
-                        required
-                      />
-                    </div>
-
-                    <div class="col-md-4">
-                      <label class="form-label">Year Level</label>
-                      <select class="form-select" id="manualYearLevel" required>
-                        <option value="" disabled selected>Select</option>
-                        <option>1st Year</option>
-                        <option>2nd Year</option>
-                        <option>3rd Year</option>
-                        <option>4th Year</option>
-                      </select>
-                    </div>
-
-                    <div class="col-md-4">
-                      <label class="form-label">Service</label>
-                      <select class="form-select" id="manualService" required>
-                        <option value="" disabled selected>
-                          Select Service
-                        </option>
-                        <option value='["Transcript of Records"]'>
-                          Transcript of Records
-                        </option>
-                        <option value='["Certificate of Enrollment"]'>
-                          Certificate of Enrollment
-                        </option>
-                        <option value='["Good Moral Character"]'>
-                          Good Moral Character
-                        </option>
-                        <option value='["Diploma"]'>Diploma</option>
-                      </select>
-                    </div>
-
-                    <div class="col-12 mt-2">
-                      <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-plus-circle"></i> Add to Queue
-                      </button>
-                    </div>
-                  </form>
+        <div class="row mb-4">
+          <div class="col-12">
+            <h3 class="section-title fs-5 mb-3">Now Serving</h3>
+            <div id="current-serving-container">
+              <div class="card shadow-sm">
+                <div class="card-body text-center text-muted py-4">
+                  <i class="bi bi-hourglass-split mb-2 fs-3"></i>
+                  <p class="mb-0">Loading status...</p>
                 </div>
               </div>
-            </div>
-
-            <div class="card" id="currentRequestCard">
-              <!-- Current request will be loaded dynamically -->
-            </div>
-
-            <div class="quick-actions">
-              <h3>Quick Actions</h3>
-              <button
-                class="action-btn"
-                onclick="queueManager.processNextInQueue()"
-              >
-                <i class="bi bi-arrow-right"></i> Process Next
-              </button>
-              <button
-                class="action-btn"
-                onclick="serviceRequestManager.loadServiceRequests()"
-              >
-                <i class="bi bi-arrow-clockwise"></i> Refresh
-              </button>
-              <button
-                class="action-btn"
-                id="pauseQueueBtn"
-                onclick="toggleQueuePause()"
-              >
-                <i class="bi bi-pause-circle"></i> Pause Queue
-              </button>
             </div>
           </div>
+        </div>
 
-          <div class="content-item">
-            <div class="card priority-card" id="priorityQueueContainer">
-              <!-- Priority queue will be loaded dynamically -->
-            </div>
-
-            <div class="card">
-              <div class="card-header">
-                <span class="card-title">Regular Queue</span>
-                <span class="badge waiting" id="regularQueueCount"
-                  >0 waiting</span
-                >
-              </div>
-              <div class="card-body p-0">
-                <div class="scrollable-area" id="regularQueueContainer">
-                  <!-- Items loaded here -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h3 class="section-title fs-5 mb-3">New Requests</h3>
+            <div
+              class="requests-container-bg"
+              style="
+                background-color: #f0f2f5;
+                border-radius: 12px;
+                padding: 20px;
+                min-height: 200px;
+              "
+            >
+              <div
+                id="requests-list"
+                class="requests-scroll-area"
+                style="max-height: 400px; overflow-y: auto"
+              >
+                <div id="no-requests-msg" class="text-center text-muted py-4">
+                  <i class="bi bi-inbox fs-3"></i>
+                  <p class="mb-0 mt-2">No New Requests</p>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
-            <div class="card">
-              <div class="card-header">
-                <span class="card-title"
-                  ><i class="bi bi-arrow-repeat"></i> Currently Processing</span
-                >
-                <span class="badge processing" id="processingBadge"
-                  >0 processing</span
-                >
-              </div>
-              <div class="card-body p-0">
-                <div class="scrollable-area" id="processingQueueContainer">
-                  <!-- Currently processing queues will be loaded here -->
+        <div class="row mb-4">
+          <div class="col-12">
+            <h3 class="section-title fs-5 mb-3">All Requests Being Served</h3>
+            <div
+              class="requests-container-bg"
+              style="
+                background-color: #f0f2f5;
+                border-radius: 12px;
+                padding: 20px;
+                min-height: 100px;
+                margin-bottom: 20px;
+              "
+            >
+              <div
+                id="all-processing-list"
+                class="requests-scroll-area"
+                style="max-height: 250px; overflow-y: auto"
+              >
+                <div id="no-processing-msg" class="text-center text-muted py-4">
+                  <i class="bi bi-person-slash fs-3"></i>
+                  <p class="mb-0 mt-2">No Requests Currently in Progress</p>
                 </div>
               </div>
             </div>
@@ -267,11 +197,10 @@
       <!-- Service Request Page -->
       <div id="documents-page" class="page">
         <div
-          class="header d-flex align-items-center justify-content-between flex-wrap gap-3"
+          class="header d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4"
         >
           <h1 class="mb-0 fs-4 fw-bold">Service Request Management</h1>
 
-          <!-- MODERN SEARCH BAR – clean, non-bold, pill-shaped -->
           <div
             class="search-wrapper d-flex align-items-center shadow-sm"
             style="border-radius: 50px; overflow: hidden; background: #f8f9fa"
@@ -282,18 +211,14 @@
               class="form-control border-0 bg-transparent"
               style="
                 height: 40px;
-                font-size: 1rem;
-                font-weight: 400;
                 padding: 0 16px;
                 outline: none;
                 box-shadow: none;
-                color: #212529;
               "
               placeholder="Search..."
-              aria-label="Search service requests"
             />
             <button
-              class="btn btn-primary d-flex align-items-center justify-content-center"
+              class="btn btn-primary"
               id="serviceRequestSearchBtn"
               type="button"
               style="
@@ -309,26 +234,14 @@
           </div>
         </div>
 
-        <div class="document-section">
-          <h2 class="section-title">Pending Service Requests</h2>
-          <div id="pendingRequestsContainer">
-            <!-- Pending requests will be loaded here dynamically -->
-          </div>
-        </div>
+        <div id="processingRequestsContainer" class="mb-5"></div>
 
-        <div class="document-section">
-          <h2 class="section-title">Approved Requests</h2>
-          <div id="approvedRequestsContainer">
-            <!-- Approved requests will be loaded here -->
-          </div>
-        </div>
+        <hr class="border-secondary opacity-10 my-4" />
 
-        <div class="document-section">
-          <h2 class="section-title">Declined Requests</h2>
-          <div id="declinedRequestsContainer">
-            <!-- Declined requests will be loaded here -->
-          </div>
-        </div>
+        <h3 class="section-title fs-6 text-secondary fw-bold mb-3">
+          <i class="bi bi-clock-history me-2"></i>History (This Session)
+        </h3>
+        <div id="completedRequestsContainer" class="mb-4"></div>
       </div>
 
       <!-- Reports Page -->
@@ -491,70 +404,54 @@
 
       <!-- --------------------------------------------- SETTINGS PAGE ------------------------------------------------->
       <div id="settings-page" class="page">
-        <div class="staff-info-card">
-          <div class="staff-header d-flex align-items-center mb-3">
-            <div class="staff-avatar">
-              <span id="staffAvatarInitials">AD</span>
-            </div>
-            <div>
-              <h4 id="staffFullName" class="mb-1">Loading...</h4>
-              <p class="text-muted mb-0" id="staffEmail">Loading...</p>
-              <span class="badge bg-primary" id="staffRole">Loading...</span>
-            </div>
-          </div>
-
-          <div class="staff-details">
-            <div class="row">
-              <div class="col-md-6">
-                <p>
-                  <strong>Department:</strong>
-                  <span id="staffDepartment">Loading...</span>
-                </p>
-                <p>
-                  <strong>Phone:</strong>
-                  <span id="staffPhone">Loading...</span>
-                </p>
-              </div>
-              <div class="col-md-6">
-                <p>
-                  <strong>Last Login:</strong>
-                  <span id="staffLastLogin">Loading...</span>
-                </p>
-                <p>
-                  <strong>Member Since:</strong>
-                  <span id="staffMemberSince">Loading...</span>
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div class="header">
           <h1>Settings</h1>
         </div>
 
-        <!-- Account Center Section -->
         <div class="settings-section">
-          <h2 class="settings-section-title">Account Center</h2>
-
           <div
-            class="settings-item"
-            onclick="toggleModal('accountDetailsModal')"
+            class="staff-info-card"
+            style="
+              box-shadow: none;
+              padding: 0;
+              margin-bottom: 20px;
+              background: transparent;
+            "
           >
-            <div class="settings-item-icon">👤</div>
-            <span>Registrar Staff Account Details</span>
-          </div>
+            <div class="staff-header d-flex align-items-center mb-3">
+              <div class="staff-avatar">
+                <span id="staffAvatarInitials">AD</span>
+              </div>
+              <div>
+                <h4 id="staffFullName" class="mb-1">Loading...</h4>
+                <p class="text-muted mb-0" id="staffEmail">Loading...</p>
+                <span class="badge bg-primary" id="staffRole">Loading...</span>
+              </div>
+            </div>
 
-          <div class="settings-item" onclick="toggleModal('passwordModal')">
-            <div class="settings-item-icon">🔒</div>
-            <span>Manage Account Password</span>
-          </div>
-
-          <div class="settings-profile">
-            <div class="profile-avatar-large"></div>
-            <div class="profile-info">
-              <h3>Jila Santos</h3>
-              <p>Registrar Staff</p>
+            <div class="staff-details">
+              <div class="row">
+                <div class="col-md-6">
+                  <p>
+                    <strong>Department:</strong>
+                    <span id="staffDepartment">Loading...</span>
+                  </p>
+                  <p>
+                    <strong>Phone:</strong>
+                    <span id="staffPhone">Loading...</span>
+                  </p>
+                </div>
+                <div class="col-md-6">
+                  <p>
+                    <strong>Last Login:</strong>
+                    <span id="staffLastLogin">Loading...</span>
+                  </p>
+                  <p>
+                    <strong>Member Since:</strong>
+                    <span id="staffMemberSince">Loading...</span>
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -563,7 +460,6 @@
           </button>
         </div>
 
-        <!-- Manage Queue System Settings Section -->
         <div class="settings-section">
           <h2 class="settings-section-title">Manage Queue System Settings</h2>
 
@@ -606,6 +502,39 @@
                 id="darkModeSwitch"
               />
               <label class="form-check-label" for="darkModeSwitch"></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="staff-management-page" class="page">
+        <div
+          class="header d-flex justify-content-between align-items-center mb-4"
+        >
+          <h1>Staff Account Management</h1>
+          <button
+            class="btn btn-success"
+            onclick="toggleModal('registerStaffModal')"
+          >
+            <i class="bi bi-plus-lg"></i> Register New Staff
+          </button>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                  <tr>
+                    <th class="p-3 ps-4">Staff Name</th>
+                    <th class="p-3">Role</th>
+                    <th class="p-3">Department</th>
+                    <th class="p-3">Current Status</th>
+                    <th class="p-3 text-end pe-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="staffListContainer"></tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -909,46 +838,306 @@
         </div>
       </div>
     </div>
+    <div
+      id="windowSelectionModal"
+      class="modal fade"
+      data-bs-backdrop="static"
+      data-bs-keyboard="false"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered">
+        <div
+          class="modal-content shadow-lg"
+          style="border-radius: 15px; border: none"
+        >
+          <div class="modal-header justify-content-center border-0 pt-4">
+            <h4 class="m-0 fw-bold text-primary">Select Your Window</h4>
+          </div>
+          <div class="modal-body px-4 pb-4">
+            <p class="text-muted text-center mb-4">
+              Please select which window you are assigned to for this session.
+            </p>
+            <div class="d-grid gap-3">
+              <button
+                type="button"
+                class="btn btn-outline-primary p-3 text-start fw-semibold position-relative"
+                onclick="selectWindow('Window 1', event)"
+              >
+                <i class="bi bi-display me-3 fs-5"></i> Window 1
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-primary p-3 text-start fw-semibold position-relative"
+                onclick="selectWindow('Window 2', event)"
+              >
+                <i class="bi bi-display me-3 fs-5"></i> Window 2
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-primary p-3 text-start fw-semibold position-relative"
+                onclick="selectWindow('Window 3', event)"
+              >
+                <i class="bi bi-display me-3 fs-5"></i> Window 3
+              </button>
+              <button
+                type="button"
+                class="btn btn-outline-primary p-3 text-start fw-semibold position-relative"
+                onclick="selectWindow('Window 4', event)"
+              >
+                <i class="bi bi-display me-3 fs-5"></i> Window 4
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-    <!-- --------------------------------------------- MANUAL TRANSACTION MODAL ------------------------------------------------->
-    <div id="manualTransactionModal" class="modal">
+    <div
+      id="windowDetailsModal"
+      class="modal fade"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div
+          class="modal-content border-0 shadow-lg"
+          style="max-width: 800px; width: 100%"
+        >
+          <div class="modal-header bg-light border-0">
+            <h5
+              class="modal-title fw-bold text-primary"
+              id="windowDetailsTitle"
+            >
+              Window Details
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div
+            class="modal-body p-4"
+            style="
+              background-color: #f8f9fa;
+              max-height: 60vh;
+              overflow-y: auto;
+            "
+          >
+            <div id="windowDetailsList"></div>
+          </div>
+          <div class="modal-footer border-0 bg-light">
+            <button
+              type="button"
+              class="btn btn-secondary px-4"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="editStaffModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h3>Manual Transaction Details</h3>
-          <span
-            class="modal-close"
-            onclick="toggleModal('manualTransactionModal')"
+          <h3>Edit Staff Account</h3>
+          <span class="modal-close" onclick="toggleModal('editStaffModal')"
             >&times;</span
           >
         </div>
         <div class="modal-body">
+          <input type="hidden" id="editStaffId" />
           <div class="form-group">
-            <label>Transaction Type</label>
-            <select id="transactionType" class="form-input">
-              <option value="walkin">Walk-in Transaction</option>
-              <option value="phone">Phone Transaction</option>
-              <option value="emergency">Emergency Service</option>
+            <label>Full Name</label>
+            <input type="text" id="editStaffName" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="editStaffEmail" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="text" id="editStaffPhone" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>Department</label>
+            <input type="text" id="editStaffDept" class="form-input" />
+          </div>
+          <div class="form-group">
+            <label>Role</label>
+            <select id="editStaffRole" class="form-select form-input">
+              <option value="staff">Staff</option>
+              <option value="admin">Admin</option>
+              <option value="super_admin">Super Admin</option>
             </select>
           </div>
           <div class="form-group">
-            <label>Additional Notes</label>
-            <textarea
-              id="transactionNotes"
+            <label>Reset Password (Optional)</label>
+            <input
+              type="password"
+              id="editStaffPassword"
               class="form-input"
-              rows="3"
-              placeholder="Any additional information..."
-            ></textarea>
+              placeholder="Leave blank to keep current"
+            />
           </div>
         </div>
         <div class="modal-footer">
           <button
             class="btn btn-secondary"
-            onclick="toggleModal('manualTransactionModal')"
+            onclick="toggleModal('editStaffModal')"
           >
             Cancel
           </button>
-          <button class="btn btn-primary" onclick="confirmManualQueue()">
-            Add to Queue
+          <button class="btn btn-primary" onclick="staffManager.updateStaff()">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="registerStaffModal" class="modal">
+      <div class="modal-content" style="max-width: 600px">
+        <div class="modal-header">
+          <h3>Register New Staff Member</h3>
+          <span class="modal-close" onclick="toggleModal('registerStaffModal')"
+            >&times;</span
+          >
+        </div>
+        <div class="modal-body">
+          <form id="dashboardRegisterForm">
+            <div class="row mb-3">
+              <div class="col-md-5">
+                <label class="form-label"
+                  >Last Name <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-input"
+                  id="regLastName"
+                  required
+                />
+              </div>
+              <div class="col-md-5">
+                <label class="form-label"
+                  >First Name <span class="text-danger">*</span></label
+                >
+                <input
+                  type="text"
+                  class="form-input"
+                  id="regFirstName"
+                  required
+                />
+              </div>
+              <div class="col-md-2">
+                <label class="form-label">M.I.</label>
+                <input
+                  type="text"
+                  class="form-input"
+                  id="regMiddleInitial"
+                  maxlength="2"
+                  placeholder="Opt"
+                />
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label"
+                  >Phone <span class="text-danger">*</span></label
+                >
+                <input
+                  type="tel"
+                  class="form-input"
+                  id="regPhone"
+                  placeholder="09..."
+                  required
+                />
+              </div>
+              <div class="col-md-6">
+                <label class="form-label"
+                  >Sex <span class="text-danger">*</span></label
+                >
+                <select class="form-select form-input" id="regSex" required>
+                  <option value="" selected disabled>Select...</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label"
+                >Email (Username) <span class="text-danger">*</span></label
+              >
+              <input type="email" class="form-input" id="regEmail" required />
+            </div>
+            <div class="mb-3">
+              <label class="form-label"
+                >Permanent Address <span class="text-danger">*</span></label
+              >
+              <input type="text" class="form-input" id="regAddress" required />
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label"
+                  >Password <span class="text-danger">*</span></label
+                >
+                <div class="input-group">
+                  <input
+                    type="password"
+                    class="form-control form-input"
+                    id="regPassword"
+                    required
+                    style="border-right: 0"
+                  />
+                  <span
+                    class="input-group-text bg-white"
+                    style="cursor: pointer; border-left: 0"
+                    onclick="toggleRegPassword('regPassword', this)"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </span>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label"
+                  >Confirm Password <span class="text-danger">*</span></label
+                >
+                <div class="input-group">
+                  <input
+                    type="password"
+                    class="form-control form-input"
+                    id="regConfirmPassword"
+                    required
+                    style="border-right: 0"
+                  />
+                  <span
+                    class="input-group-text bg-white"
+                    style="cursor: pointer; border-left: 0"
+                    onclick="toggleRegPassword('regConfirmPassword', this)"
+                  >
+                    <i class="bi bi-eye"></i>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button
+            class="btn btn-secondary"
+            onclick="toggleModal('registerStaffModal')"
+          >
+            Cancel
+          </button>
+          <button
+            class="btn btn-success"
+            onclick="submitNewStaffRegistration()"
+          >
+            Create Account
           </button>
         </div>
       </div>
@@ -999,64 +1188,57 @@
         document.querySelectorAll(".page").forEach((p) => {
           p.classList.remove("active");
 
-          // --- 🟢 NEW CODE STARTS HERE 🟢 ---
-          // If this is the "documents-page" being hidden, clear its search bar
+          // Clear search bar if leaving documents page
           if (p.id === "documents-page") {
             const searchInput = document.getElementById(
               "serviceRequestSearchInput"
             );
             if (searchInput && searchInput.value !== "") {
-              searchInput.value = ""; // Clear the text
-
-              // Also, trigger the search button's click to reset the filter
+              searchInput.value = "";
               const searchBtn = document.getElementById(
                 "serviceRequestSearchBtn"
               );
-              if (searchBtn) {
-                searchBtn.click();
-              }
+              if (searchBtn) searchBtn.click();
             }
           }
-          // --- 🟢 NEW CODE ENDS HERE 🟢 ---
         });
 
         // Show target page
         const pageToShow = document.getElementById(page + "-page");
+
         if (pageToShow) {
           pageToShow.classList.add("active");
+
           // Refresh data for specific pages
           if (page === "queue" && queueManager) {
             queueManager.loadQueues();
           } else if (page === "documents" && serviceRequestManager) {
             serviceRequestManager.loadServiceRequests();
-            // ⬇️ REPLACE THE BLOCK ABOVE WITH THIS ⬇️
           } else if (page === "reports") {
-            // 1. Render immediately with existing (pre-fetched) data
-            // This makes the chart appear instantly.
             updateReportsData();
-
-            // 2. Then, start background requests for fresh data.
-            // When these finish, they will update the stats and chart again.
-            if (queueManager) {
-              queueManager.loadQueues().then(() => {
-                updateReportsData(); // Update again when fresh data arrives
-              });
-            }
-            if (serviceRequestManager) {
-              serviceRequestManager.loadServiceRequests().then(() => {
-                updateReportsData(); // Update again when fresh data arrives
-              });
-            }
+            if (queueManager)
+              queueManager.loadQueues().then(() => updateReportsData());
+            if (serviceRequestManager)
+              serviceRequestManager
+                .loadServiceRequests()
+                .then(() => updateReportsData());
           } else if (page === "github") {
-            // ⬆️ END OF REPLACEMENT ⬆️
             loadGitHubData();
+          } else if (page === "staff-management") {
+            if (typeof staffManager !== "undefined") {
+              staffManager.loadAllStaff();
+            }
           }
         } else {
+          // This 'else' handles cases where the page ID doesn't exist
           console.error("Page not found:", page);
           // Fallback to queue page
-          document.getElementById("queue-page").classList.add("active");
+          const fallback = document.getElementById("queue-page");
+          if (fallback) fallback.classList.add("active");
         }
       }
+      // -------------------------- END SHOW PAGE FUNCTION -----------------------------------------------------
+
       // -------------------------- END SHOW PAGE FUNCTION TO HANDLE PAGE NAVIGATION -----------------------------------------------------
 
       // Initialize managers
@@ -1064,6 +1246,8 @@
       let queueManager;
       let isQueuePaused = false;
       let fcrChartInstance = null;
+      let currentWindow = null;
+      let windowSelectionModalObj = null;
 
       // Admin Dashboard Authentication Helper
       const adminToken = localStorage.getItem("adminToken");
@@ -1090,70 +1274,106 @@
         return fetch(url, { ...defaultOptions, ...options });
       }
 
-      // Function to display staff information
+      // ---------------------------------------------------------
+      // BLOCK 1: Display Staff Info & Handle Super Admin (FIXED)
+      // ---------------------------------------------------------
       function displayStaffInfo(staff) {
-        currentStaff = staff;
+        currentStaff = staff; // Update global variable
 
-        // Update staff info in the UI
-        if (document.getElementById("staffFullName")) {
+        // 1. Update Sidebar Name
+        const sidebarNameEl = document.getElementById("sidebarStaffName");
+        if (sidebarNameEl) {
+          sidebarNameEl.textContent = staff.full_name;
+        }
+
+        // 2. Update Sidebar Role
+        const sidebarRoleEl = document.getElementById("sidebarStaffRole");
+        if (sidebarRoleEl) {
+          const formattedRole = staff.role
+            .replace("_", " ")
+            .replace(/\b\w/g, (s) => s.toUpperCase());
+          sidebarRoleEl.textContent = formattedRole;
+        }
+
+        // 3. Update Sidebar Avatar Initials
+        const sidebarAvatarEl = document.getElementById("sidebarAvatar");
+        let initials = "AD"; // Default
+        if (sidebarAvatarEl) {
+          if (staff.first_name && staff.last_name) {
+            initials = (
+              staff.first_name.charAt(0) + staff.last_name.charAt(0)
+            ).toUpperCase();
+          } else if (staff.full_name) {
+            initials = staff.full_name.substring(0, 2).toUpperCase();
+          }
+          sidebarAvatarEl.textContent = initials;
+        }
+
+        // 4. Update Settings Page Details (FIXED SECTION)
+        if (document.getElementById("staffFullName"))
           document.getElementById("staffFullName").textContent =
             staff.full_name;
-        }
 
-        if (document.getElementById("staffEmail")) {
+        if (document.getElementById("staffEmail"))
           document.getElementById("staffEmail").textContent = staff.email;
-        }
 
-        if (document.getElementById("staffRole")) {
+        if (document.getElementById("staffRole"))
           document.getElementById("staffRole").textContent = staff.role
             .replace("_", " ")
             .toUpperCase();
-        }
 
-        if (document.getElementById("staffDepartment")) {
+        if (document.getElementById("staffDepartment"))
           document.getElementById("staffDepartment").textContent =
-            staff.department || "Not specified";
-        }
+            staff.department || "Not Specified";
 
-        if (document.getElementById("staffPhone")) {
+        if (document.getElementById("staffPhone"))
           document.getElementById("staffPhone").textContent =
-            staff.phone || "Not specified";
-        }
+            staff.phone || "Not Specified";
 
-        if (document.getElementById("staffLastLogin")) {
+        if (document.getElementById("staffLastLogin"))
           document.getElementById("staffLastLogin").textContent =
             staff.last_login
               ? new Date(staff.last_login).toLocaleString()
-              : "First login";
-        }
+              : "First Login";
 
-        if (document.getElementById("staffMemberSince")) {
-          document.getElementById("staffMemberSince").textContent = new Date(
+        if (document.getElementById("staffMemberSince"))
+          document.getElementById("staffMemberSince").textContent =
             staff.created_at
-          ).toLocaleDateString();
-        }
+              ? new Date(staff.created_at).toLocaleDateString()
+              : "N/A";
 
-        if (document.getElementById("staffAvatarInitials")) {
-          const initials = staff.full_name
-            .split(" ")
-            .map((n) => n[0])
-            .join("")
-            .toUpperCase();
+        // Update Avatar in Settings Page to match Sidebar
+        if (document.getElementById("staffAvatarInitials"))
           document.getElementById("staffAvatarInitials").textContent = initials;
-        }
 
-        // Also update any other places where staff name is displayed
-        if (document.getElementById("adminName")) {
-          document.getElementById("adminName").textContent = staff.full_name;
-        }
+        // 🟢 5. SUPER ADMIN CHECK 🟢
+        if (staff.role === "super_admin") {
+          console.log("👑 Super Admin Detected");
 
-        // Update the ServiceRequestManager's currentAdmin
-        if (serviceRequestManager) {
-          serviceRequestManager.currentAdmin = staff.full_name;
+          // A. Show the "Staff Accounts" tab in sidebar
+          const staffNav = document.getElementById("nav-staff-management");
+          if (staffNav) staffNav.style.display = "flex";
+
+          // B. Force "Supervisor" mode (Bypasses Window Selection)
+          localStorage.setItem("assignedWindow", "Supervisor");
+          currentWindow = "Supervisor";
+
+          // Update UI to show Supervisor mode
+          const winDisplay = document.getElementById("currentWindowDisplay");
+          if (winDisplay) winDisplay.textContent = "Supervisor";
+
+          const sidebarTitle = document.querySelector(".sidebar-title");
+          if (sidebarTitle)
+            sidebarTitle.innerHTML = `Super Admin<br><small style="font-size:11px; color:#ccc;">Supervisor View</small>`;
+
+          // C. Load staff data immediately
+          if (typeof staffManager !== "undefined") {
+            staffManager.loadAllStaff();
+          }
         }
-        console.log("Staff info displayed:", staff.full_name);
       }
 
+      // Check authentication on page load
       // Check authentication on page load
       if (!adminToken) {
         window.location.href = "/adminLogin";
@@ -1172,19 +1392,22 @@
               adminLogout();
             } else {
               console.log("Admin logged in:", data.admin);
-              // You can display admin info in the dashboard
-              if (document.getElementById("adminName")) {
-                document.getElementById("adminName").textContent =
-                  data.admin.full_name;
-              }
 
-              // Load initial data after successful auth
+              // 1. Update Sidebar info (Name, Role, Avatar)
+              displayStaffInfo(data.admin);
+
+              // 2. Load initial data
               if (queueManager) {
                 queueManager.loadQueues();
               }
               if (serviceRequestManager) {
                 serviceRequestManager.loadServiceRequests();
               }
+
+              // 🟢 3. PASTE THIS HERE: CHECK WINDOW ASSIGNMENT 🟢
+              // We call this here because we need 'currentStaff' (set in displayStaffInfo)
+              // to be ready so we know if they are a Super Admin or not.
+              checkWindowAssignment();
             }
           })
           .catch((error) => {
@@ -1197,16 +1420,45 @@
       function adminLogout() {
         localStorage.removeItem("admin");
         localStorage.removeItem("adminToken");
+        localStorage.removeItem("assignedWindow"); // Clear client-side cache
         window.location.href = "/adminLogin";
+      }
+
+      // Global function to unassign the window
+      async function unassignWindowOnServer(windowToUnassign) {
+        // Use the passed argument, or fall back to the global variable
+        const targetWindow = windowToUnassign || currentWindow;
+
+        if (targetWindow && adminToken) {
+          try {
+            console.log("Attempting to unassign:", targetWindow);
+            await makeAuthenticatedRequest("/api/admin/unassign-window", {
+              method: "POST",
+              body: JSON.stringify({ windowNumber: targetWindow }),
+            });
+            console.log("Server unassign success");
+          } catch (e) {
+            console.warn("Failed to unassign window on server.", e);
+          }
+        }
+        // Clear client-side state
+        currentWindow = null;
+        localStorage.removeItem("assignedWindow");
       }
 
       // Navigation functionality
       document.addEventListener("DOMContentLoaded", function () {
         console.log("Admin dashboard initialized");
 
+        // 🟢 FIX: REMOVED the line localStorage.removeItem("assignedWindow");
+        // This allows the browser to remember the window on refresh.
+
         // Initialize managers
         serviceRequestManager = new ServiceRequestManager();
         queueManager = new QueueManager();
+        // Pre-load data in the background on page load
+        serviceRequestManager.loadServiceRequests();
+        queueManager.loadQueues();
 
         // Set up navigation
         setupNavigation();
@@ -1217,8 +1469,12 @@
         // Load preferences
         loadPreferences();
 
-        // Set up auto-refresh
-        setupAutoRefresh();
+        // Set up enhanced auto-refresh
+        setupEnhancedAutoRefresh();
+
+        // 🟢 FIX: Ensure window check runs after everything else is ready 🟢
+        // This function will now check local storage first before showing the modal.
+        // checkWindowAssignment();
       });
 
       // ⬇️ REPLACE THIS FUNCTION ⬇️
@@ -1452,10 +1708,10 @@
         // 4. Handle empty state
         if (recentRequests.length === 0) {
           listElement.innerHTML = `
-          <li class="request-list-item empty">
-            No requests found for today.
-          </li>
-        `;
+                <li class="request-list-item empty">
+                  No requests found for today.
+                </li>
+              `;
           return;
         }
 
@@ -1495,11 +1751,11 @@
             const serviceName = escape(mainService);
 
             return `
-          <li class="request-list-item">
-            <div class="client-name" title="${clientName}">${clientName}</div>
-            <div class="service-name" title="${serviceName}">${serviceName}</div>
-          </li>
-        `;
+                <li class="request-list-item">
+                  <div class="client-name" title="${clientName}">${clientName}</div>
+                  <div class="service-name" title="${serviceName}">${serviceName}</div>
+                </li>
+              `;
           })
           .join("");
       }
@@ -1637,15 +1893,6 @@
         toggleModal("notificationModal");
       }
 
-      function handleLogout() {
-        if (confirm("Are you sure you want to log out?")) {
-          showNotification("Logging out...");
-          setTimeout(() => {
-            adminLogout();
-          }, 1000);
-        }
-      }
-
       // Notification system
       function showNotification(message, type = "success") {
         // Remove existing notification if any
@@ -1667,17 +1914,17 @@
             ? "#f57c00"
             : "#2e7d32";
         notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${bgColor};
-            color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            z-index: 10000;
-            animation: slideInRight 0.3s ease-out;
-        `;
+                  position: fixed;
+                  top: 20px;
+                  right: 20px;
+                  background: ${bgColor};
+                  color: white;
+                  padding: 15px 25px;
+                  border-radius: 8px;
+                  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                  z-index: 10000;
+                  animation: slideInRight 0.3s ease-out;
+              `;
 
         document.body.appendChild(notification);
 
@@ -1753,13 +2000,13 @@
             const container = document.getElementById(containerId);
             if (container) {
               container.innerHTML = `
-                        <div class="empty-state">
-                            <div style="text-align: center; padding: 40px; color: #999;">
-                                <div style="font-size: 3rem;">📋</div>
-                                <p style="margin-top: 10px;">No service requests found.</p>
-                            </div>
-                        </div>
-                    `;
+                              <div class="empty-state">
+                                  <div style="text-align: center; padding: 40px; color: #999;">
+                                      <div style="font-size: 3rem;">📋</div>
+                                      <p style="margin-top: 10px;">No service requests found.</p>
+                                  </div>
+                              </div>
+                          `;
             }
           });
 
@@ -1767,9 +2014,232 @@
         }
 
         renderRequests() {
-          this.renderPendingRequests();
-          this.renderApprovedRequests();
-          this.renderDeclinedRequests();
+          this.renderProcessingRequests(); // Active cards
+          this.renderCompletedRequests(); // 🟢 ADD THIS CALL 🟢
+        }
+
+        // 🟢 UPDATED: Renders ALL active/claimed requests for this window (Oldest to Newest) 🟢
+        renderProcessingRequests() {
+          const container = document.getElementById(
+            "processingRequestsContainer"
+          );
+          if (!container) return;
+
+          // Get active queue data
+          const processingQueueItems =
+            queueManager && queueManager.queues
+              ? queueManager.queues.processing
+              : [];
+
+          // Get Current Window Identity
+          let activeWindow = localStorage.getItem("assignedWindow");
+          if (!activeWindow || activeWindow === "null")
+            activeWindow = currentWindow;
+
+          // Helper
+          const cleanString = (str) =>
+            String(str || "")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase();
+          const myCleanWindow = cleanString(activeWindow);
+
+          // 1. Filter: Find ALL requests for THIS window
+          const myRequests = processingQueueItems.filter(
+            (item) => cleanString(item.window_number) === myCleanWindow
+          );
+
+          // 2. Sort: Oldest Started to Newest Started
+          // This ensures the "oldest" claimed request appears at the top
+          myRequests.sort(
+            (a, b) => new Date(a.started_at) - new Date(b.started_at)
+          );
+
+          // 🟢 STATE 1: IDLE (No active requests)
+          if (myRequests.length === 0) {
+            container.innerHTML = `
+                          <div class="text-center py-5 bg-white rounded shadow-sm border">
+                              <div class="mb-3">
+                                  <i class="bi bi-person-workspace display-1 text-muted opacity-25"></i>
+                              </div>
+                              <h3 class="fw-bold text-secondary">No Active Requests</h3>
+                              <p class="text-muted">You are not currently serving any clients.</p>
+                              <button class="btn btn-primary mt-3" onclick="showPage('queue')">
+                                  <i class="bi bi-list-task me-2"></i> Go to Queue List
+                              </button>
+                          </div>`;
+            return;
+          }
+
+          // 🟢 STATE 2: ACTIVE LIST (Rendering all claimed requests)
+
+          // Determine colors based on window (same for all cards in this window)
+          let borderColor = "#0d6efd"; // Default blue
+          let badgeClass = "bg-primary";
+          if (myCleanWindow.includes("2")) {
+            borderColor = "#ffc107";
+            badgeClass = "bg-warning text-dark";
+          }
+          if (myCleanWindow.includes("3")) {
+            borderColor = "#0dcaf0";
+            badgeClass = "bg-info text-dark";
+          }
+          if (myCleanWindow.includes("4")) {
+            borderColor = "#dc3545";
+            badgeClass = "bg-danger";
+          }
+
+          // Generate HTML for ALL active cards
+          const cardsHtml = myRequests
+            .map((req) => {
+              const services = Array.isArray(req.services) ? req.services : [];
+
+              return `
+                      <div class="card border-0 shadow-sm animate__animated animate__fadeIn mb-4">
+                          <div class="card-body p-4" style="border-left: 8px solid ${borderColor};">
+
+                              <div class="d-flex justify-content-between align-items-start mb-3">
+                                  <div>
+                                      <h3 class="fw-bold mb-1">${this.escapeHtml(
+                                        req.user_name
+                                      )}</h3>
+                                      <p class="text-muted mb-0 fs-6">Student ID: <strong>${this.escapeHtml(
+                                        req.student_id
+                                      )}</strong></p>
+                                  </div>
+                                  <div class="text-end">
+                                      <span class="badge ${badgeClass} fs-5 px-3 py-2 rounded-pill shadow-sm">
+                                          ${this.escapeHtml(req.queue_number)}
+                                      </span>
+                                  </div>
+                              </div>
+
+                              <div class="bg-light p-3 rounded mb-3">
+                                  <label class="text-secondary small fw-bold text-uppercase mb-1">Requested Services</label>
+                                  <div class="fs-6 fw-semibold text-dark">
+                                      <i class="bi bi-gear-wide-connected me-2 text-primary"></i>
+                                      ${this.escapeHtml(services.join(", "))}
+                                  </div>
+                              </div>
+
+                              <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                  <div class="text-muted small">
+                                      <i class="bi bi-clock me-1"></i> Started: ${new Date(
+                                        req.started_at
+                                      ).toLocaleTimeString()}
+                                  </div>
+
+                                  <button class="btn btn-success px-4 fw-bold shadow-sm" onclick="queueManager.markAsDone('${
+                                    req.queue_id
+                                  }')">
+                                      <i class="bi bi-check-circle-fill me-2"></i> Mark as Done
+                                  </button>
+                              </div>
+
+                          </div>
+                      </div>`;
+            })
+            .join("");
+
+          container.innerHTML = `
+                      <h3 class="section-title fs-5 text-primary fw-bold mb-3">
+                          <i class="bi bi-person-check-fill me-2"></i> Now Serving (${myRequests.length})
+                      </h3>
+                      ${cardsHtml}
+                  `;
+        }
+
+        // 🟢 NEW: Renders history of completed requests (Oldest to Newest) 🟢
+        renderCompletedRequests() {
+          const container = document.getElementById(
+            "completedRequestsContainer"
+          );
+          if (!container) return;
+
+          // 1. Get Completed Data from QueueManager
+          const completedQueueItems =
+            queueManager && queueManager.queues
+              ? queueManager.queues.completed
+              : [];
+
+          // 2. Get Current Window
+          let activeWindow = localStorage.getItem("assignedWindow");
+          if (!activeWindow || activeWindow === "null")
+            activeWindow = currentWindow;
+          const cleanString = (str) =>
+            String(str || "")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase();
+          const myCleanWindow = cleanString(activeWindow);
+
+          // 3. Filter for MY window only
+          const myHistory = completedQueueItems.filter(
+            (item) => cleanString(item.window_number) === myCleanWindow
+          );
+
+          if (myHistory.length === 0) {
+            container.innerHTML = `
+                          <div class="text-center py-3 text-muted bg-light rounded small">
+                              No completed requests yet.
+                          </div>`;
+            return;
+          }
+
+          // 4. Sort: Oldest completed to Newest completed
+          myHistory.sort(
+            (a, b) => new Date(a.completed_at) - new Date(b.completed_at)
+          );
+
+          // 5. Render
+          container.innerHTML = myHistory
+            .map((item) => {
+              const services = Array.isArray(item.services)
+                ? item.services
+                : [];
+
+              // Determine Color
+              let badgeClass = "bg-secondary";
+              if (myCleanWindow.includes("1")) badgeClass = "bg-primary";
+              else if (myCleanWindow.includes("2"))
+                badgeClass = "bg-warning text-dark";
+              else if (myCleanWindow.includes("3"))
+                badgeClass = "bg-info text-dark";
+              else if (myCleanWindow.includes("4")) badgeClass = "bg-danger";
+
+              return `
+                          <div class="document-item shadow-sm mb-2 p-3 rounded border-start border-3 border-success bg-white">
+                              <div class="d-flex justify-content-between align-items-center">
+
+                                  <div class="d-flex align-items-center gap-3">
+                                      <span class="badge ${badgeClass} rounded-pill">${this.escapeHtml(
+                item.queue_number
+              )}</span>
+                                      <div>
+                                          <div class="fw-bold text-dark small">${this.escapeHtml(
+                                            item.user_name
+                                          )}</div>
+                                          <div class="text-muted" style="font-size: 0.75rem;">ID: ${this.escapeHtml(
+                                            item.student_id
+                                          )}</div>
+                                      </div>
+                                  </div>
+
+                                  <div class="text-secondary small px-2 text-truncate" style="max-width: 200px;">
+                                      ${this.escapeHtml(services.join(", "))}
+                                  </div>
+
+                                  <div class="text-end text-success small" style="min-width: 80px;">
+                                      <i class="bi bi-check-circle-fill me-1"></i> ${new Date(
+                                        item.completed_at
+                                      ).toLocaleTimeString([], {
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                      })}
+                                  </div>
+                              </div>
+                          </div>
+                      `;
+            })
+            .join("");
         }
 
         renderPendingRequests() {
@@ -1782,69 +2252,69 @@
 
           if (pendingRequests.length === 0) {
             container.innerHTML = `
-                    <div class="empty-state">
-                        <div style="text-align: center; padding: 40px; color: #999;">
-                            <div style="font-size: 3rem;"> </div>
-                            <p style="margin-top: 10px;">No pending service requests.</p>
-                        </div>
-                    </div>
-                `;
+                          <div class="empty-state">
+                              <div style="text-align: center; padding: 40px; color: #999;">
+                                  <div style="font-size: 3rem;"> </div>
+                                  <p style="margin-top: 10px;">No pending service requests.</p>
+                              </div>
+                          </div>
+                      `;
             return;
           }
 
           container.innerHTML = pendingRequests
             .map(
               (request) => `
-                        <div class="document-item">
-                            <div class="document-header">
-                                <div>
-                                    <div class="document-title">${this.escapeHtml(
-                                      request.services.join(", ")
-                                    )}</div>
-                                    <div class="document-description">
-    <span class="requester-line">Requested by: ${this.escapeHtml(
-      request.user_name
-    )} (${this.escapeHtml(request.student_id)})</span><br>
-    ${
-      request.services
-        ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
-        : ""
-    }
-    ${
-      request.submitted_at
-        ? `Submitted: ${new Date(request.submitted_at).toLocaleString()}`
-        : ""
-    }
-</div>
-                                </div>
-                                <div class="queue-number">Request ID: ${this.escapeHtml(
-                                  request.request_id
-                                )}</div>
-                            </div>
-                            <div class="document-meta">
-                                <span>Submitted: ${new Date(
-                                  request.submitted_at
-                                ).toLocaleString()}</span>
-                                <div class="button-group" style="margin-top: 10px;">
-                                    <button class="btn btn-success btn-sm" onclick="serviceRequestManager.showApproveModal('${
-                                      request.request_id
-                                    }')">
-                                        ✓ Approve
-                                    </button>
-                                    <button class="btn btn-danger btn-sm" onclick="serviceRequestManager.showDeclineModal('${
-                                      request.request_id
-                                    }')">
-                                        ✗ Decline
-                                    </button>
-                                    <button class="btn btn-primary btn-sm" onclick="serviceRequestManager.viewRequestDetails('${
-                                      request.request_id
-                                    }')">
-                                        👁️ View Details
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    `
+                              <div class="document-item">
+                                  <div class="document-header">
+                                      <div>
+                                          <div class="document-title">${this.escapeHtml(
+                                            request.services.join(", ")
+                                          )}</div>
+                                          <div class="document-description">
+          <span class="requester-line">Requested by: ${this.escapeHtml(
+            request.user_name
+          )} (${this.escapeHtml(request.student_id)})</span><br>
+          ${
+            request.services
+              ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
+              : ""
+          }
+          ${
+            request.submitted_at
+              ? `Submitted: ${new Date(request.submitted_at).toLocaleString()}`
+              : ""
+          }
+      </div>
+                                      </div>
+                                      <div class="queue-number">Request ID: ${this.escapeHtml(
+                                        request.request_id
+                                      )}</div>
+                                  </div>
+                                  <div class="document-meta">
+                                      <span>Submitted: ${new Date(
+                                        request.submitted_at
+                                      ).toLocaleString()}</span>
+                                      <div class="button-group" style="margin-top: 10px;">
+                                          <button class="btn btn-success btn-sm" onclick="serviceRequestManager.showApproveModal('${
+                                            request.request_id
+                                          }')">
+                                              ✓ Approve
+                                          </button>
+                                          <button class="btn btn-danger btn-sm" onclick="serviceRequestManager.showDeclineModal('${
+                                            request.request_id
+                                          }')">
+                                              ✗ Decline
+                                          </button>
+                                          <button class="btn btn-primary btn-sm" onclick="serviceRequestManager.viewRequestDetails('${
+                                            request.request_id
+                                          }')">
+                                              👁️ View Details
+                                          </button>
+                                      </div>
+                                  </div>
+                              </div>
+                          `
             )
             .join("");
         }
@@ -1870,52 +2340,52 @@
 
           if (approvedRequests.length === 0) {
             container.innerHTML = `
-                    <div class="empty-state">
-                        <div style="text-align: center; padding: 40px; color: #999;">
-                            <div style="font-size: 3rem;"></div>
-                            <p style="margin-top: 10px;">No approved service requests for today.</p>
-                        </div>
-                    </div>
-                `;
+                          <div class="empty-state">
+                              <div style="text-align: center; padding: 40px; color: #999;">
+                                  <div style="font-size: 3rem;"></div>
+                                  <p style="margin-top: 10px;">No approved service requests for today.</p>
+                              </div>
+                          </div>
+                      `;
             return;
           }
 
           container.innerHTML = approvedRequests
             .map(
               (request) => `
-                        <div class="document-item approved">
-                            <div class="document-header">
-                                <div>
-                                    <div class="document-title">${this.escapeHtml(
-                                      request.services.join(", ")
-                                    )}</div>
-                                    <div class="document-description">
-    <span class="requester-line">Requested by: ${this.escapeHtml(
-      request.user_name
-    )} (${this.escapeHtml(request.student_id)})</span><br>
-    ${
-      request.services
-        ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
-        : ""
-    }
-    ${
-      request.approved_at
-        ? `Approved at: ${new Date(request.approved_at).toLocaleString()}`
-        : ""
-    }
-</div>
-                                </div>
-                                <div class="queue-number">
-                                    <span class="badge approved-badge">Approved</span>
-                                </div>
-                            </div>
-                            <div class="document-meta">
-                                <span>Request ID: ${this.escapeHtml(
-                                  request.request_id
-                                )}</span>
-                            </div>
-                        </div>
-                    `
+                              <div class="document-item approved">
+                                  <div class="document-header">
+                                      <div>
+                                          <div class="document-title">${this.escapeHtml(
+                                            request.services.join(", ")
+                                          )}</div>
+                                          <div class="document-description">
+          <span class="requester-line">Requested by: ${this.escapeHtml(
+            request.user_name
+          )} (${this.escapeHtml(request.student_id)})</span><br>
+          ${
+            request.services
+              ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
+              : ""
+          }
+          ${
+            request.approved_at
+              ? `Approved at: ${new Date(request.approved_at).toLocaleString()}`
+              : ""
+          }
+      </div>
+                                      </div>
+                                      <div class="queue-number">
+                                          <span class="badge approved-badge">Approved</span>
+                                      </div>
+                                  </div>
+                                  <div class="document-meta">
+                                      <span>Request ID: ${this.escapeHtml(
+                                        request.request_id
+                                      )}</span>
+                                  </div>
+                              </div>
+                          `
             )
             .join("");
         }
@@ -1941,56 +2411,56 @@
 
           if (declinedRequests.length === 0) {
             container.innerHTML = `
-                    <div class="empty-state">
-                        <div style="text-align: center; padding: 40px; color: #999;">
-                            <div style="font-size: 3rem;"></div>
-                            <p style="margin-top: 10px;">No declined service requests for today.</p>
-                        </div>
-                    </div>
-                `;
+                          <div class="empty-state">
+                              <div style="text-align: center; padding: 40px; color: #999;">
+                                  <div style="font-size: 3rem;"></div>
+                                  <p style="margin-top: 10px;">No declined service requests for today.</p>
+                              </div>
+                          </div>
+                      `;
             return;
           }
 
           container.innerHTML = declinedRequests
             .map(
               (request) => `
-                        <div class="document-item declined">
-                            <div class="document-header">
-                                <div>
-                                    <div class="document-title">${this.escapeHtml(
-                                      request.services.join(", ")
-                                    )}</div>
-                                    <div class="document-description">
-    <span class="requester-line">Requested by: ${this.escapeHtml(
-      request.user_name
-    )} (${this.escapeHtml(request.student_id)})</span><br>
-    ${
-      request.services
-        ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
-        : ""
-    }
-    ${
-      request.declined_at
-        ? `Declined at: ${new Date(request.declined_at).toLocaleString()}`
-        : ""
-    }
-</div>
-                                </div>
-                                <div class="queue-number">
-                                    <span class="badge declined-badge">Declined</span>
-                                </div>
-                            </div>
-                            <div class="document-meta">
-                                <span>${
-                                  request.declined_at
-                                    ? `Declined at: ${new Date(
+                              <div class="document-item declined">
+                                  <div class="document-header">
+                                      <div>
+                                          <div class="document-title">${this.escapeHtml(
+                                            request.services.join(", ")
+                                          )}</div>
+                                          <div class="document-description">
+          <span class="requester-line">Requested by: ${this.escapeHtml(
+            request.user_name
+          )} (${this.escapeHtml(request.student_id)})</span><br>
+          ${
+            request.services
+              ? `Service: ${this.escapeHtml(request.services.join(", "))}<br>`
+              : ""
+          }
+          ${
+            request.declined_at
+              ? `Declined at: ${new Date(request.declined_at).toLocaleString()}`
+              : ""
+          }
+      </div>
+                                      </div>
+                                      <div class="queue-number">
+                                          <span class="badge declined-badge">Declined</span>
+                                      </div>
+                                  </div>
+                                  <div class="document-meta">
+                                      <span>${
                                         request.declined_at
-                                      ).toLocaleString()}`
-                                    : "Declined"
-                                }</span>
-                            </div>
-                        </div>
-                    `
+                                          ? `Declined at: ${new Date(
+                                              request.declined_at
+                                            ).toLocaleString()}`
+                                          : "Declined"
+                                      }</span>
+                                  </div>
+                              </div>
+                          `
             )
             .join("");
         }
@@ -2033,26 +2503,6 @@
           if (pendingElement) pendingElement.textContent = pendingCount;
           if (approvedElement) approvedElement.textContent = approvedCount;
           if (declinedElement) declinedElement.textContent = declinedCount;
-
-          // --- 🟢 NEW CODE STARTS HERE 🟢 ---
-          // This updates the notification dot in the sidebar
-          const serviceMenu = document.querySelector(
-            '.menu-item[data-page="documents"]'
-          );
-          const dot = serviceMenu
-            ? serviceMenu.querySelector(".notification-dot")
-            : null;
-
-          if (serviceMenu && dot) {
-            if (pendingCount > 0) {
-              dot.textContent = pendingCount; // Set the number
-              serviceMenu.classList.add("has-notification");
-            } else {
-              dot.textContent = ""; // Clear the number
-              serviceMenu.classList.remove("has-notification");
-            }
-          }
-          // --- 🟢 NEW CODE ENDS HERE 🟢 ---
         }
 
         showApproveModal(requestId) {
@@ -2096,24 +2546,24 @@
 
         getRequestDetailsHTML(request) {
           return `
-                <div class="request-preview">
-                    <strong>Student:</strong> ${this.escapeHtml(
-                      request.user_name
-                    )} (${this.escapeHtml(request.student_id)})<br>
-                    <strong>Course:</strong> ${this.escapeHtml(
-                      request.course
-                    )} - ${this.escapeHtml(request.year_level)}<br>
-                    <strong>Services:</strong> ${this.escapeHtml(
-                      request.services.join(", ")
-                    )}<br>
-                    <strong>Total Amount:</strong> ₱${parseFloat(
-                      request.total_amount || 0
-                    ).toFixed(2)}<br>
-                    <strong>Submitted:</strong> ${new Date(
-                      request.submitted_at
-                    ).toLocaleString()}
-                </div>
-            `;
+                      <div class="request-preview">
+                          <strong>Student:</strong> ${this.escapeHtml(
+                            request.user_name
+                          )} (${this.escapeHtml(request.student_id)})<br>
+                          <strong>Course:</strong> ${this.escapeHtml(
+                            request.course
+                          )} - ${this.escapeHtml(request.year_level)}<br>
+                          <strong>Services:</strong> ${this.escapeHtml(
+                            request.services.join(", ")
+                          )}<br>
+                          <strong>Total Amount:</strong> ₱${parseFloat(
+                            request.total_amount || 0
+                          ).toFixed(2)}<br>
+                          <strong>Submitted:</strong> ${new Date(
+                            request.submitted_at
+                          ).toLocaleString()}
+                      </div>
+                  `;
         }
 
         getDetailedRequestHTML(request) {
@@ -2127,163 +2577,166 @@
           const requirementsHTML = requirements
             .map(
               (req) => `
-                        <div class="requirement-item">
-                            <strong>${this.escapeHtml(
-                              req.service || "Service"
-                            )}:</strong><br>
-                            <ul>
-                                ${(req.requirements || [])
-                                  .map((r) => `<li>${this.escapeHtml(r)}</li>`)
-                                  .join("")}
-                            </ul>
-                        </div>
-                    `
+                              <div class="requirement-item">
+                                  <strong>${this.escapeHtml(
+                                    req.service || "Service"
+                                  )}:</strong><br>
+                                  <ul>
+                                      ${(req.requirements || [])
+                                        .map(
+                                          (r) =>
+                                            `<li>${this.escapeHtml(r)}</li>`
+                                        )
+                                        .join("")}
+                                  </ul>
+                              </div>
+                          `
             )
             .join("");
 
           return `
-                <div class="request-details">
-                    <div class="info-row">
-                        <span class="info-label">Request ID:</span>
-                        <span class="info-value">${this.escapeHtml(
-                          request.request_id
-                        )}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Student Name:</span>
-                        <span class="info-value">${this.escapeHtml(
-                          request.user_name
-                        )}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Student ID:</span>
-                        <span class="info-value">${this.escapeHtml(
-                          request.student_id
-                        )}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Course & Year:</span>
-                        <span class="info-value">${this.escapeHtml(
-                          request.course
-                        )} - ${this.escapeHtml(request.year_level)}</span>
-                    </div>
-                    ${
-                      request.contact_email
-                        ? `
-                        <div class="info-row">
-                            <span class="info-label">Contact Email:</span>
-                            <span class="info-value">${this.escapeHtml(
-                              request.contact_email
-                            )}</span>
-                        </div>
-                    `
-                        : ""
-                    }
-                    ${
-                      request.contact_phone
-                        ? `
-                        <div class="info-row">
-                            <span class="info-label">Contact Phone:</span>
-                            <span class="info-value">${this.escapeHtml(
-                              request.contact_phone
-                            )}</span>
-                        </div>
-                    `
-                        : ""
-                    }
-                    <div class="info-row">
-                        <span class="info-label">Submitted:</span>
-                        <span class="info-value">${new Date(
-                          request.submitted_at
-                        ).toLocaleString()}</span>
-                    </div>
-                    
-                    <h4>Requested Services</h4>
-                    <div class="services-list">
-                        ${services
-                          .map(
-                            (service) => `
-                                    <div class="service-item">
-                                        <strong>• ${this.escapeHtml(
-                                          service
-                                        )}</strong>
-                                    </div>
-                                `
-                          )
-                          .join("")}
-                        <div class="total-amount">
-                            <strong>Total Amount: ₱${parseFloat(
-                              request.total_amount || 0
-                            ).toFixed(2)}</strong>
-                        </div>
-                    </div>
+                      <div class="request-details">
+                          <div class="info-row">
+                              <span class="info-label">Request ID:</span>
+                              <span class="info-value">${this.escapeHtml(
+                                request.request_id
+                              )}</span>
+                          </div>
+                          <div class="info-row">
+                              <span class="info-label">Student Name:</span>
+                              <span class="info-value">${this.escapeHtml(
+                                request.user_name
+                              )}</span>
+                          </div>
+                          <div class="info-row">
+                              <span class="info-label">Student ID:</span>
+                              <span class="info-value">${this.escapeHtml(
+                                request.student_id
+                              )}</span>
+                          </div>
+                          <div class="info-row">
+                              <span class="info-label">Course & Year:</span>
+                              <span class="info-value">${this.escapeHtml(
+                                request.course
+                              )} - ${this.escapeHtml(request.year_level)}</span>
+                          </div>
+                          ${
+                            request.contact_email
+                              ? `
+                              <div class="info-row">
+                                  <span class="info-label">Contact Email:</span>
+                                  <span class="info-value">${this.escapeHtml(
+                                    request.contact_email
+                                  )}</span>
+                              </div>
+                          `
+                              : ""
+                          }
+                          ${
+                            request.contact_phone
+                              ? `
+                              <div class="info-row">
+                                  <span class="info-label">Contact Phone:</span>
+                                  <span class="info-value">${this.escapeHtml(
+                                    request.contact_phone
+                                  )}</span>
+                              </div>
+                          `
+                              : ""
+                          }
+                          <div class="info-row">
+                              <span class="info-label">Submitted:</span>
+                              <span class="info-value">${new Date(
+                                request.submitted_at
+                              ).toLocaleString()}</span>
+                          </div>
 
-                    ${
-                      requirements.length > 0
-                        ? `
-                        <h4>Requirements</h4>
-                        <div class="requirements-list">
-                            ${requirementsHTML}
-                        </div>
-                    `
-                        : ""
-                    }
+                          <h4>Requested Services</h4>
+                          <div class="services-list">
+                              ${services
+                                .map(
+                                  (service) => `
+                                          <div class="service-item">
+                                              <strong>• ${this.escapeHtml(
+                                                service
+                                              )}</strong>
+                                          </div>
+                                      `
+                                )
+                                .join("")}
+                              <div class="total-amount">
+                                  <strong>Total Amount: ₱${parseFloat(
+                                    request.total_amount || 0
+                                  ).toFixed(2)}</strong>
+                              </div>
+                          </div>
 
-                    ${
-                      request.status === "approved" && request.approved_by
-                        ? `
-                        <div class="approval-details">
-                            <strong>Approval Details:</strong><br>
-                            Approved by: ${this.escapeHtml(
-                              request.approved_by
-                            )}<br>
-                            ${
-                              request.approved_at
-                                ? `Approved at: ${new Date(
+                          ${
+                            requirements.length > 0
+                              ? `
+                              <h4>Requirements</h4>
+                              <div class="requirements-list">
+                                  ${requirementsHTML}
+                              </div>
+                          `
+                              : ""
+                          }
+
+                          ${
+                            request.status === "approved" && request.approved_by
+                              ? `
+                              <div class="approval-details">
+                                  <strong>Approval Details:</strong><br>
+                                  Approved by: ${this.escapeHtml(
+                                    request.approved_by
+                                  )}<br>
+                                  ${
                                     request.approved_at
-                                  ).toLocaleString()}<br>`
-                                : ""
-                            }
-                            ${
-                              request.approve_notes
-                                ? `Notes: ${this.escapeHtml(
+                                      ? `Approved at: ${new Date(
+                                          request.approved_at
+                                        ).toLocaleString()}<br>`
+                                      : ""
+                                  }
+                                  ${
                                     request.approve_notes
-                                  )}`
-                                : ""
-                            }
-                        </div>
-                    `
-                        : ""
-                    }
+                                      ? `Notes: ${this.escapeHtml(
+                                          request.approve_notes
+                                        )}`
+                                      : ""
+                                  }
+                              </div>
+                          `
+                              : ""
+                          }
 
-                    ${
-                      request.status === "declined" && request.declined_by
-                        ? `
-                        <div class="decline-details">
-                            <strong>Decline Details:</strong><br>
-                            Declined by: ${this.escapeHtml(
-                              request.declined_by
-                            )}<br>
-                            ${
-                              request.declined_at
-                                ? `Declined at: ${new Date(
+                          ${
+                            request.status === "declined" && request.declined_by
+                              ? `
+                              <div class="decline-details">
+                                  <strong>Decline Details:</strong><br>
+                                  Declined by: ${this.escapeHtml(
+                                    request.declined_by
+                                  )}<br>
+                                  ${
                                     request.declined_at
-                                  ).toLocaleString()}<br>`
-                                : ""
-                            }
-                            ${
-                              request.decline_reason
-                                ? `Reason: ${this.escapeHtml(
+                                      ? `Declined at: ${new Date(
+                                          request.declined_at
+                                        ).toLocaleString()}<br>`
+                                      : ""
+                                  }
+                                  ${
                                     request.decline_reason
-                                  )}`
-                                : ""
-                            }
-                        </div>
-                    `
-                        : ""
-                    }
-                </div>
-            `;
+                                      ? `Reason: ${this.escapeHtml(
+                                          request.decline_reason
+                                        )}`
+                                      : ""
+                                  }
+                              </div>
+                          `
+                              : ""
+                          }
+                      </div>
+                  `;
         }
 
         async confirmApproveRequest() {
@@ -2377,8 +2830,8 @@
         }
       }
       /* --------------------------------------------------------------
-   SERVICE REQUEST SEARCH — BY REQUESTER NAME ONLY
-   -------------------------------------------------------------- */
+         SERVICE REQUEST SEARCH — BY REQUESTER NAME ONLY
+         -------------------------------------------------------------- */
       document.addEventListener("DOMContentLoaded", () => {
         const searchInput = document.getElementById(
           "serviceRequestSearchInput"
@@ -2452,6 +2905,263 @@
         };
       });
 
+      // Staff Management (Super Admin)
+      class StaffManager {
+        async loadAllStaff() {
+          try {
+            const response = await makeAuthenticatedRequest(
+              "/api/admin/all-staff"
+            );
+            const result = await response.json();
+
+            if (result.success) {
+              this.renderStaffList(result.staff);
+            }
+          } catch (error) {
+            console.error("Error loading staff:", error);
+          }
+        }
+
+        renderStaffList(staffList) {
+          const container = document.getElementById("staffListContainer");
+          if (!container) return;
+
+          container.innerHTML = staffList
+            .map((staff) => {
+              // Logic: Check if this row is the currently logged-in user
+              const isMe = currentStaff && currentStaff.id === staff.id;
+
+              // Logic: Don't show Delete button for your own account
+              const deleteButton = isMe
+                ? `<button class="btn btn-sm btn-outline-secondary disabled ms-2" title="You cannot delete yourself"><i class="bi bi-trash"></i></button>`
+                : `<button class="btn btn-sm btn-outline-danger ms-2" onclick="staffManager.deleteStaff(${staff.id}, '${staff.full_name}')" title="Delete Account"><i class="bi bi-trash"></i></button>`;
+
+              // 🟢 FIX: Status Logic 🟢
+              let statusBadge = "";
+
+              if (isMe) {
+                // If it is YOU, you are definitely Online
+                if (staff.role === "super_admin") {
+                  statusBadge = `<span class="badge bg-primary">Active: Supervisor</span>`;
+                } else if (staff.assigned_window) {
+                  statusBadge = `<span class="badge bg-success">Active: ${staff.assigned_window}</span>`;
+                } else {
+                  statusBadge = `<span class="badge bg-success">Online</span>`;
+                }
+              } else {
+                // For others, rely on database status
+                if (staff.assigned_window) {
+                  statusBadge = `<span class="badge bg-success">Active: ${staff.assigned_window}</span>`;
+                } else {
+                  statusBadge =
+                    '<span class="text-muted small">Offline / Idle</span>';
+                }
+              }
+
+              return `
+              <tr>
+                  <td class="p-3 ps-4">
+                      <div class="d-flex align-items-center">
+                          <div class="staff-avatar-small me-3 bg-primary text-white rounded-circle d-flex justify-content-center align-items-center" style="width:35px; height:35px; font-size:12px;">
+                              ${staff.full_name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                              <div class="fw-bold text-dark">${
+                                staff.full_name
+                              } ${isMe ? "(You)" : ""}</div>
+                              <div class="text-muted small">${staff.email}</div>
+                          </div>
+                      </div>
+                  </td>
+                  <td class="p-3"><span class="badge bg-secondary">${staff.role.replace(
+                    "_",
+                    " "
+                  )}</span></td>
+                  <td class="p-3">${staff.department || "N/A"}</td>
+                  <td class="p-3">
+                      ${statusBadge} 
+                  </td>
+                  <td class="p-3 text-end pe-4">
+                      <button class="btn btn-sm btn-outline-primary" onclick='staffManager.openEditModal(${JSON.stringify(
+                        staff
+                      )})'>
+                          <i class="bi bi-pencil"></i> Edit
+                      </button>
+                      ${deleteButton} 
+                  </td>
+              </tr>
+          `;
+            })
+            .join("");
+        }
+
+        // 🟢 NEW: Delete Staff Function
+        async deleteStaff(id, name) {
+          if (
+            !confirm(
+              `⚠️ ARE YOU SURE?\n\nYou are about to permanently delete the account for "${name}".\nThis action cannot be undone.`
+            )
+          ) {
+            return;
+          }
+
+          try {
+            const response = await makeAuthenticatedRequest(
+              `/api/admin/delete-staff/${id}`,
+              {
+                method: "DELETE",
+              }
+            );
+
+            const result = await response.json();
+
+            if (result.success) {
+              showNotification(
+                "Staff account deleted successfully.",
+                "success"
+              );
+              this.loadAllStaff(); // Refresh the list immediately
+            } else {
+              alert("Failed to delete: " + result.message);
+            }
+          } catch (error) {
+            console.error("Delete error:", error);
+            alert("An error occurred while deleting the account.");
+          }
+        }
+
+        openEditModal(staff) {
+          document.getElementById("editStaffId").value = staff.id;
+          document.getElementById("editStaffName").value = staff.full_name;
+          document.getElementById("editStaffEmail").value = staff.email;
+          document.getElementById("editStaffPhone").value = staff.phone || "";
+          document.getElementById("editStaffDept").value =
+            staff.department || "";
+          document.getElementById("editStaffRole").value = staff.role;
+          document.getElementById("editStaffPassword").value = ""; // Reset password field
+
+          toggleModal("editStaffModal");
+        }
+
+        async updateStaff() {
+          const id = document.getElementById("editStaffId").value;
+          const data = {
+            id: id,
+            full_name: document.getElementById("editStaffName").value,
+            email: document.getElementById("editStaffEmail").value,
+            phone: document.getElementById("editStaffPhone").value,
+            department: document.getElementById("editStaffDept").value,
+            role: document.getElementById("editStaffRole").value,
+            password: document.getElementById("editStaffPassword").value,
+          };
+
+          try {
+            const response = await makeAuthenticatedRequest(
+              "/api/admin/update-staff-account",
+              {
+                method: "POST",
+                body: JSON.stringify(data),
+              }
+            );
+            const result = await response.json();
+
+            if (result.success) {
+              showNotification("Staff updated successfully");
+              toggleModal("editStaffModal");
+              this.loadAllStaff(); // Reload list
+            } else {
+              alert(result.message);
+            }
+          } catch (error) {
+            alert("Update failed");
+          }
+        }
+      }
+      // Initialize global instance
+      const staffManager = new StaffManager();
+
+      // Function to handle Super Admin registering new staff
+      async function submitNewStaffRegistration() {
+        // 1. Gather Data
+        const lastName = document.getElementById("regLastName").value;
+        const firstName = document.getElementById("regFirstName").value;
+        const middleInitial = document.getElementById("regMiddleInitial").value;
+        const phone = document.getElementById("regPhone").value;
+        const sex = document.getElementById("regSex").value;
+        const email = document.getElementById("regEmail").value;
+        const address = document.getElementById("regAddress").value;
+        const password = document.getElementById("regPassword").value;
+        const confirmPassword =
+          document.getElementById("regConfirmPassword").value;
+
+        // 2. Validate
+        if (
+          !lastName ||
+          !firstName ||
+          !phone ||
+          !sex ||
+          !email ||
+          !address ||
+          !password
+        ) {
+          alert("Please fill in all required fields.");
+          return;
+        }
+
+        if (password !== confirmPassword) {
+          alert("Passwords do not match.");
+          return;
+        }
+
+        // Construct full name automatically
+        const fullName = `${firstName} ${
+          middleInitial ? middleInitial + ". " : ""
+        }${lastName}`.trim();
+
+        const payload = {
+          lastName,
+          firstName,
+          middleInitial,
+          phone,
+          sex,
+          email,
+          address,
+          password,
+          full_name: fullName,
+        };
+
+        // 3. Send to API (using Authenticated Request)
+        try {
+          const response = await makeAuthenticatedRequest(
+            "/api/admin/register",
+            {
+              method: "POST",
+              body: JSON.stringify(payload),
+            }
+          );
+
+          const result = await response.json();
+
+          if (result.success) {
+            showNotification("Staff account created successfully!", "success");
+            toggleModal("registerStaffModal");
+
+            // Clear Form
+            document.getElementById("dashboardRegisterForm").reset();
+
+            // Refresh the staff list immediately
+            if (typeof staffManager !== "undefined") {
+              staffManager.loadAllStaff();
+            }
+          } else {
+            alert("Error: " + result.message);
+          }
+        } catch (error) {
+          console.error("Registration error:", error);
+          alert("Failed to register staff. See console for details.");
+        }
+      }
+
       // Queue Manager
       class QueueManager {
         constructor() {
@@ -2517,118 +3227,324 @@
         }
 
         renderQueueDashboard() {
-          this.renderCurrentRequest();
-          this.renderPriorityQueue();
-          this.renderRegularQueue();
-          this.renderProcessingQueue();
+          this.renderNowServing(); // Renamed from renderCurrentRequest
+          this.renderNewRequests();
+          this.renderAllProcessing(); // <--- 🟢 ADD THIS LINE 🟢
         }
 
-        renderCurrentRequest() {
-          const currentProcessing = this.queues.processing[0];
-          const currentRequestCard =
-            document.getElementById("currentRequestCard");
+        // 🟢 NEW FUNCTION: Opens the modal with details 🟢
+        showWindowDetails(windowName) {
+          // 1. Filter requests for this window
+          const cleanString = (str) =>
+            String(str || "")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase();
+          const targetKey = cleanString(windowName);
 
-          if (!currentRequestCard) return;
+          const requests = this.queues.processing.filter(
+            (req) => cleanString(req.window_number) === targetKey
+          );
 
-          if (!currentProcessing) {
-            currentRequestCard.innerHTML = `
-                    <div class="card-header">
-                        <div>
-                            <span class="card-title">Current Request</span>
-                            <span class="badge inactive">No Active Request</span>
-                        </div>
-                    </div>
-                    <div class="empty-state">
-                        <div style="text-align: center; padding: 40px; color: #999;">
-                            <div style="font-size: 3rem;">📋</div>
-                            <p style="margin-top: 10px;">No request is currently being processed.</p>
-                        </div>
-                    </div>
-                    <div class="button-group">
-                        <button class="btn btn-primary" onclick="queueManager.processNextInQueue()" style="width: 100%;">
-                            Process Next in Queue
-                        </button>
-                    </div>
-                `;
+          // 2. Get Modal Elements
+          const modalTitle = document.getElementById("windowDetailsTitle");
+          const modalList = document.getElementById("windowDetailsList");
+
+          if (modalTitle)
+            modalTitle.innerHTML = `<i class="bi bi-display me-2"></i> ${windowName} Status`;
+
+          // 3. Populate Modal Content
+          if (modalList) {
+            if (requests.length === 0) {
+              // Idle State
+              modalList.innerHTML = `
+                              <div class="text-center py-5 text-muted bg-white rounded shadow-sm">
+                                  <i class="bi bi-cup-hot display-1 text-secondary opacity-25"></i>
+                                  <h4 class="mt-3 fw-bold">Currently Idle</h4>
+                                  <p class="mb-0">This window is ready to serve.</p>
+                              </div>
+                          `;
+            } else {
+              // Active Processing State
+              modalList.innerHTML = requests
+                .map((req) => {
+                  const services = Array.isArray(req.services)
+                    ? req.services
+                    : [];
+                  return `
+                              <div class="card border-0 shadow-sm mb-3 animate__animated animate__fadeIn">
+                                  <div class="card-body border-start border-5 border-primary rounded-start">
+                                      <div class="d-flex justify-content-between align-items-start mb-2">
+                                          <div>
+                                              <h5 class="fw-bold mb-0 text-dark">${this.escapeHtml(
+                                                req.user_name
+                                              )}</h5>
+                                              <small class="text-muted">Student ID: ${this.escapeHtml(
+                                                req.student_id || "N/A"
+                                              )}</small>
+                                          </div>
+                                          <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">${this.escapeHtml(
+                                            req.queue_number
+                                          )}</span>
+                                      </div>
+
+                                      <div class="p-2 bg-light rounded mt-3">
+                                          <div class="d-flex align-items-center text-secondary small mb-1">
+                                              <i class="bi bi-gear-wide-connected me-2"></i> Service:
+                                          </div>
+                                          <div class="fw-semibold text-dark">${services.join(
+                                            ", "
+                                          )}</div>
+                                      </div>
+
+                                      <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                                          <small class="text-muted">
+                                              <i class="bi bi-clock me-1"></i> Started: ${new Date(
+                                                req.started_at
+                                              ).toLocaleTimeString()}
+                                          </small>
+                                          <span class="badge bg-warning text-dark">In Progress</span>
+                                      </div>
+                                  </div>
+                              </div>
+                              `;
+                })
+                .join("");
+            }
+          }
+
+          // 4. Show Modal
+          const modalEl = document.getElementById("windowDetailsModal");
+          if (modalEl) {
+            const modal = new bootstrap.Modal(modalEl);
+            modal.show();
+          }
+        }
+
+        renderAllProcessing() {
+          const container = document.getElementById("all-processing-list");
+          const noRequestsMsg = document.getElementById("no-processing-msg");
+
+          const processingRequests = this.queues.processing || [];
+
+          if (processingRequests.length === 0) {
+            container.innerHTML = "";
+            if (noRequestsMsg) noRequestsMsg.style.display = "block";
             return;
           }
 
-          const isPriority = currentProcessing.is_priority;
-          const services = Array.isArray(currentProcessing.services)
-            ? currentProcessing.services
-            : [];
+          if (noRequestsMsg) noRequestsMsg.style.display = "none";
 
-          const processingTime = this.getProcessingTime(
-            currentProcessing.started_at
+          // Clean string helper
+          const cleanString = (str) =>
+            String(str || "")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase();
+
+          container.innerHTML =
+            `<div class="active-requests-container">` +
+            processingRequests
+              .map((request) => {
+                const services = Array.isArray(request.services)
+                  ? request.services
+                  : [];
+                const processingTime = this.getProcessingTime(
+                  request.started_at
+                );
+                const winKey = cleanString(request.window_number);
+
+                // Styling Classes
+                let winClass = "win-grey";
+                let badgeClass = "bg-secondary";
+
+                if (winKey.includes("1")) {
+                  winClass = "win-1";
+                  badgeClass = "bg-primary";
+                } else if (winKey.includes("2")) {
+                  winClass = "win-2";
+                  badgeClass = "bg-warning text-dark";
+                } else if (winKey.includes("3")) {
+                  winClass = "win-3";
+                  badgeClass = "bg-info text-dark";
+                } else if (winKey.includes("4")) {
+                  winClass = "win-4";
+                  badgeClass = "bg-danger";
+                }
+
+                return `
+                      <div class="active-request-row ${winClass}">
+                          <div class="req-queue-num">${this.escapeHtml(
+                            request.queue_number
+                          )}</div>
+
+                          <div class="req-info">
+                              <h6>${this.escapeHtml(request.user_name)}</h6>
+                              <p>${services.join(", ").substring(0, 35)}${
+                  services.join(", ").length > 35 ? "..." : ""
+                }</p>
+                          </div>
+
+                          <div>
+                              <span class="req-window-badge badge ${badgeClass}">${this.escapeHtml(
+                  request.window_number
+                )}</span>
+                          </div>
+
+                          <div class="req-time">
+                              <i class="bi bi-stopwatch me-1"></i>${processingTime}
+                          </div>
+                      </div>
+                    `;
+              })
+              .join("") +
+            `</div>`;
+        }
+
+        // ---------------------------------------------------------
+        // BLOCK 4: Render New Requests (Inside QueueManager)
+        // ---------------------------------------------------------
+        renderNewRequests() {
+          const container = document.getElementById("requests-list");
+          const noRequestsMsg = document.getElementById("no-requests-msg");
+          if (!container || !noRequestsMsg) return;
+
+          const newRequests = [
+            ...(this.queues.priority || []),
+            ...(this.queues.waiting || []),
+          ];
+
+          if (newRequests.length === 0) {
+            container.innerHTML = "";
+            noRequestsMsg.style.display = "block";
+            return;
+          }
+
+          noRequestsMsg.style.display = "none";
+
+          // 🟢 CHECK IF SUPER ADMIN 🟢
+          const isSuperAdmin =
+            currentStaff && currentStaff.role === "super_admin";
+
+          container.innerHTML = newRequests
+            .map((request) => {
+              const services = Array.isArray(request.services)
+                ? request.services
+                : [];
+              const isPriority = request.is_priority;
+              const cardId = `req-${request.queue_id}`;
+
+              // 🟢 DETERMINE BUTTON STYLE 🟢
+              let actionButton = "";
+              if (isSuperAdmin) {
+                // Disabled button for Supervisor
+                actionButton = `<button class="btn btn-sm btn-secondary" disabled style="opacity: 0.6; cursor: not-allowed;">
+                                          <i class="bi bi-eye"></i> View Only
+                                      </button>`;
+              } else {
+                // Normal button for Staff
+                actionButton = `<button class="btn btn-sm btn-primary" onclick="queueManager.startProcessing('${request.queue_id}')">
+                                          <i class="bi bi-person-check-fill me-1"></i> Serve Client
+                                      </button>`;
+              }
+
+              return `
+                  <div class="request-card ${
+                    isPriority ? "priority-card" : ""
+                  }" id="${cardId}">
+                      <div class="card-info">
+                          <span class="student-name">
+                              ${this.escapeHtml(request.user_name)}
+                              <small class="text-muted ms-2">(${this.escapeHtml(
+                                request.queue_number
+                              )})</small>
+                              ${
+                                isPriority
+                                  ? '<span class="badge bg-danger ms-2">Priority</span>'
+                                  : ""
+                              }
+                          </span>
+                          <span class="text-secondary small me-2">
+                              ${services.join(", ").substring(0, 30)}...
+                          </span>
+                      </div>
+                      <div class="card-actions">
+                          ${actionButton} <button class="btn btn-sm btn-secondary ms-2" onclick="queueManager.viewDetails('${
+                request.queue_id
+              }')">
+                              Details
+                          </button>
+                      </div>
+                  </div>
+                  `;
+            })
+            .join("");
+        }
+        renderNowServing() {
+          const myProcessingTicket = (this.queues.processing || []).find(
+            (q) => q.window_number === currentWindow
           );
 
-          currentRequestCard.innerHTML = `
-                <div class="card-header">
-                    <div>
-                        <span class="card-title">Current Request</span>
-                        ${
-                          isPriority
-                            ? '<span class="badge priority">🔴 PRIORITY</span>'
-                            : ""
-                        }
-                        <span class="badge processing">⏱️ Processing (${processingTime})</span>
-                    </div>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Queue Number:</span>
-                    <span class="info-value">${this.escapeHtml(
-                      currentProcessing.queue_number
-                    )}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Full Name:</span>
-                    <span class="info-value">${this.escapeHtml(
-                      currentProcessing.user_name
-                    )}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Student ID:</span>
-                    <span class="info-value">${this.escapeHtml(
-                      currentProcessing.student_id || "N/A"
-                    )}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Services:</span>
-                    <span class="info-value">${services.join(", ")}</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Started:</span>
-                    <span class="info-value">${new Date(
-                      currentProcessing.started_at
-                    ).toLocaleTimeString()}</span>
-                </div>
-                ${
-                  isPriority
-                    ? `
-                    <div class="alert-box">
-                        ℹ️ <strong>Priority Service:</strong> This request is prioritized.
-                    </div>
-                `
-                    : ""
-                }
-                <div class="action-buttons">
-                    <button class="btn btn-primary" onclick="queueManager.notifyStudent('${
-                      currentProcessing.queue_id
-                    }')">
-                        🔔 Notify Student
-                    </button>
-                    <button class="btn btn-success" onclick="queueManager.markAsDone('${
-                      currentProcessing.queue_id
-                    }')">
-                        ✓ Mark as Done
-                    </button>
-                    <button class="btn btn-secondary" onclick="queueManager.transferToStaff('${
-                      currentProcessing.queue_id
-                    }')">
-                        👥 Transfer
-                    </button>
-                </div>
-            `;
+          const container = document.getElementById(
+            "current-serving-container"
+          ); // You need to update the HTML ID below too
+
+          if (!currentWindow) {
+            // Default "Select Window" state
+            // (Keep your existing simple logic or update to new style if you prefer)
+            return;
+          }
+
+          if (!myProcessingTicket) {
+            // Idle State
+            container.innerHTML = `
+                      <div class="now-serving-card text-center py-4">
+                          <div class="text-muted opacity-50 mb-2">
+                              <i class="bi bi-cup-hot fs-1"></i>
+                          </div>
+                          <h4 class="text-secondary fw-bold">Window ${currentWindow} is Idle</h4>
+                          <p class="text-muted small mb-0">Waiting for next client...</p>
+                      </div>
+                   `;
+          } else {
+            // Active State
+            const services = Array.isArray(myProcessingTicket.services)
+              ? myProcessingTicket.services
+              : [];
+
+            container.innerHTML = `
+                      <div class="now-serving-card animate__animated animate__fadeIn">
+                          <div class="now-serving-header">
+                              <span class="serving-status-badge">
+                                  <span class="spinner-grow spinner-grow-sm text-success" role="status"></span>
+                                  Serving Now
+                              </span>
+                              <span class="badge bg-primary fs-6 px-3 py-2 rounded-pill">
+                                  ${this.escapeHtml(
+                                    myProcessingTicket.queue_number
+                                  )}
+                              </span>
+                          </div>
+                          <div class="serving-body">
+                              <div class="serving-client-name">${this.escapeHtml(
+                                myProcessingTicket.user_name
+                              )}</div>
+                              <div class="serving-meta">
+                                  <span><i class="bi bi-person-badge"></i> ${this.escapeHtml(
+                                    myProcessingTicket.student_id
+                                  )}</span>
+                                  <span><i class="bi bi-clock"></i> Started: ${new Date(
+                                    myProcessingTicket.started_at
+                                  ).toLocaleTimeString()}</span>
+                              </div>
+                              <div class="p-2 bg-light rounded border border-light">
+                                  <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Services</small>
+                                  <div class="text-dark fw-medium mt-1">
+                                      ${this.escapeHtml(services.join(", "))}
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                   `;
+          }
         }
 
         renderProcessingQueue() {
@@ -2645,12 +3561,12 @@
 
           if (processingQueues.length === 0) {
             container.innerHTML = `
-                    <div class="empty-state">
-                        <div style="text-align: center; padding: 20px; color: #999;">
-                            No requests currently processing
-                        </div>
-                    </div>
-                `;
+                          <div class="empty-state">
+                              <div style="text-align: center; padding: 20px; color: #999;">
+                                  No requests currently processing
+                              </div>
+                          </div>
+                      `;
             return;
           }
 
@@ -2663,207 +3579,58 @@
               const isCurrent = index === 0;
 
               return `
-                    <div class="queue-item ${
-                      isCurrent ? "queue-item-processing" : ""
-                    }" style="padding: 15px; border-bottom: 1px solid #eee; ${
+                          <div class="queue-item ${
+                            isCurrent ? "queue-item-processing" : ""
+                          }" style="padding: 15px; border-bottom: 1px solid #eee; ${
                 !isCurrent ? "opacity: 0.7;" : ""
               }">
-                        <div class="queue-header" style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                            <div>
-                                <strong>${this.escapeHtml(
-                                  queue.queue_number
-                                )}</strong>
-                                ${
-                                  queue.is_priority
-                                    ? '<span class="status-badge" style="background: #d32f2f; margin-left: 8px;">PRIORITY</span>'
-                                    : ""
-                                }
-                                ${
-                                  isCurrent
-                                    ? '<span class="status-badge status-processing">CURRENT</span>'
-                                    : '<span class="status-badge status-waiting">NEXT</span>'
-                                }
-                            </div>
-                            <div style="text-align: right;">
-                                <div style="font-size: 12px; color: #666;">${processingTime}</div>
-                            </div>
-                        </div>
-                        <div style="font-size: 14px; margin-bottom: 5px;">${this.escapeHtml(
-                          queue.user_name
-                        )}</div>
-                        <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
-                            ${services.slice(0, 2).join(", ")}${
+                              <div class="queue-header" style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                  <div>
+                                      <strong>${this.escapeHtml(
+                                        queue.queue_number
+                                      )}</strong>
+                                      ${
+                                        queue.is_priority
+                                          ? '<span class="status-badge" style="background: #d32f2f; margin-left: 8px;">PRIORITY</span>'
+                                          : ""
+                                      }
+                                      ${
+                                        isCurrent
+                                          ? '<span class="status-badge status-processing">CURRENT</span>'
+                                          : '<span class="status-badge status-waiting">NEXT</span>'
+                                      }
+                                  </div>
+                                  <div style="text-align: right;">
+                                      <div style="font-size: 12px; color: #666;">${processingTime}</div>
+                                  </div>
+                              </div>
+                              <div style="font-size: 14px; margin-bottom: 5px;">${this.escapeHtml(
+                                queue.user_name
+                              )}</div>
+                              <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+                                  ${services.slice(0, 2).join(", ")}${
                 services.length > 2 ? ` +${services.length - 2} more` : ""
               }
-                        </div>
-                        <div class="action-buttons">
-                            ${
-                              !isCurrent
-                                ? `
-                                <button class="btn btn-sm btn-primary" onclick="queueManager.makeCurrent('${queue.queue_id}')">Make Current</button>
-                            `
-                                : ""
-                            }
-                            <button class="btn btn-sm btn-success" onclick="queueManager.markAsDone('${
-                              queue.queue_id
-                            }')">Complete</button>
-                            <button class="btn btn-sm btn-warning" onclick="queueManager.notifyStudent('${
-                              queue.queue_id
-                            }')">Notify</button>
-                        </div>
-                    </div>
-                `;
+                              </div>
+                              <div class="action-buttons">
+                                  ${
+                                    !isCurrent
+                                      ? `
+                                      <button class="btn btn-sm btn-primary" onclick="queueManager.makeCurrent('${queue.queue_id}')">Make Current</button>
+                                  `
+                                      : ""
+                                  }
+                                  <button class="btn btn-sm btn-success" onclick="queueManager.markAsDone('${
+                                    queue.queue_id
+                                  }')">Complete</button>
+                                  <button class="btn btn-sm btn-warning" onclick="queueManager.notifyStudent('${
+                                    queue.queue_id
+                                  }')">Notify</button>
+                              </div>
+                          </div>
+                      `;
             })
             .join("");
-        }
-
-        renderPriorityQueue() {
-          const priorityQueueCard = document.getElementById(
-            "priorityQueueContainer"
-          );
-          if (!priorityQueueCard) return;
-
-          const priorityQueues = this.queues.priority || [];
-
-          priorityQueueCard.innerHTML = `
-    <div class="card-header-priority">
-      <span class="card-title">❤️ Priority Queue</span>
-      <span class="badge priority">${priorityQueues.length} priority</span>
-    </div>
-    <div class="priority-queue-list" style="padding: 0 20px;">
-      ${priorityQueues
-        .map((queue) => {
-          const services = Array.isArray(queue.services) ? queue.services : [];
-          return `
-            <div class="queue-card" onclick="queueManager.startProcessing('${
-              queue.queue_id
-            }')" style="cursor: pointer; padding: 12px; border-bottom: 1px solid #f0f0f0;">
-              <div class="queue-header" style="display: flex; justify-content: space-between; align-items: start;">
-                <span class="queue-id">${this.escapeHtml(
-                  queue.queue_number
-                )}</span>
-                <span class="queue-status" style="text-align: right;">
-                  ${services[0] || "Service"}<br />
-                  <small style="color: #999">${new Date(
-                    queue.submitted_at
-                  ).toLocaleTimeString()}</small>
-                </span>
-              </div>
-              <div style="font-size: 14px; color: #666; margin-top: 5px;">
-                ${this.escapeHtml(queue.user_name)}
-              </div>
-              <div style="font-size: 12px; color: #999;">
-                ${this.escapeHtml(queue.student_id || "N/A")}
-              </div>
-              <div class="action-buttons" style="margin-top: 8px;">
-                <button class="btn btn-sm btn-outline-secondary" onclick="event.stopPropagation(); queueManager.moveToRegular('${
-                  queue.queue_id
-                }')">
-                  Move to Regular
-                </button>
-                <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); queueManager.viewDetails('${
-                  queue.queue_id
-                }')">
-                  Details
-                </button>
-              </div>
-            </div>
-          `;
-        })
-        .join("")}
-      ${
-        priorityQueues.length === 0
-          ? `
-        <div class="empty-state">
-          <div style="text-align: center; padding: 20px; color: #999;">
-            No priority requests
-          </div>
-        </div>
-      `
-          : ""
-      }
-    </div>
-  `;
-          this.updateQueueStats();
-        }
-
-        renderRegularQueue() {
-          const regularQueueCard = document.getElementById(
-            "regularQueueContainer"
-          );
-          if (!regularQueueCard) return;
-
-          const regularQueues = this.queues.waiting || [];
-
-          regularQueueCard.innerHTML = `
-    <div class="regular-queue-list" style="padding: 0 20px;">
-      ${regularQueues
-        .map((queue) => {
-          const services = Array.isArray(queue.services) ? queue.services : [];
-          return `
-            <div class="queue-card" onclick="queueManager.startProcessing('${
-              queue.queue_id
-            }')" style="cursor: pointer; padding: 12px; border-bottom: 1px solid #f0f0f0;">
-              <div class="queue-header" style="display: flex; justify-content: space-between; align-items: start;">
-                <span class="queue-id">${this.escapeHtml(
-                  queue.queue_number
-                )}</span>
-                <span class="queue-status" style="text-align: right;">
-                  ${services[0] || "Service"}<br />
-                  <small style="color: #999">${new Date(
-                    queue.submitted_at
-                  ).toLocaleTimeString()}</small>
-                </span>
-              </div>
-              <div style="font-size: 14px; color: #666; margin-top: 5px;">
-                ${this.escapeHtml(queue.user_name)}
-              </div>
-              <div style="font-size: 12px; color: #999;">
-                ${this.escapeHtml(queue.student_id || "N/A")}
-              </div>
-              <div class="action-buttons" style="margin-top: 8px;">
-                <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation(); queueManager.makePriority('${
-                  queue.queue_id
-                }')">
-                  Make Priority
-                </button>
-                <button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation(); queueManager.viewDetails('${
-                  queue.queue_id
-                }')">
-                  Details
-                </button>
-              </div>
-            </div>
-          `;
-        })
-        .join("")}
-      ${
-        regularQueues.length === 0
-          ? `
-        <div class="empty-state">
-          <div style="text-align: center; padding: 20px; color: #999;">
-            No regular requests in queue
-          </div>
-        </div>
-      `
-          : ""
-      }
-    </div>
-    <div class="next-serve" style="padding: 15px 20px; border-top: 1px solid #f0f0f0; background: #f9f9f9;">
-      Next to serve: <strong>${this.getNextToServe()}</strong>
-    </div>
-  `;
-          // Update badge in header
-          const badge = document
-            .getElementById("regularQueueContainer")
-            .parentElement.parentElement.querySelector(
-              ".card-header .badge.waiting"
-            );
-          if (badge) {
-            badge.textContent =
-              regularQueues.length +
-              (regularQueues.length === 1 ? " waiting" : " waiting");
-          }
         }
 
         getProcessingTime(startedAt) {
@@ -2888,58 +3655,104 @@
           return "No pending requests";
         }
 
+        // 🟢 UPDATED: Makes cards clickable and shows status 🟢
         updateQueueStats() {
+          // 1. Calculate Sidebar Total
           const waitingCount = (this.queues.waiting || []).length;
           const processingCount = (this.queues.processing || []).length;
-          const readyCount = (this.queues.ready || []).length; // Added: Handle ready queues if API provides them
           const completedCount = (this.queues.completed || []).length;
           const priorityCount = (this.queues.priority || []).length;
-
-          // Calculate total today's requests (sum of all queues)
           const totalCount =
-            waitingCount +
-            processingCount +
-            readyCount +
-            completedCount +
-            priorityCount;
+            waitingCount + processingCount + completedCount + priorityCount;
 
-          // Update top stat cards (existing)
-          const waitingEl = document.getElementById("waitingCount");
-          const processingEl = document.getElementById("processingCount");
-          const readyEl = document.getElementById("readyCount"); // Added: Update ready count
-          const completedEl = document.getElementById("completedCount");
-          const priorityEl = document.getElementById("priorityCount");
-
-          if (waitingEl) waitingEl.textContent = waitingCount;
-          if (processingEl) processingEl.textContent = processingCount;
-          if (readyEl) readyEl.textContent = readyCount;
-          if (completedEl) completedEl.textContent = completedCount;
-          if (priorityEl) priorityEl.textContent = priorityCount;
-
-          // Sync Total Today's Request (sidebar and reports)
           const sidebarTotalEl = document.getElementById("totalRequestsToday");
-          const reportsTotalEl = document.getElementById(
-            "totalRequestsSummary"
-          );
           if (sidebarTotalEl) sidebarTotalEl.textContent = totalCount;
-          if (reportsTotalEl) reportsTotalEl.textContent = totalCount;
 
-          // Sync Completed in reports (new card)
-          const reportsCompletedEl =
-            document.getElementById("completedSummary");
-          if (reportsCompletedEl)
-            reportsCompletedEl.textContent = completedCount;
+          // 2. Determine Status
+          const windowStatus = {
+            window1: false,
+            window2: false,
+            window3: false,
+            window4: false,
+          };
 
-          // Also update Regular Queue badge (existing, no change)
-          const regularBadge = document
-            .getElementById("regularQueueContainer")
-            .parentElement.parentElement.querySelector(
-              ".card-header .badge.waiting"
-            );
-          if (regularBadge) {
-            regularBadge.textContent =
-              waitingCount + (waitingCount === 1 ? " waiting" : " waiting");
-          }
+          const cleanString = (str) =>
+            String(str || "")
+              .replace(/[^a-zA-Z0-9]/g, "")
+              .toLowerCase();
+
+          (this.queues.processing || []).forEach((ticket) => {
+            const winKey = cleanString(ticket.window_number);
+            if (windowStatus.hasOwnProperty(winKey)) {
+              windowStatus[winKey] = true;
+            }
+          });
+
+          // 3. Update Cards & Add Click Listeners
+          const windows = [
+            {
+              key: "window1",
+              id: "win1-count",
+              colorClass: "text-primary",
+              name: "Window 1",
+            },
+            {
+              key: "window2",
+              id: "win2-count",
+              colorClass: "text-warning",
+              name: "Window 2",
+            },
+            {
+              key: "window3",
+              id: "win3-count",
+              colorClass: "text-info",
+              name: "Window 3",
+            },
+            {
+              key: "window4",
+              id: "win4-count",
+              colorClass: "text-danger",
+              name: "Window 4",
+            },
+          ];
+
+          windows.forEach((win) => {
+            const isBusy = windowStatus[win.key];
+            const element = document.getElementById(win.id);
+
+            if (element) {
+              // 🟢 Make the Card Clickable 🟢
+              const card = element.closest(".card");
+              if (card) {
+                card.style.cursor = "pointer";
+                card.style.transition = "transform 0.2s, box-shadow 0.2s";
+
+                // Add hover effect via JS
+                card.onmouseover = () => {
+                  card.style.transform = "translateY(-5px)";
+                  card.style.boxShadow = "0 10px 20px rgba(0,0,0,0.1)";
+                };
+                card.onmouseout = () => {
+                  card.style.transform = "translateY(0)";
+                  card.style.boxShadow = "none";
+                };
+
+                // Add Click Event
+                card.onclick = () => this.showWindowDetails(win.name);
+              }
+
+              // Update Text Status
+              if (isBusy) {
+                element.textContent = "Processing";
+                element.className = `fw-bold mb-0 ${win.colorClass}`;
+                element.style.fontSize = "1.5rem";
+              } else {
+                element.textContent = "Idle";
+                element.className = "fw-bold mb-0 text-muted";
+                element.style.fontSize = "2rem";
+              }
+            }
+          });
         }
 
         // New methods for enhanced functionality
@@ -3051,27 +3864,76 @@
         }
 
         async startProcessing(queueId) {
-          if (!confirm("Start processing this request?")) return;
+          // 1. Check Window Assignment
+          if (!currentWindow) {
+            currentWindow = localStorage.getItem("assignedWindow");
+            if (!currentWindow) {
+              alert(
+                "You must select a Window (1-4) before serving clients. Please refresh."
+              );
+              checkWindowAssignment();
+              return;
+            }
+          }
+
+          // 🟢 2. OPTIMISTIC UPDATE: Remove the card IMMEDIATELY 🟢
+          // This prevents double-clicking and makes the UI feel instant.
+          const cardToRemove = document.getElementById(`req-${queueId}`);
+          if (cardToRemove) {
+            // Visual fade out
+            cardToRemove.style.transition = "all 0.3s ease";
+            cardToRemove.style.opacity = "0";
+            cardToRemove.style.transform = "translateX(20px)";
+
+            // Remove from HTML after animation
+            setTimeout(() => {
+              if (cardToRemove.parentNode) cardToRemove.remove();
+            }, 300);
+          }
 
           try {
+            // 3. Call Backend
             const response = await makeAuthenticatedRequest(
               "/api/admin/start-processing",
               {
                 method: "POST",
-                body: JSON.stringify({ queueId }),
+                body: JSON.stringify({
+                  queueId: queueId,
+                  windowNumber: currentWindow,
+                }),
               }
             );
 
             const result = await response.json();
+
             if (result.success) {
-              showNotification("Processing started!");
+              showNotification(`Success! Now Serving at ${currentWindow}`);
               await this.loadQueues();
+              this.renderNowServing();
             } else {
-              alert("Error: " + result.message);
+              // 🟢 FIX: Handle "Already Taken" gracefully 🟢
+              console.warn("Server response:", result.message);
+
+              // Refresh the list to remove the ghost card
+              await this.loadQueues();
+              this.renderQueueDashboard();
+
+              // Show a nice warning so the user knows why it disappeared
+              if (result.message.toLowerCase().includes("already")) {
+                showNotification(
+                  "This request was just taken by another window.",
+                  "warning"
+                );
+              } else {
+                alert("System Update: " + result.message);
+              }
             }
           } catch (error) {
             console.error("Error starting processing:", error);
-            alert("Error starting processing. Please try again.");
+            // If network fails, put the card back by refreshing
+            await this.loadQueues();
+            this.renderQueueDashboard();
+            alert("Connection error. Please try again.");
           }
         }
 
@@ -3113,9 +3975,21 @@
 
             const result = await response.json();
             if (result.success) {
-              // ✅ FIXED: Simplified notification - no automatic next queue
               showNotification("Request completed successfully!");
+
+              // 1. Refresh Queue Data (Moves item from 'Processing' to 'Completed')
               await this.loadQueues();
+
+              // ------------------------------------------------------------
+              // 🟢 CRITICAL FIX: Refresh Service Request Page UI 🟢
+              // ------------------------------------------------------------
+              if (typeof serviceRequestManager !== "undefined") {
+                // This removes the card from the "Now Serving" list in the Service Request tab
+                serviceRequestManager.renderRequests();
+                // This updates the "History" list immediately
+                serviceRequestManager.updateStats();
+              }
+              // ------------------------------------------------------------
             } else {
               alert("Error: " + result.message);
             }
@@ -3178,6 +4052,46 @@
             const element = document.getElementById(stat);
             if (element) element.textContent = "0";
           });
+        }
+
+        // 🟢 UPDATED: Handles assigning a new request to a specific window
+        async startProcessingFromList(queueId, windowNumber) {
+          if (
+            !confirm(`Start serving this client and assign to ${windowNumber}?`)
+          )
+            return;
+
+          // Optional Check: Is the *target* window already serving someone? (This logic is usually handled better server-side, but client-side is faster for UX)
+          // If the current admin's window is the target window, let them decide if they want to override the current request.
+          // For simplicity, we'll allow assigning, and the backend's sorting will determine who is truly "Now Serving".
+
+          try {
+            const response = await makeAuthenticatedRequest(
+              "/api/admin/start-processing",
+              {
+                method: "POST",
+                body: JSON.stringify({
+                  queueId: queueId,
+                  windowNumber: windowNumber,
+                }),
+              }
+            );
+
+            const result = await response.json();
+            if (result.success) {
+              showNotification(`Processing started at ${windowNumber}!`);
+              await this.loadQueues(); // Refresh all lists
+
+              // 🟢 CRITICAL FIX: Explicitly check and update Now Serving if the target window is *this* admin's window.
+              if (currentWindow === windowNumber) {
+                this.renderNowServing();
+              }
+            } else {
+              alert("Error: " + result.message);
+            }
+          } catch (error) {
+            alert("Error starting processing. Please try again.");
+          }
         }
       }
 
@@ -3255,115 +4169,19 @@
 
       // Enhanced auto-refresh with error handling
       function setupEnhancedAutoRefresh() {
-        // Refresh queue data every 5 seconds (runs in background)
+        // 🟢 FIX: Change 5000 (5s) to 1500 (1.5s) 🟢
+        // This makes the request disappear from other windows almost instantly.
         setInterval(() => {
           if (!isQueuePaused) {
-            // We removed the page check so this always runs,
-            // updating stats like "Total Requests Today".
             queueManager.loadQueues();
           }
-        }, 5000); // You can keep this at 5s, or change to 10s (10000) if 5s is too frequent
+        }, 1500);
 
-        // Refresh service requests every 30 seconds (runs in background)
+        // Refresh service requests every 15 seconds (was 30s)
         setInterval(() => {
-          // We removed the page check so this always runs,
-          // updating the notification dot.
           serviceRequestManager.loadServiceRequests();
-        }, 30000); // 30s is good, but you can make it 15s (15000) if you want it faster
+        }, 15000);
       }
-
-      // Initialize with enhanced features
-      document.addEventListener("DOMContentLoaded", function () {
-        console.log("Admin dashboard initialized with enhanced features");
-
-        // Initialize managers
-        serviceRequestManager = new ServiceRequestManager();
-        queueManager = new QueueManager();
-        // Pre-load data in the background on page load
-        serviceRequestManager.loadServiceRequests();
-        queueManager.loadQueues();
-
-        // Set up navigation
-        setupNavigation();
-
-        // Show initial page
-        showPage("queue");
-
-        // Load preferences
-        loadPreferences();
-
-        // Set up enhanced auto-refresh
-        setupEnhancedAutoRefresh();
-      });
-
-      // Manual Queue Entry Handler
-      // Manual Queue Entry Handler (Fixed: Null-safe)
-      document
-        .getElementById("manualQueueForm")
-        ?.addEventListener("submit", async (e) => {
-          e.preventDefault();
-
-          const name = document.getElementById("manualName")?.value?.trim();
-          const studentId = document
-            .getElementById("manualStudentId")
-            ?.value?.trim();
-          const course = document.getElementById("manualCourse")?.value?.trim();
-          const yearLevel = document.getElementById("manualYearLevel")?.value;
-          const servicesJson = document.getElementById("manualService")?.value;
-
-          if (!name || !studentId || !course || !yearLevel || !servicesJson) {
-            alert("Please fill in all fields.");
-            return;
-          }
-
-          try {
-            const response = await makeAuthenticatedRequest(
-              "/api/admin/manual-queue-entry",
-              {
-                method: "POST",
-                body: JSON.stringify({
-                  user_name: name,
-                  student_id: studentId,
-                  course: course,
-                  year_level: yearLevel,
-                  services: servicesJson,
-                  total_amount: 0.0,
-                }),
-              }
-            );
-
-            const result = await response.json();
-
-            if (result.success) {
-              showNotification(
-                `${name} added to queue as ${result.queueNumber}`
-              );
-              document.getElementById("manualQueueForm")?.reset();
-
-              // Null-safe collapse (fixes the error)
-              const collapseElement =
-                document.getElementById("manualEntryForm");
-              if (collapseElement) {
-                collapseElement.classList.remove("show");
-              } else {
-                console.warn("Collapse element not found - skipping hide");
-              }
-
-              queueManager.loadQueues(); // Refresh queue
-            } else {
-              alert("Error: " + result.message);
-            }
-          } catch (error) {
-            console.error("Manual queue entry failed:", error);
-            alert(
-              `Failed to add to queue: ${
-                error.message || "Check console for details."
-              }`
-            );
-          }
-        });
-      // ⬇️ ADD THESE TWO NEW FUNCTIONS ⬇️
-
       /**
        * Populates the 'Queue Report History' list on the Reports page.
        * For now, it just checks for today's completed requests.
@@ -3387,19 +4205,19 @@
           });
 
           container.innerHTML = `
-          <h2 class="history-title">Queue Report History</h2>
-          <div class="history-item" onclick="showReportDetail('today')">
-            <span class="history-day">Today's Report</span>
-            <span class="history-date">${day}, ${date}</span>
-          </div>
-          `;
+                <h2 class="history-title">Queue Report History</h2>
+                <div class="history-item" onclick="showReportDetail('today')">
+                  <span class="history-day">Today's Report</span>
+                  <span class="history-date">${day}, ${date}</span>
+                </div>
+                `;
         } else {
           container.innerHTML = `
-          <h2 class="history-title">Queue Report History</h2>
-          <div class="history-item empty" style="text-align: center; color: #999; padding: 20px 0;">
-            No completed requests for today.
-          </div>
-        `;
+                <h2 class="history-title">Queue Report History</h2>
+                <div class="history-item empty" style="text-align: center; color: #999; padding: 20px 0;">
+                  No completed requests for today.
+                </div>
+              `;
         }
       }
 
@@ -3482,11 +4300,11 @@
         let count = 0;
         serviceSummary.forEach((count, serviceName) => {
           gridHtml += `
-          <div class="service-item">
-            <span class="service-name">${serviceName}:</span>
-            <span class="service-count">${count}</span>
-          </div>
-        `;
+                <div class="service-item">
+                  <span class="service-name">${serviceName}:</span>
+                  <span class="service-count">${count}</span>
+                </div>
+              `;
           count++;
           // Split into two columns
           if (count % 5 === 0 && count < serviceSummary.size) {
@@ -3508,25 +4326,27 @@
 
         requestsByService.forEach((requests, serviceName) => {
           tableHtml += `
-          <div class="table-section">
-            <div class="table-header-title">${serviceName}</div>
-            <div class="table-row header-row">
-              <div class="table-cell header">Name</div>
-              <div class="table-cell header">Year/Course</div>
-              <div class="table-cell header">Student ID</div>
-            </div>
-        `;
+                <div class="table-section">
+                  <div class="table-header-title">${serviceName}</div>
+                  <div class="table-row header-row">
+                    <div class="table-cell header">Name</div>
+                    <div class="table-cell header">Year/Course</div>
+                    <div class="table-cell header">Student ID</div>
+                  </div>
+              `;
 
           requests.forEach((req) => {
             tableHtml += `
-            <div class="table-row">
-              <div class="table-cell">${escape(req.user_name)}</div>
-              <div class="table-cell">${escape(req.course || "N/A")} - ${escape(
-              req.year_level || "N/A"
-            )}</div>
-              <div class="table-cell">${escape(req.student_id || "N/A")}</div>
-            </div>
-          `;
+                  <div class="table-row">
+                    <div class="table-cell">${escape(req.user_name)}</div>
+                    <div class="table-cell">${escape(
+                      req.course || "N/A"
+                    )} - ${escape(req.year_level || "N/A")}</div>
+                    <div class="table-cell">${escape(
+                      req.student_id || "N/A"
+                    )}</div>
+                  </div>
+                `;
           });
 
           tableHtml += "</div>"; // End table-section
@@ -3537,10 +4357,10 @@
             requestsByService.size > 0
               ? tableHtml
               : `
-          <div style="text-align: center; color: #999; padding: 30px 0;">
-            No detailed request data to display.
-          </div>
-        `;
+                <div style="text-align: center; color: #999; padding: 30px 0;">
+                  No detailed request data to display.
+                </div>
+              `;
         }
       }
       // ⬆️ END OF NEW FUNCTIONS ⬆️
@@ -3576,6 +4396,218 @@
           if (sw) sw.checked = true;
         }
       });
+      // ==========================================
+      // WINDOW ASSIGNMENT LOGIC (PERSISTENCE)
+      // ==========================================
+      let activeWindows = []; // Cache of windows currently in use
+
+      async function checkWindowAssignment() {
+        // 🟢 1. SUPER ADMIN BYPASS 🟢
+        // Check Object OR Local Storage flag
+        let savedWindow = localStorage.getItem("assignedWindow");
+
+        if (
+          (currentStaff && currentStaff.role === "super_admin") ||
+          savedWindow === "Supervisor"
+        ) {
+          console.log("Super Admin: Skipping window selection modal.");
+
+          // Ensure UI is set correctly if we hit the storage check
+          const winDisplay = document.getElementById("currentWindowDisplay");
+          if (winDisplay) winDisplay.textContent = "Supervisor";
+
+          return; // STOP HERE. Do not show modal.
+        }
+
+        const currentWindowDisplay = document.getElementById(
+          "currentWindowDisplay"
+        );
+
+        // 2. Check local storage for regular staff
+        if (savedWindow && savedWindow !== "Supervisor") {
+          currentWindow = savedWindow;
+          updateUIWithWindow(currentWindow);
+          if (queueManager) queueManager.loadQueues();
+          return;
+        }
+
+        // 🟢 3. If no window is saved locally, proceed to fetch locks and SHOW THE MODAL 🟢
+        if (currentWindowDisplay) currentWindowDisplay.textContent = "N/A";
+
+        try {
+          const response = await makeAuthenticatedRequest(
+            "/api/admin/active-windows"
+          );
+          const data = await response.json();
+          if (data.success) {
+            activeWindows = data.activeWindows;
+          }
+        } catch (error) {
+          console.error("Failed to fetch active windows:", error);
+        }
+
+        // 4. Show the modal only if no window was saved.
+        const modalElement = document.getElementById("windowSelectionModal");
+        if (modalElement) {
+          renderWindowButtons(modalElement);
+          windowSelectionModalObj = new bootstrap.Modal(modalElement, {
+            backdrop: "static",
+            keyboard: false,
+          });
+          windowSelectionModalObj.show();
+        }
+      }
+
+      // The rest of your assignment functions (renderWindowButtons and selectWindow)
+      // are still required and remain unchanged from the previous steps.
+
+      function renderWindowButtons(modalElement) {
+        const windows = ["Window 1", "Window 2", "Window 3", "Window 4"];
+        const modalBody = modalElement.querySelector(".modal-body .d-grid");
+
+        if (!modalBody) return;
+        modalBody.innerHTML = "";
+
+        windows.forEach((windowName) => {
+          const isLocked = activeWindows.includes(windowName);
+          const isDisabled = isLocked ? "disabled" : "";
+          const lockIcon = isLocked
+            ? '<i class="bi bi-lock-fill ms-auto text-danger"></i>'
+            : "";
+
+          // 🟢 FIX 2: Pass 'event' to the function call 🟢
+          modalBody.innerHTML += `
+                      <button
+                          type="button"
+                          class="btn btn-outline-primary p-3 text-start fw-semibold position-relative"
+                          onclick="${
+                            isLocked
+                              ? ""
+                              : `selectWindow('${windowName}', event)`
+                          }"
+                          ${isDisabled}
+                      >
+                          <i class="bi bi-display me-3 fs-5"></i> ${windowName}
+                          ${lockIcon}
+                      </button>
+                  `;
+        });
+      }
+
+      window.selectWindow = async function (windowName, event) {
+        // 1. Stop the default immediate form refresh (we need to save data first!)
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+
+        try {
+          // 2. Lock the window on the server
+          const response = await makeAuthenticatedRequest(
+            "/api/admin/assign-window",
+            {
+              method: "POST",
+              body: JSON.stringify({ windowNumber: windowName }),
+            }
+          );
+          const data = await response.json();
+
+          if (!data.success) {
+            alert(`Assignment failed: ${data.message}. Refreshing list.`);
+            checkWindowAssignment();
+            return;
+          }
+
+          // 3. Save state to Local Storage
+          localStorage.setItem("assignedWindow", windowName);
+          currentWindow = windowName;
+
+          // 4. 🟢 SHOW LOADING SCREEN IN MODAL 🟢
+          const modalBody = document.querySelector(
+            "#windowSelectionModal .modal-body"
+          );
+          if (modalBody) {
+            modalBody.innerHTML = `
+                      <div class="text-center py-5">
+                          <div class="spinner-border text-primary mb-3" style="width: 3rem; height: 3rem;" role="status">
+                              <span class="visually-hidden">Loading...</span>
+                          </div>
+                          <h4 class="fw-bold text-dark">Setting up ${windowName}...</h4>
+                          <p class="text-muted">The page will reload to apply settings.</p>
+                      </div>
+                    `;
+          }
+
+          // 5. 🟢 FORCE RELOAD AFTER 1 SECOND 🟢
+          // This guarantees the dashboard loads fresh with the buttons visible.
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        } catch (error) {
+          console.error("Error assigning window:", error);
+          alert("Network error. Please try again.");
+        }
+      };
+
+      function updateUIWithWindow(windowName) {
+        const currentWindowDisplay = document.getElementById(
+          "currentWindowDisplay"
+        );
+        if (currentWindowDisplay) currentWindowDisplay.textContent = windowName;
+
+        const sidebarTitle = document.querySelector(".sidebar-title");
+        if (sidebarTitle) {
+          // Simple update for sidebar title
+          sidebarTitle.innerHTML = `Registrar Staff <br><small style="font-size: 12px; color: #aab0bc;">${windowName}</small>`;
+        }
+      }
+
+      // Hook into existing initialization
+      document.addEventListener("DOMContentLoaded", function () {
+        // checkWindowAssignment();
+      });
+
+      // Correct Logout Function
+      window.handleLogout = function () {
+        if (confirm("Are you sure you want to log out?")) {
+          showNotification("Logging out...");
+
+          // 1. Ensure we have the window value to send to server
+          if (!currentWindow) {
+            currentWindow = localStorage.getItem("assignedWindow");
+          }
+
+          // 2. Call server to UNLOCK the window in the database
+          unassignWindowOnServer()
+            .then(() => {
+              // 3. Clear local storage and redirect
+              localStorage.removeItem("assignedWindow");
+              adminLogout();
+            })
+            .catch((err) => {
+              // Even if server fails, log out anyway
+              console.error("Unassign failed", err);
+              localStorage.removeItem("assignedWindow");
+              adminLogout();
+            });
+        }
+      };
+
+      // Function to toggle password visibility
+      function toggleRegPassword(inputId, iconSpan) {
+        const input = document.getElementById(inputId);
+        const icon = iconSpan.querySelector("i");
+
+        if (input.type === "password") {
+          input.type = "text";
+          icon.classList.remove("bi-eye");
+          icon.classList.add("bi-eye-slash");
+        } else {
+          input.type = "password";
+          icon.classList.remove("bi-eye-slash");
+          icon.classList.add("bi-eye");
+        }
+      }
     </script>
   </body>
 </html>

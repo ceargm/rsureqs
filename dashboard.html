@@ -2267,7 +2267,18 @@ document
 
       const result = await response.json();
 
-      if (result.success) {
+if (result.success) {
+        // --- PASTE THIS NEW CODE HERE ---
+        // 1. Get the current user's name from LocalStorage
+        const studentName = localStorage.getItem("fullname") || "Student";
+        
+        // 2. Trigger the Admin Dashboard event
+        localStorage.setItem('latestRequest', JSON.stringify({ 
+            name: studentName, 
+            timestamp: Date.now() 
+        }));
+        // --- END OF NEW CODE ---
+
         // Close modal
         const selectedModal = bootstrap.Modal.getInstance(
           document.getElementById("selectedModal")
@@ -2285,7 +2296,7 @@ document
         resetServiceSelectionUI();
         updateSelectedCount();
         await loadUserRequests();
-      } else {
+      }else {
         showToast("Error: " + result.message, "error");
       }
     } catch (error) {

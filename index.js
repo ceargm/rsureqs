@@ -127,17 +127,16 @@ const db = mysql.createConnection({
 // });
 
 db.connect((err) => {
-  if (err) {
-    console.error("❌ Database connection failed:", err);
-    return;
-  }
-  console.log("✅ Connected to local MySQL");
-
-  createQueueTable();
-  createAdminStaffTable();
-  createServiceRequestsTable(); // Add this line
+  // ... existing code ...
+  createServiceRequestsTable();
   addColumnIfNotExists("service_requests", "claim_details", "TEXT");
   addColumnIfNotExists("queue", "claim_details", "TEXT");
+
+  // 🟢 CRITICAL: This column saves which ticket goes to which window.
+  addColumnIfNotExists("queue", "window_number", "VARCHAR(50)");
+
+  // 🟢 CRITICAL: This column saves which window the staff is assigned to.
+  addColumnIfNotExists("admin_staff", "assigned_window", "VARCHAR(50)");
 });
 
 // Paste this function near the top of index.js, after the imports
@@ -229,12 +228,16 @@ function createServiceRequestsTable() {
 // Get the next global queue number (A-001, A-002, …)
 // Returns a string like "A-001"
 // -------------------------------------------------------------------
+// -------------------------------------------------------------------
+// FIX: Get the next global queue number (Continuous)
+// This looks at ALL history to find the highest number, preventing duplicates.
+// -------------------------------------------------------------------
 function getNextQueueNumber(callback) {
-  // 1. Find the highest existing number that starts with "A-"
   const sql = `
     SELECT queue_number 
     FROM queue 
     WHERE queue_number REGEXP '^A-[0-9]+$' 
+    -- REMOVED DATE CHECK to ensure unique numbers globally
     ORDER BY CAST(SUBSTRING(queue_number, 3) AS UNSIGNED) DESC 
     LIMIT 1
   `;
@@ -244,11 +247,12 @@ function getNextQueueNumber(callback) {
 
     let nextSeq = 1;
     if (rows.length > 0) {
-      const last = rows[0].queue_number; // e.g. "A-123"
+      const last = rows[0].queue_number; // e.g. "A-193"
       const num = parseInt(last.split("-")[1], 10);
       nextSeq = num + 1;
     }
 
+    // Format as A-XXX (e.g., A-194)
     const nextNumber = `A-${String(nextSeq).padStart(3, "0")}`;
     callback(null, nextNumber);
   });
@@ -338,7 +342,7 @@ function createQueueTable() {
       started_at DATETIME,
       completed_at DATETIME,
       processed_by VARCHAR(255),
-      processed_by_id INT,
+      processed_by_id INT DEFAULT NULL,
       completed_by VARCHAR(255),
       completed_by_id INT,
       added_by VARCHAR(255),
@@ -438,6 +442,10 @@ app.get("/admin", (req, res) => {
 app.get("/adminLogin", (req, res) => {
   res.sendFile(path.join(__dirname, "adminlogin.html"));
 });
+
+app.get("/adminRegister.html", (req, res) => {
+  res.sendFile(path.join(__dirname, "adminRegister.html"));
+});
 // --- 🟢 PASTE these with your other app.get() routes 🟢 ---
 
 app.get("/forgot", (req, res) => {
@@ -527,6 +535,101 @@ app.post("/api/admin/login", async (req, res) => {
       success: false,
       message: "Server error occurred",
     });
+  }
+});
+
+// === API: ADMIN REGISTRATION (SECURED: Super Admin Only) ===
+app.post("/api/admin/register", authenticateAdmin, async (req, res) => {
+  // 1. Security Check: Only Super Admins can create new staff
+  if (req.admin.role !== "super_admin") {
+    return res.status(403).json({
+      success: false,
+      message: "Access denied. Only Super Admins can register staff.",
+    });
+  }
+
+  const {
+    email,
+    password,
+    lastName,
+    firstName,
+    middleInitial,
+    phone,
+    sex,
+    address,
+    full_name,
+  } = req.body;
+
+  // Basic Validation
+  if (!email || !password || !lastName || !firstName) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Missing required fields." });
+  }
+
+  try {
+    // 2. Check if email already exists
+    db.query(
+      "SELECT id FROM admin_staff WHERE email = ?",
+      [email],
+      async (err, results) => {
+        if (err) {
+          console.error("Registration DB check error:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Database error." });
+        }
+
+        if (results.length > 0) {
+          return res.json({
+            success: false,
+            message: "Email already registered.",
+          });
+        }
+
+        // 3. Hash the password
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 4. Insert the new staff member
+        const insertSql = `
+            INSERT INTO admin_staff 
+            (email, password, last_name, first_name, middle_initial, phone, sex, permanent_address, full_name, role, is_active) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'staff', 1)
+        `;
+
+        db.query(
+          insertSql,
+          [
+            email,
+            hashedPassword,
+            lastName,
+            firstName,
+            middleInitial || "",
+            phone,
+            sex,
+            address,
+            full_name,
+          ],
+          (insertErr, result) => {
+            if (insertErr) {
+              console.error("Registration Insert Error:", insertErr);
+              return res.status(500).json({
+                success: false,
+                message: "Failed to register account.",
+              });
+            }
+
+            res.json({
+              success: true,
+              message: "New staff account created successfully!",
+            });
+          }
+        );
+      }
+    );
+  } catch (error) {
+    console.error("Server error during registration:", error);
+    res.status(500).json({ success: false, message: "Server error." });
   }
 });
 
@@ -621,17 +724,97 @@ app.post("/api/admin/update-me", authenticateAdmin, async (req, res) => {
   }
 });
 
-// PROTECTED ADMIN ROUTES
+// === API: GET ALL ACTIVE WINDOWS (for locking logic) ===
+app.get("/api/admin/active-windows", authenticateAdmin, (req, res) => {
+  const query = `
+    SELECT assigned_window 
+    FROM admin_staff 
+    WHERE assigned_window IS NOT NULL AND is_active = 1
+  `;
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("Database error fetching active windows:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+    const activeWindows = results.map((row) => row.assigned_window);
+    res.json({ success: true, activeWindows });
+  });
+});
+
+// === API: LOCK/ASSIGN WINDOW ===
+app.post("/api/admin/assign-window", authenticateAdmin, (req, res) => {
+  const { windowNumber } = req.body;
+  const adminId = req.admin.adminId;
+
+  if (!windowNumber) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Window number is required." });
+  }
+
+  // Check if the window is already assigned to someone else
+  const checkQuery = `
+    SELECT full_name 
+    FROM admin_staff 
+    WHERE assigned_window = ? AND id != ?
+  `;
+  db.query(checkQuery, [windowNumber, adminId], (err, results) => {
+    if (err) {
+      console.error("Database error checking window lock:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    if (results.length > 0) {
+      return res.json({
+        success: false,
+        message: `${windowNumber} is already taken by ${results[0].full_name}.`,
+      });
+    }
+
+    // Assign the window
+    const assignQuery = `
+      UPDATE admin_staff 
+      SET assigned_window = ? 
+      WHERE id = ?
+    `;
+    db.query(assignQuery, [windowNumber, adminId], (updateErr) => {
+      if (updateErr) {
+        console.error("Database error assigning window:", updateErr);
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error" });
+      }
+      res.json({ success: true, message: "Window assigned successfully." });
+    });
+  });
+});
+
+// === API: UNLOCK WINDOW (on logout/refresh) ===
+app.post("/api/admin/unassign-window", authenticateAdmin, (req, res) => {
+  const adminId = req.admin.adminId;
+
+  const unassignQuery = `
+    UPDATE admin_staff 
+    SET assigned_window = NULL 
+    WHERE id = ?
+  `;
+  db.query(unassignQuery, [adminId], (err) => {
+    if (err) {
+      console.error("Database error unassigning window:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+    res.json({ success: true, message: "Window unassigned successfully." });
+  });
+});
+
 const adminApiRoutes = [
   "/api/admin/service-requests",
-  "/api/admin/pending-requests",
-  "/api/admin/approve-request",
-  "/api/admin/decline-request",
-  "/api/admin/add-manual-queue",
-  "/api/admin/make-priority",
-  "/api/admin/move-to-regular",
-  "/api/admin/make-current",
-  "/api/admin/clear-priority",
   "/api/admin/add-to-queue",
   "/api/admin/queues",
   "/api/admin/start-processing",
@@ -642,92 +825,6 @@ const adminApiRoutes = [
 
 app.use(adminApiRoutes, authenticateAdmin);
 
-// Admin Routes with Staff Tracking
-app.post("/api/admin/approve-request", authenticateAdmin, (req, res) => {
-  const { requestId, approveNotes } = req.body;
-  const approvedBy = req.admin.full_name;
-  const adminId = req.admin.adminId;
-
-  if (!requestId) {
-    return res.status(400).json({
-      success: false,
-      message: "Request ID is required",
-    });
-  }
-
-  db.query(
-    `UPDATE service_requests 
- SET status = 'approved', approved_by = ?, approved_by_id = ?, approved_at = NOW(), approve_notes = ?, is_viewed_by_user = 0
- WHERE request_id = ?`,
-    [approvedBy, adminId, approveNotes || "", requestId],
-    (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Database error",
-        });
-      }
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Request not found",
-        });
-      }
-
-      addToQueueSystem(requestId);
-
-      res.json({
-        success: true,
-        message: "Request approved successfully and added to queue",
-        approvedBy: approvedBy,
-      });
-    }
-  );
-});
-
-app.post("/api/admin/decline-request", authenticateAdmin, (req, res) => {
-  const { requestId, declineReason } = req.body;
-  const declinedBy = req.admin.full_name;
-  const adminId = req.admin.adminId;
-
-  if (!requestId || !declineReason) {
-    return res.status(400).json({
-      success: false,
-      message: "Request ID and reason are required",
-    });
-  }
-
-  db.query(
-    `UPDATE service_requests 
- SET status = 'declined', declined_by = ?, declined_by_id = ?, declined_at = NOW(), decline_reason = ?, is_viewed_by_user = 0
- WHERE request_id = ?`,
-    [declinedBy, adminId, declineReason, requestId],
-    (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Database error",
-        });
-      }
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Request not found",
-        });
-      }
-
-      res.json({
-        success: true,
-        message: "Request declined successfully",
-        declinedBy: declinedBy,
-      });
-    }
-  );
-});
 function addToQueueSystem(requestId) {
   console.log(`[DEBUG] Starting addToQueueSystem for requestId: ${requestId}`);
 
@@ -740,334 +837,81 @@ function addToQueueSystem(requestId) {
 
     const request = requests[0];
 
-    // Generate queue number
-    // Generate queue number
-    getNextQueueNumber((err, queueNumber) => {
-      if (err) {
-        console.error("Error generating queue number:", err);
-        return; // Exit early, caller will handle response
-      }
+    // Check if it's already in the queue to prevent duplicates
+    db.query(
+      "SELECT queue_id FROM queue WHERE request_id = ?",
+      [requestId],
+      (checkErr, existingQueue) => {
+        if (checkErr) {
+          console.error("[ERROR] Error checking existing queue:", checkErr);
+          return;
+        }
+        if (existingQueue.length > 0) {
+          console.log(
+            `[INFO] Request ${requestId} already in queue. Skipping.`
+          );
+          return;
+        }
 
-      const isPriority = false;
-      const priorityType = null;
-
-      const insertQueueQuery = `
-    INSERT INTO queue (
-      queue_number, user_id, user_name, student_id, course, year_level,
-      request_id, services, total_amount, status, is_priority, priority_type, submitted_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'waiting', ?, ?, NOW())
-  `;
-
-      db.query(
-        insertQueueQuery,
-        [
-          queueNumber,
-          request.user_id,
-          request.user_name,
-          request.student_id,
-          request.course,
-          request.year_level,
-          requestId,
-          request.services,
-          request.total_amount,
-          isPriority,
-          priorityType,
-        ],
-        (err, result) => {
+        // Generate queue number
+        getNextQueueNumber((err, queueNumber) => {
           if (err) {
-            console.error("Database error:", err);
+            console.error("Error generating queue number:", err);
             return; // Exit early
           }
 
-          const updateRequestQuery = `
+          const isPriority = false;
+          const priorityType = null;
+
+          const insertQueueQuery = `
+    INSERT INTO queue (
+      queue_number, user_id, user_name, student_id, course, year_level,
+      request_id, services, total_amount, status, is_priority, priority_type, submitted_at, claim_details
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'waiting', ?, ?, NOW(), ?)
+  `;
+
+          db.query(
+            insertQueueQuery,
+            [
+              queueNumber,
+              request.user_id,
+              request.user_name,
+              request.student_id,
+              request.course,
+              request.year_level,
+              requestId,
+              request.services,
+              request.total_amount,
+              isPriority,
+              priorityType,
+              request.claim_details || null, // Use claim details from service_requests if available
+            ],
+            (err, result) => {
+              if (err) {
+                console.error("Database error during queue insertion:", err);
+                return; // Exit early
+              }
+
+              const updateRequestQuery = `
         UPDATE service_requests 
-        SET queue_status = 'in_queue', queue_number = ? 
+        SET status = 'approved', queue_status = 'in_queue', queue_number = ? 
         WHERE request_id = ?
       `;
 
-          db.query(updateRequestQuery, [queueNumber, requestId], (err) => {
-            if (err) console.error("Error updating service request:", err);
-            // No res.json here – caller (e.g., approval route) will respond
-          });
-        }
-      );
-    });
-  });
-}
-
-app.post("/api/admin/start-processing", authenticateAdmin, (req, res) => {
-  const { queueId } = req.body;
-  const adminId = req.admin.adminId;
-  const adminName = req.admin.full_name;
-
-  if (!queueId) {
-    return res.status(400).json({
-      success: false,
-      message: "Queue ID is required",
-    });
-  }
-
-  // First, get the queue details to find the request_id
-  const getQueueQuery = "SELECT * FROM queue WHERE queue_id = ?";
-
-  db.query(getQueueQuery, [queueId], (err, queueResults) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Database error",
-      });
-    }
-
-    if (queueResults.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Queue not found",
-      });
-    }
-
-    const queue = queueResults[0];
-    const requestId = queue.request_id;
-
-    const updateQuery = `
-      UPDATE queue 
-      SET status = 'processing', 
-          started_at = NOW(),
-        processed_by = ?,
-        processed_by_id = ?
-    WHERE queue_id = ?
-  `;
-
-    db.query(updateQuery, [adminName, adminId, queueId], (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Database error",
-        });
-      }
-
-      if (result.affectedRows === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Queue not found",
-        });
-      }
-
-      // ✅ CRITICAL FIX: Also update the service_requests table
-      if (requestId) {
-        const updateServiceRequestQuery = `
-          UPDATE service_requests 
-          SET queue_status = 'processing'
-          WHERE request_id = ?
-        `;
-
-        db.query(updateServiceRequestQuery, [requestId], (err) => {
-          if (err) {
-            console.error("Error updating service request:", err);
-            // Don't fail the main request if this fails, but log it
-          } else {
-            console.log(`Service request ${requestId} marked as processing`);
-          }
-        });
-      }
-
-      res.json({
-        success: true,
-        message: "Queue moved to processing",
-        processedBy: adminName,
-      });
-    });
-  });
-});
-
-app.post("/api/admin/mark-done", authenticateAdmin, (req, res) => {
-  const { queueId, claimDetails } = req.body;
-  const adminId = req.admin.adminId;
-  const adminName = req.admin.full_name;
-
-  if (!queueId || !claimDetails) {
-    return res.status(400).json({
-      success: false,
-      message: "Queue ID and claim details are required",
-    });
-  }
-
-  // First, get the queue details to find the request_id
-  const getQueueQuery = "SELECT * FROM queue WHERE queue_id = ?";
-
-  db.query(getQueueQuery, [queueId], (err, queueResults) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Database error",
-      });
-    }
-
-    if (queueResults.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Queue not found",
-      });
-    }
-
-    const queue = queueResults[0];
-    const requestId = queue.request_id;
-
-    // Update queue status to completed with staff info
-    const updateQueueQuery = `
-      UPDATE queue 
-      SET status = 'completed', 
-          completed_at = NOW(),
-          completed_by = ?,
-          completed_by_id = ?,
-          claim_details = ? 
-      WHERE queue_id = ?
-    `;
-
-    db.query(
-      updateQueueQuery,
-      [adminName, adminId, claimDetails, queueId],
-      (err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).json({
-            success: false,
-            message: "Database error",
-          });
-        }
-
-        if (result.affectedRows === 0) {
-          return res.status(404).json({
-            success: false,
-            message: "Queue not found",
-          });
-        }
-
-        // ✅ CRITICAL FIX: Also update the service_requests table
-        if (requestId) {
-          const updateServiceRequestQuery = `
-            UPDATE service_requests 
-            SET queue_status = 'completed', 
-                is_viewed_by_user = 0,
-                claim_details = ? 
-            WHERE request_id = ?
-          `;
-
-          db.query(
-            updateServiceRequestQuery,
-            [claimDetails, requestId],
-            (err) => {
-              if (err) {
-                console.error("Error updating service request:", err);
-                // Don't fail the main request if this fails, but log it
-              } else {
-                console.log(
-                  `Service request ${requestId} marked as completed with claim details`
-                );
-              }
+              db.query(updateRequestQuery, [queueNumber, requestId], (err) => {
+                if (err) console.error("Error updating service request:", err);
+                else
+                  console.log(
+                    `[SUCCESS] Request ${requestId} queued as ${queueNumber}`
+                  );
+              });
             }
           );
-        }
-
-        // ✅ FIXED: Remove automatic processing of next queue
-        // Let the admin manually start the next queue when ready
-
-        res.json({
-          success: true,
-          message: "Queue completed successfully",
-          completedBy: adminName,
-          nextQueueStarted: false, // Always false now
         });
       }
     );
   });
-});
-
-app.post("/api/admin/add-manual-queue", authenticateAdmin, (req, res) => {
-  const { name, studentId, service, isPriority, transactionType, notes } =
-    req.body;
-  const adminId = req.admin.adminId;
-  const adminName = req.admin.full_name;
-
-  if (!name) {
-    return res.status(400).json({
-      success: false,
-      message: "Name is required",
-    });
-  }
-
-  const queueNumberQuery = `
-    SELECT COUNT(*) as count 
-    FROM queue 
-    WHERE DATE(submitted_at) = CURDATE()
-  `;
-
-  db.query(queueNumberQuery, (err, countResult) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Database error",
-      });
-    }
-
-    const queueCount = countResult[0].count + 1;
-    const queueNumber = isPriority
-      ? `P-${String(queueCount).padStart(3, "0")}`
-      : `A-${String(queueCount).padStart(3, "0")}`;
-
-    const insertQueueQuery = `
-      INSERT INTO queue (
-        queue_number, 
-        user_name,
-        student_id,
-        services,
-        status,
-        is_priority,
-        priority_type,
-        transaction_type,
-        admin_notes,
-        added_by,
-        added_by_id,
-        submitted_at
-      ) VALUES (?, ?, ?, ?, 'waiting', ?, ?, ?, ?, ?, ?, NOW())
-    `;
-
-    db.query(
-      insertQueueQuery,
-      [
-        queueNumber,
-        name,
-        studentId || null,
-        JSON.stringify([service]),
-        isPriority,
-        isPriority ? "Manual Priority" : null,
-        transactionType || "walkin",
-        notes || null,
-        adminName,
-        adminId,
-      ],
-      (err, result) => {
-        if (err) {
-          console.error("Database error:", err);
-          return res.status(500).json({
-            success: false,
-            message: "Database error",
-          });
-        }
-
-        res.json({
-          success: true,
-          message: "Manual queue entry added successfully",
-          queueNumber: queueNumber,
-          addedBy: adminName,
-        });
-      }
-    );
-  });
-});
+}
 
 // EXISTING STUDENT ROUTES
 app.post("/api/login", (req, res) => {
@@ -1523,16 +1367,18 @@ app.post(
         // The new 'requirements_paths' column stores the *filenames*
 
         // --- THIS LINE WAS THE BUG, IT'S NOW FIXED ---
+        // --- THIS LINE WAS THE BUG, IT'S NOW FIXED ---
         const requirementsText = JSON.stringify(requirement_names || []);
         // --- END OF FIX ---
 
+        // 1. Insert into service_requests with status 'approved' and queue_status 'in_queue'
         db.query(
           `INSERT INTO service_requests 
   (request_id, user_id, user_name, student_id, course, year_level, 
-  services, total_amount, requirements, requirements_paths, status, submitted_at, contact_email, contact_phone,
+  services, total_amount, requirements, requirements_paths, status, queue_status, submitted_at, contact_email, contact_phone,
   campus, dob, pob, nationality, home_address, previous_school, 
   primary_school, secondary_school, school_id_picture) 
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'approved', 'in_queue', NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             requestId,
             userId,
@@ -1564,10 +1410,14 @@ app.post(
                 .json({ success: false, message: "Database error" });
             }
 
+            // 2. Immediately add to the queue system
+            addToQueueSystem(requestId, true); // Pass true to skip unnecessary checks
+
             res.json({
               success: true,
               requestId: requestId,
-              message: "Service request submitted for admin approval",
+              // Message now reflects the new streamlined flow
+              message: "Service request submitted and added to the queue!",
             });
           }
         );
@@ -1575,6 +1425,72 @@ app.post(
     );
   }
 );
+
+// === API: START PROCESSING REQUEST ===
+app.post("/api/admin/start-processing", authenticateAdmin, (req, res) => {
+  const { queueId, windowNumber } = req.body;
+  const adminId = req.admin.adminId;
+  const adminName = req.admin.full_name;
+
+  if (!queueId || !windowNumber) {
+    return res.status(400).json({
+      success: false,
+      message: "Queue ID and Window Number are required.",
+    });
+  }
+
+  const updateQuery = `
+UPDATE queue 
+SET status = 'processing', 
+started_at = NOW(),
+processed_by = ?,
+processed_by_id = ?,
+window_number = ?
+WHERE queue_id = ? AND status = 'waiting'
+`;
+
+  // index.js (Inside the db.query callback)
+
+  db.query(
+    updateQuery,
+    [adminName, adminId, windowNumber, queueId],
+    (err, result) => {
+      if (err) {
+        console.error("Database error starting processing (DETAIL):", err);
+        // 🟢 Also log the query and parameters 🟢
+        console.error(
+          "Failing Query:",
+          updateQuery.replace(/\s+/g, " ").trim()
+        );
+        console.error("Failing Params:", [
+          adminName,
+          adminId,
+          windowNumber,
+          queueId,
+        ]);
+        return res.status(500).json({
+          success: false,
+          message: "Database error occurred during processing update.",
+        });
+      }
+      // ... (the rest of the code is unchanged) ...
+
+      if (result.affectedRows === 0) {
+        return res.json({
+          success: false,
+          message:
+            "Request not found, already processing, or already completed.",
+        });
+      }
+
+      res.json({
+        success: true,
+        message: "Request moved to processing successfully.",
+      });
+    }
+  );
+});
+// === END API: START PROCESSING REQUEST ===
 // --- END OF REPLACED ROUTE ---
 app.get("/api/admin/service-requests", authenticateAdmin, (req, res) => {
   db.query(
@@ -1625,177 +1541,6 @@ app.get("/api/admin/service-requests", authenticateAdmin, (req, res) => {
       res.json({
         success: true,
         requests: requests,
-      });
-    }
-  );
-});
-
-app.get("/api/admin/pending-requests", authenticateAdmin, (req, res) => {
-  db.query(
-    "SELECT * FROM service_requests WHERE status = 'pending' ORDER BY submitted_at ASC",
-    (err, results) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res
-          .status(500)
-          .json({ success: false, message: "Database error" });
-      }
-
-      const requests = results.map((request) => ({
-        ...request,
-        services: JSON.parse(request.services),
-        requirements: JSON.parse(request.requirements),
-      }));
-
-      res.json({
-        success: true,
-        requests: requests,
-      });
-    }
-  );
-});
-
-app.post("/api/admin/make-priority", (req, res) => {
-  const { queueId } = req.body;
-
-  db.query(
-    `UPDATE queue 
-     SET is_priority = TRUE, priority_type = 'Manual Priority'
-     WHERE queue_id = ?`,
-    [queueId],
-    (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Database error",
-        });
-      }
-
-      res.json({
-        success: true,
-        message: "Queue item moved to priority",
-      });
-    }
-  );
-});
-
-app.post("/api/admin/move-to-regular", authenticateAdmin, (req, res) => {
-  const { queueId } = req.body;
-
-  db.query(
-    `UPDATE queue 
-     SET is_priority = FALSE, priority_type = NULL
-     WHERE queue_id = ?`,
-    [queueId],
-    (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Database error",
-        });
-      }
-
-      res.json({
-        success: true,
-        message: "Queue item moved to regular",
-      });
-    }
-  );
-});
-
-// THIS IS THE CORRECTED "MAKE-CURRENT" LOGIC
-app.post("/api/admin/make-current", authenticateAdmin, (req, res) => {
-  const { queueId } = req.body;
-  const adminId = req.admin.adminId;
-  const adminName = req.admin.full_name;
-
-  if (!queueId) {
-    return res
-      .status(400)
-      .json({ success: false, message: "Queue ID is required" });
-  }
-
-  // 1. Find the timestamp of the *current* (oldest) processing item
-  const findOldestQuery = `
-    SELECT started_at 
-    FROM queue 
-    WHERE status = 'processing' 
-      AND DATE(submitted_at) = CURDATE()
-    ORDER BY started_at ASC 
-    LIMIT 1
-  `;
-
-  db.query(findOldestQuery, (err, results) => {
-    if (err) {
-      console.error("Database error (findOldest):", err);
-      return res
-        .status(500)
-        .json({ success: false, message: "Database error" });
-    }
-
-    let newTimestamp;
-    if (results.length > 0) {
-      // 2. Found an old item. Set new timestamp 1 second *before* it.
-      const oldestTime = new Date(results[0].started_at);
-      oldestTime.setSeconds(oldestTime.getSeconds() - 1);
-      newTimestamp = oldestTime;
-    } else {
-      // 3. No other item is processing. Just set to NOW().
-      newTimestamp = new Date();
-    }
-
-    // 4. Update the selected queue item with this new, *older* timestamp
-    db.query(
-      `UPDATE queue 
-       SET 
-         status = 'processing', 
-         started_at = ?,  -- This is the new, older timestamp
-         processed_by = ?,
-         processed_by_id = ?
-       WHERE queue_id = ?`,
-      [newTimestamp, adminName, adminId, queueId],
-      (err, result) => {
-        if (err) {
-          console.error("Database error (update):", err);
-          return res
-            .status(500)
-            .json({ success: false, message: "Database error" });
-        }
-
-        if (result.affectedRows === 0) {
-          return res
-            .status(404)
-            .json({ success: false, message: "Queue not found" });
-        }
-
-        res.json({
-          success: true,
-          message: "Queue item set as current",
-        });
-      }
-    );
-  });
-});
-
-app.post("/api/admin/clear-priority", authenticateAdmin, (req, res) => {
-  db.query(
-    `UPDATE queue 
-     SET is_priority = FALSE, priority_type = NULL
-     WHERE is_priority = TRUE AND status = 'waiting'`,
-    (err, result) => {
-      if (err) {
-        console.error("Database error:", err);
-        return res.status(500).json({
-          success: false,
-          message: "Database error",
-        });
-      }
-
-      res.json({
-        success: true,
-        message: "Priority queue cleared",
       });
     }
   );
@@ -1939,41 +1684,38 @@ app.post("/api/admin/add-to-queue", authenticateAdmin, (req, res) => {
 app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
   const query = `
     SELECT 
-      queue_id, queue_number, user_id, user_name, student_id, course,
-      year_level, request_id, services, total_amount, status,
-      is_priority, priority_type, submitted_at, started_at, completed_at
+      queue_id, queue_number, user_name, student_id, course,
+      year_level, services, status, is_priority, 
+      submitted_at, started_at, completed_at, 
+      window_number, -- CRITICAL: We need this to count completed per window
+      completed_by
     FROM queue
     WHERE 
-      -- 🟢 FIX: Show TODAY'S requests OR any unfinished requests from the past
       (DATE(submitted_at) = CURDATE()) 
       OR 
-      (status IN ('waiting', 'processing', 'ready'))
+      (status IN ('waiting', 'processing', 'ready')) 
+      OR
+      (DATE(completed_at) = CURDATE() AND status = 'completed') -- Ensure we get today's completed
     ORDER BY 
-      -- Sort processing items first
       CASE 
         WHEN status = 'processing' THEN 1
         WHEN status = 'waiting' THEN 2
         ELSE 3
       END ASC,
-      -- For processing items, sort by PRIORITY first
-      is_priority DESC,
-      -- Then, sort by started_at (oldest first)
-      started_at ASC,
-      -- Fallback sorting
       CASE 
-        WHEN status = 'completed' THEN completed_at 
+        WHEN status = 'processing' THEN started_at 
         ELSE NULL 
       END DESC,
+      is_priority DESC,
       submitted_at ASC
   `;
 
   db.query(query, (err, queues) => {
     if (err) {
       console.error("Database error:", err);
-      return res.status(500).json({
-        success: false,
-        message: "Database error",
-      });
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
     }
 
     const processedQueues = queues.map((queue) => {
@@ -1986,11 +1728,7 @@ app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
               : queue.services,
         };
       } catch (parseErr) {
-        console.error("Error parsing services for queue:", queue.queue_id);
-        return {
-          ...queue,
-          services: [],
-        };
+        return { ...queue, services: [] };
       }
     });
 
@@ -2006,10 +1744,7 @@ app.get("/api/admin/queues", authenticateAdmin, (req, res) => {
       ),
     };
 
-    res.json({
-      success: true,
-      queues: organizedQueues,
-    });
+    res.json({ success: true, queues: organizedQueues });
   });
 });
 
@@ -2506,6 +2241,124 @@ app.post("/api/reset-password", async (req, res) => {
   }
 });
 // --- 🟢 END OF NEW BLOCK 🟢 ---
+
+// === API: GET ALL STAFF (Super Admin Only) ===
+app.get("/api/admin/all-staff", authenticateAdmin, (req, res) => {
+  if (req.admin.role !== "super_admin") {
+    return res.status(403).json({ success: false, message: "Access denied." });
+  }
+
+  // Fetch all staff except the one requesting (optional, or fetch all)
+  db.query(
+    "SELECT id, full_name, email, phone, department, role, is_active, assigned_window, last_login FROM admin_staff ORDER BY created_at DESC",
+    (err, results) => {
+      if (err) {
+        console.error("Error fetching staff:", err);
+        return res
+          .status(500)
+          .json({ success: false, message: "Database error" });
+      }
+      res.json({ success: true, staff: results });
+    }
+  );
+});
+
+// === API: UPDATE STAFF ACCOUNT (Super Admin Only) ===
+app.post(
+  "/api/admin/update-staff-account",
+  authenticateAdmin,
+  async (req, res) => {
+    if (req.admin.role !== "super_admin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Access denied." });
+    }
+
+    const { id, full_name, email, phone, department, role, password } =
+      req.body;
+
+    try {
+      let query =
+        "UPDATE admin_staff SET full_name=?, email=?, phone=?, department=?, role=? WHERE id=?";
+      let params = [full_name, email, phone, department, role, id];
+
+      // If password is provided, hash it and update
+      if (password && password.trim() !== "") {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        query =
+          "UPDATE admin_staff SET full_name=?, email=?, phone=?, department=?, role=?, password=? WHERE id=?";
+        params = [
+          full_name,
+          email,
+          phone,
+          department,
+          role,
+          hashedPassword,
+          id,
+        ];
+      }
+
+      db.query(query, params, (err, result) => {
+        if (err) {
+          console.error("Error updating staff:", err);
+          return res
+            .status(500)
+            .json({ success: false, message: "Database error" });
+        }
+        res.json({
+          success: true,
+          message: "Staff account updated successfully.",
+        });
+      });
+    } catch (error) {
+      res.status(500).json({ success: false, message: "Server error" });
+    }
+  }
+);
+// === API: DELETE STAFF ACCOUNT (Super Admin Only) ===
+app.delete("/api/admin/delete-staff/:id", authenticateAdmin, (req, res) => {
+  // 1. Security Check
+  if (req.admin.role !== "super_admin") {
+    return res.status(403).json({ success: false, message: "Access denied." });
+  }
+
+  const staffId = parseInt(req.params.id);
+
+  // 2. Prevent Self-Deletion (Important!)
+  if (staffId === req.admin.adminId) {
+    return res
+      .status(400)
+      .json({ success: false, message: "You cannot delete your own account." });
+  }
+
+  // 3. Delete from Database
+  const query = "DELETE FROM admin_staff WHERE id = ?";
+
+  db.query(query, [staffId], (err, result) => {
+    if (err) {
+      // Handle Foreign Key constraints (if staff has records in other tables)
+      if (err.code === "ER_ROW_IS_REFERENCED_2") {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Cannot delete: This staff member has associated records (requests/queues). Consider deactivating them instead.",
+        });
+      }
+      console.error("Error deleting staff:", err);
+      return res
+        .status(500)
+        .json({ success: false, message: "Database error" });
+    }
+
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Staff member not found." });
+    }
+
+    res.json({ success: true, message: "Staff account deleted successfully." });
+  });
+});
 
 // Start server
 const PORT = 3000;

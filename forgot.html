@@ -104,6 +104,78 @@
             }
           }
         });
+      // ==========================================
+      // WINDOW ASSIGNMENT LOGIC
+      // ==========================================
+
+      function checkWindowAssignment() {
+        // 1. Check if window is already saved in Local Storage
+        const savedWindow = localStorage.getItem("assignedWindow");
+
+        if (!savedWindow) {
+          // 2. If not set, show the modal using Bootstrap API
+          const modalElement = document.getElementById("windowSelectionModal");
+          if (modalElement) {
+            const windowModal = new bootstrap.Modal(modalElement, {
+              backdrop: "static",
+              keyboard: false,
+            });
+            windowModal.show();
+          }
+        } else {
+          // 3. If set, apply it
+          currentWindow = savedWindow;
+          updateUIWithWindow(currentWindow);
+        }
+      }
+
+      // Make global so buttons can access it
+      window.selectWindow = function (windowName) {
+        // 1. Save to storage
+        localStorage.setItem("assignedWindow", windowName);
+        currentWindow = windowName;
+
+        // 2. Hide Modal using Bootstrap API
+        const modalElement = document.getElementById("windowSelectionModal");
+        const modalInstance = bootstrap.Modal.getInstance(modalElement);
+        if (modalInstance) {
+          modalInstance.hide();
+        }
+
+        // 3. Update UI
+        updateUIWithWindow(windowName);
+        showNotification(`You are now working at ${windowName}`);
+      };
+
+      function updateUIWithWindow(windowName) {
+        // Update the sidebar title or add a badge to show current window
+        const sidebarTitle = document.querySelector(".sidebar-title");
+        if (sidebarTitle) {
+          // Prevent duplicate appending
+          if (!sidebarTitle.innerHTML.includes("<small>")) {
+            sidebarTitle.innerHTML += `<br><small style="font-size: 12px; color: #aab0bc;">${windowName}</small>`;
+          }
+        }
+      }
+
+      // Hook into existing initialization
+      document.addEventListener("DOMContentLoaded", function () {
+        checkWindowAssignment();
+      });
+
+      // Update Logout to clear the window selection
+      // We override the handleLogout defined earlier in your script
+      const oldLogout = window.handleLogout;
+      window.handleLogout = function () {
+        if (confirm("Are you sure you want to log out?")) {
+          showNotification("Logging out...");
+          setTimeout(() => {
+            // CLEAR THE WINDOW ASSIGNMENT ON LOGOUT
+            localStorage.removeItem("assignedWindow");
+            adminLogout();
+          }, 1000);
+        }
+      };
     </script>
   </body>
 </html>
