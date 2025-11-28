@@ -4402,38 +4402,42 @@
       let activeWindows = []; // Cache of windows currently in use
 
       async function checkWindowAssignment() {
-        // 🟢 1. SUPER ADMIN BYPASS 🟢
-        // Check Object OR Local Storage flag
+        const currentWindowDisplay = document.getElementById(
+          "currentWindowDisplay"
+        );
         let savedWindow = localStorage.getItem("assignedWindow");
 
+        // 🟢 1. SUPER ADMIN BYPASS 🟢
         if (
           (currentStaff && currentStaff.role === "super_admin") ||
           savedWindow === "Supervisor"
         ) {
           console.log("Super Admin: Skipping window selection modal.");
-
-          // Ensure UI is set correctly if we hit the storage check
-          const winDisplay = document.getElementById("currentWindowDisplay");
           if (winDisplay) winDisplay.textContent = "Supervisor";
-
-          return; // STOP HERE. Do not show modal.
-        }
-
-        const currentWindowDisplay = document.getElementById(
-          "currentWindowDisplay"
-        );
-
-        // 2. Check local storage for regular staff
-        if (savedWindow && savedWindow !== "Supervisor") {
-          currentWindow = savedWindow;
-          updateUIWithWindow(currentWindow);
-          if (queueManager) queueManager.loadQueues();
           return;
         }
 
-        // 🟢 3. If no window is saved locally, proceed to fetch locks and SHOW THE MODAL 🟢
+        // 🟢 2. AUTO RE-LOCK (Handles Refresh Logic) 🟢
+        // If we have a saved window, we must tell the server "I'm still here!"
+        // because the 'pagehide' event might have just unlocked it during the refresh.
+        if (savedWindow && savedWindow !== "Supervisor") {
+          currentWindow = savedWindow;
+
+          // SILENTLY RE-ASSIGN ON SERVER
+          makeAuthenticatedRequest("/api/admin/assign-window", {
+            method: "POST",
+            body: JSON.stringify({ windowNumber: savedWindow }),
+          }).catch((err) => console.warn("Background re-lock failed", err));
+
+          // Update UI
+          updateUIWithWindow(currentWindow);
+          if (queueManager) queueManager.loadQueues();
+          return; // Stop here, don't show modal
+        }
+
         if (currentWindowDisplay) currentWindowDisplay.textContent = "N/A";
 
+        // 3. Fetch active windows and show modal (Normal Login Flow)
         try {
           const response = await makeAuthenticatedRequest(
             "/api/admin/active-windows"
@@ -4446,7 +4450,7 @@
           console.error("Failed to fetch active windows:", error);
         }
 
-        // 4. Show the modal only if no window was saved.
+        // Show the modal
         const modalElement = document.getElementById("windowSelectionModal");
         if (modalElement) {
           renderWindowButtons(modalElement);
@@ -4608,6 +4612,17 @@
           icon.classList.add("bi-eye");
         }
       }
+      // 🟢 ROBUST TAB CLOSE HANDLER 🟢
+      // Uses sendBeacon with a Blob to bypass header restrictions
+      window.addEventListener("pagehide", function () {
+        if (adminToken) {
+          const payload = JSON.stringify({ token: adminToken });
+          const blob = new Blob([payload], { type: "application/json" });
+
+          // Send signal to the new specific endpoint
+          navigator.sendBeacon("/api/admin/beacon-unlock", blob);
+        }
+      });
     </script>
   </body>
 </html>
