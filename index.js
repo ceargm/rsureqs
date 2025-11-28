@@ -2360,6 +2360,41 @@ app.delete("/api/admin/delete-staff/:id", authenticateAdmin, (req, res) => {
   });
 });
 
+// --- 🟢 NEW: Beacon Unlock Route (For Tab Closing) 🟢 ---
+// This route accepts the token in the body because sendBeacon cannot send Auth headers.
+app.post("/api/admin/beacon-unlock", (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    return res
+      .status(400)
+      .json({ success: false, message: "No token provided" });
+  }
+
+  try {
+    // Manually verify token since we skipped the middleware
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const adminId = decoded.adminId;
+
+    const unassignQuery =
+      "UPDATE admin_staff SET assigned_window = NULL WHERE id = ?";
+
+    db.query(unassignQuery, [adminId], (err) => {
+      if (err) {
+        console.error("Beacon unlock DB error:", err);
+      } else {
+        console.log(`[Beacon] Window unlocked for Admin ID ${adminId}`);
+      }
+    });
+  } catch (error) {
+    console.error("Beacon token verification failed:", error.message);
+  }
+
+  // Beacon requests don't wait for responses, but we send one anyway
+  res.status(200).send("OK");
+});
+// --- 🟢 END NEW ROUTE 🟢 ---
+
 // Start server
 const PORT = 3000;
 app.listen(PORT, () => {
